@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Brim.Parse\Brim.Parse.csproj" />
+    <ProjectReference Include="..\Brim.C0\Brim.C0.csproj" />
+  </ItemGroup>
+
+</Project>

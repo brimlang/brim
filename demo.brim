@@ -1,0 +1,11 @@
+[[[acme::users]]]
+
+--- toml
+version = "0.8"
+stability = "experimental"
+---
+
+<< User
+<< mk_user
+
+hits := 0   // top-level var (module state-ish)
