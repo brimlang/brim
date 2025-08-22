@@ -21,6 +21,7 @@ $Url = "https://github.com/WebAssembly/binaryen/releases/download/$VERSION/$File
 $Dest = Join-Path $ROOT "toolchain/binaryen/$RID"
 New-Item -ItemType Directory -Force -Path $Dest | Out-Null
 $Archive = New-TemporaryFile
+$TempDir = New-Item -ItemType Directory -Path ([System.IO.Path]::GetTempPath()) -Name ([System.Guid]::NewGuid())
 if (-not (Test-Path (Join-Path $Dest 'bin'))) {
   Invoke-WebRequest -Uri $Url -OutFile $Archive
   $shaUrl = "$Url.sha256"
@@ -30,8 +31,13 @@ if (-not (Test-Path (Join-Path $Dest 'bin'))) {
     $actual = (Get-FileHash $Archive -Algorithm SHA256).Hash.ToLower()
     if ($actual -ne $expected) { Write-Error 'Checksum mismatch'; exit 1 }
   } catch {}
-  Expand-Archive $Archive -DestinationPath $Dest
+  Expand-Archive $Archive -DestinationPath $TempDir.FullName
+  $inner = Get-ChildItem $TempDir.FullName | Where-Object { $_.PSIsContainer } | Select-Object -First 1
+  if ($inner) {
+    Move-Item (Join-Path $inner.FullName '*') $Dest -Force
+  }
 }
 Remove-Item $Archive -Force -ErrorAction SilentlyContinue
+Remove-Item $TempDir -Recurse -Force -ErrorAction SilentlyContinue
 $env:BINARYEN_HOME = $Dest
 $env:PATH = "$($Dest)/bin;" + $env:PATH

@@ -47,9 +47,16 @@ TMPDIR="$(mktemp -d)"
 ARCHIVE="$TMPDIR/$FILE"
 if [ ! -d "$DEST/bin" ]; then
   echo "Downloading $URL" >&2
-  curl -Ls "$URL" -o "$ARCHIVE"
-  if curl -Ls "$URL.sha256" -o "$ARCHIVE.sha256"; then
-    (cd "$TMPDIR" && sha256sum -c "$ARCHIVE.sha256")
+  curl -fsSL "$URL" -o "$ARCHIVE"
+  if curl -fsSL "$URL.sha256" -o "$ARCHIVE.sha256"; then
+    (cd "$TMPDIR" && \
+      if command -v sha256sum >/dev/null 2>&1; then
+        sha256sum -c "$ARCHIVE.sha256"
+      elif command -v shasum >/dev/null 2>&1; then
+        shasum -a 256 -c "$ARCHIVE.sha256"
+      else
+        echo "No sha256 tool found; skipping checksum" >&2
+      fi)
   fi
   tar -xf "$ARCHIVE" -C "$DEST" --strip-components=1
 fi
