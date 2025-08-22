@@ -1,6 +1,9 @@
 [tools]
 dotnet = "9"
 
+[tasks.setup-binaryen]
+run = "bash -c 'source ./scripts/setup-binaryen.sh'"
+
 [tasks.build]
 run = "dotnet build -c Release"
 

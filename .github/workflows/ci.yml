@@ -12,8 +12,9 @@ jobs:
           fetch-depth: 0
       - uses: jdx/mise-action@v2
       - run: mise install
+      - run: mise run setup-binaryen
       - run: dotnet --info
-      - run: dotnet build -c Release
-      - run: dotnet test  -c Release
-      - run: dotnet publish src/Brim.Tool -c Release -r linux-x64 -p:PublishAot=true -p:StripSymbols=true -p:InvariantGlobalization=true -o out/linux-x64
+      - run: mise run build
+      - run: mise run test
+      - run: mise run aot-linux-x64
       - run: artifacts/publish/Brim.Tool/release_linux-x64/Brim.Tool version
