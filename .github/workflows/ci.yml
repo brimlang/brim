@@ -16,4 +16,4 @@ jobs:
       - run: dotnet build -c Release
       - run: dotnet test  -c Release
       - run: dotnet publish src/Brim.Tool -c Release -r linux-x64 -p:PublishAot=true -p:StripSymbols=true -p:InvariantGlobalization=true -o out/linux-x64
-      - run: ./out/linux-x64/Brim.Tool version
+      - run: artifacts/publish/Brim.Tool/release_linux-x64/Brim.Tool version

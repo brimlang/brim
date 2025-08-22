@@ -3,7 +3,12 @@ dotnet = "9"
 
 [tasks.build]
 run = "dotnet build -c Release"
+
 [tasks.aot-linux-x64]
 run = "dotnet publish src/Brim.Tool -c Release -r linux-x64 -p:PublishAot=true -p:StripSymbol=true -p:InvariantGlobalization=true"
+
 [tasks.test]
-run = "dotnet test -c Release --results-directory out/test-results --logger \"trx;LogFileName=test-results.trx\""
+run = "dotnet test -c Release --results-directory artifacts/test-results --logger \"trx;LogFilePrefix=TestResults_\""
+
+[tasks.run]
+run = "dotnet run -c Release --project src/Brim.Tool -- ${@}"
