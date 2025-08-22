@@ -5,10 +5,13 @@ dotnet = "9"
 run = "bash -c 'source ./scripts/setup-binaryen.sh'"
 
 [tasks.build]
-run = "bash -c 'source ./scripts/setup-binaryen.sh && dotnet build -c Release'"
+run = "dotnet build -c Release"
 
 [tasks.aot-linux-x64]
-run = "bash -c 'source ./scripts/setup-binaryen.sh && dotnet publish src/Brim.Tool -c Release -r linux-x64 -p:PublishAot=true -p:StripSymbols=true -p:InvariantGlobalization=true'"
+run = "dotnet publish src/Brim.Tool -c Release -r linux-x64 -p:PublishAot=true -p:StripSymbol=true -p:InvariantGlobalization=true"
 
 [tasks.test]
-run = "bash -c 'source ./scripts/setup-binaryen.sh && dotnet test -c Release --results-directory out/test-results --logger \"trx;LogFileName=test-results.trx\"'"
+run = "dotnet test -c Release --results-directory artifacts/test-results --logger \"trx;LogFilePrefix=TestResults_\""
+
+[tasks.run]
+run = "dotnet run -c Release --project src/Brim.Tool -- ${@}"

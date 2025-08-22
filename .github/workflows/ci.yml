@@ -17,4 +17,4 @@ jobs:
       - run: mise run build
       - run: mise run test
       - run: mise run aot-linux-x64
-      - run: ./out/linux-x64/Brim.Tool version
+      - run: artifacts/publish/Brim.Tool/release_linux-x64/Brim.Tool version

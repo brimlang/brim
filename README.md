@@ -8,11 +8,12 @@
 - `Brim.Tool` — single-binary CLI (`brim`)
 
 ### Quick start
+
 ```bash
+mise trust
 mise install
 mise run setup-binaryen
 mise run build
 dotnet run --project src/Brim.Tool -- build --dump=wit
 mise run aot-linux-x64
-./out/linux-x64/Brim.Tool version
-```
+./artifacts/publish/Brim.Tool/release_linux-x64/Brim.Tool version
