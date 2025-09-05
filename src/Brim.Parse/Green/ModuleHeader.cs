@@ -15,9 +15,9 @@ public sealed record ModuleHeader(
     yield return Close;
   }
 
-  public static ModuleHeader Parse(ref Parser p) => new(
+  public static ModuleHeader Parse(Parser p) => new(
     p.ExpectSyntax(SyntaxKind.ModulePathOpenToken),
-    ModulePath.Parse(ref p),
+  ModulePath.Parse(p),
     p.ExpectSyntax(SyntaxKind.ModulePathCloseToken)
   );
 }

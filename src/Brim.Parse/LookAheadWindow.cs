@@ -1,36 +1,38 @@
+using Brim.Parse.Producers;
+
 namespace Brim.Parse;
 
 /// <summary>
-/// Fixed-capacity lookahead window over a token producer (includes EOF token).
+/// Fixed-capacity lookahead window over a token producer (includes EOB token).
 /// </summary>
-public struct LookAheadWindow<T, TProd>
-  where T : struct
-  where TProd : struct
+public sealed class LookAheadWindow<T, TProd>
+  where T : struct, IToken
+  where TProd : ITokenProducer<T>
 {
-  public delegate bool Reader(ref TProd prod, out T item);
-  readonly Reader _read;
-  TProd _producer;
-  readonly T[] _buffer; // rolling window (we never need to keep older consumed tokens for now)
-  int _count;           // number of filled slots (grows until EOF visible)
-  int _index;           // current absolute index (0-based)
-  bool _sawEof;
+  readonly TProd _producer;
+  readonly T[] _buffer;
 
-  public int Capacity { get; }
+  int _count;
+  int _index;
+  bool _sawEob;
 
-  public LookAheadWindow(TProd producer, Reader reader, int capacity)
+  public LookAheadWindow(TProd producer, int capacity)
   {
     ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacity);
     Capacity = capacity;
+
     _producer = producer;
-    _read = reader;
     _buffer = new T[capacity];
     _count = 0;
     _index = 0;
-    _sawEof = false;
+    _sawEob = false;
+
     EnsureFilled(0); // fill first token(s)
   }
 
-  public readonly ref readonly T Current => ref _buffer[_index % Capacity];
+  public int Capacity { get; }
+
+  public ref readonly T Current => ref _buffer[_index % Capacity];
 
   public ref readonly T Peek(int k)
   {
@@ -49,15 +51,16 @@ public struct LookAheadWindow<T, TProd>
 
   public bool Advance()
   {
-    if (_sawEof) return false; // already on EOF
+    if (_sawEob) return false; // already on EOB
+
     _index++;
     EnsureFilled(0);
-    return !_sawEof; // true if now on non-EOF
+    return !_sawEob; // true if now on non-EOB
   }
 
   void EnsureFilled(int k)
   {
-    if (k >= Capacity) throw new ArgumentOutOfRangeException(nameof(k), $"Lookahead capacity {Capacity} exceeded (requested LA({k})).");
+    ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(k, Capacity);
     EnsureFilledInternal(k);
   }
 
@@ -65,22 +68,24 @@ public struct LookAheadWindow<T, TProd>
   {
     if (k >= Capacity) return false;
     EnsureFilledInternal(k);
-    return k < _count; // we have that many tokens (EOF included counts)
+    return k < _count; // we have that many tokens (EOB included counts)
   }
 
   void EnsureFilledInternal(int k)
   {
-    int needed = (_index + k + 1) - _count; // total tokens needed (absolute) - currently produced count
-    while (needed > 0 && !_sawEof)
+    int needed = _index + k + 1 - _count; // total tokens needed (absolute) - currently produced count
+    while (needed > 0 && !_sawEob)
     {
-      if (!_read(ref _producer, out T item)) break; // producer exhausted (already handled by item kind)
+      if (!_producer.TryRead(out T item)) break; // producer exhausted
+
       int slot = _count % Capacity;
       _buffer[slot] = item;
       _count++;
-      // naive EOF detection: rely on caller to interpret; cannot pattern match generic easily
-      if (item is RawToken rt && rt.Kind == RawTokenKind.Eof) _sawEof = true;
-      else if (item is SignificantToken st && st.Token.Kind == RawTokenKind.Eof) _sawEof = true;
-      needed = (_index + k + 1) - _count;
+
+      if (Utilities.GetRawTokenKind(item) == RawTokenKind.Eob)
+        _sawEob = true;
+
+      needed = _index + k + 1 - _count;
     }
   }
 }

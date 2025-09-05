@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using SymbolEntry = (Brim.Parse.RawTokenKind singleKind, (string symbol, Brim.Parse.RawTokenKind kind)[] multiSyms);
 
 namespace Brim.Parse;

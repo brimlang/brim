@@ -1,5 +1,3 @@
-using System.Collections.Immutable;
-
 namespace Brim.Parse.Green;
 
 public sealed record class ModulePath(
@@ -14,7 +12,7 @@ public sealed record class ModulePath(
       yield return part;
   }
 
-  public static ModulePath Parse(ref Parser p)
+  public static ModulePath Parse(Parser p)
   {
     ImmutableArray<GreenToken>.Builder parts = ImmutableArray.CreateBuilder<GreenToken>();
 

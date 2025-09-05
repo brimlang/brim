@@ -13,8 +13,8 @@ public sealed record ModuleDirective(
     yield return Terminator;
   }
 
-  public static ModuleDirective Parse(ref Parser p) => new(
-    ModuleHeader.Parse(ref p),
+  public static ModuleDirective Parse(Parser p) => new(
+  ModuleHeader.Parse(p),
     p.ExpectSyntax(SyntaxKind.TerminatorToken)
   );
 }

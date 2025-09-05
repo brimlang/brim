@@ -1,6 +1,7 @@
 using System.CommandLine;
 using Brim.Parse;
 using Brim.Parse.Green;
+using Brim.Parse.Producers;
 using Spectre.Console;
 
 namespace Brim.Tool.Commands;
@@ -30,7 +31,12 @@ class ParseCommand : Command
     }
 
     string source = File.ReadAllText(file);
-    Parser parser = new(SourceText.From(source));
+    SourceText st = SourceText.From(source);
+    DiagSink sink = DiagSink.Create();
+    RawProducer raw = new(st, sink);
+    SignificantProducer<RawProducer> sig = new(raw);
+    LookAheadWindow<SignificantToken, SignificantProducer<RawProducer>> la = new(sig, 4);
+    Parser parser = new(la, sink);
     BrimModule module = parser.ParseModule();
 
     GreenNodeFormatter formatter = new(RenderFlags.Default);
@@ -40,11 +46,11 @@ class ParseCommand : Command
 
     AnsiConsole.WriteLine(module.GetText(source));
 
-    IReadOnlyList<Diag> diags = parser.Diagnostics;
+    IReadOnlyList<Diagnostic> diags = parser.Diagnostics;
     if (diags.Count > 0)
     {
       AnsiConsole.MarkupLine("[red]Diagnostics:[/]");
-      foreach (Diag d in diags)
+      foreach (Diagnostic d in diags)
       {
         string msg = DiagRenderer.Render(d);
         AnsiConsole.MarkupLine($"[yellow]{d.Line}:{d.Column}[/] {msg}");

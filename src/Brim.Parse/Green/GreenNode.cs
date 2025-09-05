@@ -2,7 +2,7 @@ namespace Brim.Parse.Green;
 
 interface IParsable<out T> where T : GreenNode
 {
-  static abstract T Parse(ref Parser p);
+  static abstract T Parse(Parser p);
 }
 
 public abstract record GreenNode(SyntaxKind Kind, int Offset)

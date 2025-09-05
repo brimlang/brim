@@ -1,44 +1,36 @@
-using Brim.Parse;
-using Xunit;
-
 namespace Brim.Parse.Tests;
 
 public class DiagnosticsTests
 {
-  static (Parser parser, Brim.Parse.Green.BrimModule module) Parse(string src)
-  {
-    var p = new Parser(SourceText.From(src));
-    var m = p.ParseModule();
-    return (p, m);
-  }
+  static (Green.BrimModule module, IReadOnlyList<Diagnostic> diags) Parse(string src) => ParseFacade.ParseModule(src);
 
   [Fact]
-  public void UnexpectedToken_EmitsDiagnostic()
+  public void UnexpectedTokenEmitsDiagnostic()
   {
     // Number literal does not start any production (predictions: <<, [[, identifier)
-    var (p, _) = Parse("123");
-    Assert.Contains(p.Diagnostics, d => d.Code == DiagCode.UnexpectedToken);
+    var (_, diags) = Parse("123");
+    Assert.Contains(diags, static d => d.Code == DiagCode.UnexpectedToken);
   }
 
   [Fact]
-  public void MissingToken_EmitsDiagnostic()
+  public void MissingTokenEmitsDiagnostic()
   {
     // An import like: [[path]] without terminator maybe? Use struct decl missing close brace.
-    var (p, _) = Parse("foo = %{\n"); // struct declaration missing closing }
-    Assert.Contains(p.Diagnostics, d => d.Code == DiagCode.MissingToken);
+    var (_, diags2) = Parse("foo = %{\n");
+    Assert.Contains(diags2, static d => d.Code == DiagCode.MissingToken);
   }
 
   [Fact]
-  public void InvalidCharacter_EmitsDiagnostic()
+  public void InvalidCharacterEmitsDiagnostic()
   {
-    var (p, _) = Parse("$");
-    Assert.Contains(p.Diagnostics, d => d.Code == DiagCode.InvalidCharacter);
+    var (_, diags3) = Parse("$");
+    Assert.Contains(diags3, static d => d.Code == DiagCode.InvalidCharacter);
   }
 
   [Fact]
-  public void UnterminatedString_EmitsDiagnostic()
+  public void UnterminatedStringEmitsDiagnostic()
   {
-    var (p, _) = Parse("\"hello");
-    Assert.Contains(p.Diagnostics, d => d.Code == DiagCode.UnterminatedString);
+    var (_, diags4) = Parse("\"hello");
+    Assert.Contains(diags4, static d => d.Code == DiagCode.UnterminatedString);
   }
 }

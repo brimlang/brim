@@ -6,7 +6,8 @@ namespace Brim.Parse;
 public enum RawTokenKind
 {
   // Special
-  Any = 0, // Wildcard for parsing
+  Any = -1, // Wildcard for parsing
+  Default = 0, // Uninitialized
   Identifier,
   Terminator,
   Error,
@@ -46,8 +47,8 @@ public enum RawTokenKind
 
   // Trivia
   WhitespaceTrivia,
-  
+
   // Synthesized end-of-file (always emitted exactly once by new producers)
-  Eof,
+  Eob = short.MaxValue,
 }
 

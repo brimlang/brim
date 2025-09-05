@@ -3,9 +3,9 @@ namespace Brim.Parse.Green;
 public sealed record GreenToken(
   SyntaxKind SyntaxKind,
   SignificantToken Significant)
-: GreenNode(SyntaxKind, Significant.Token.Offset)
+: GreenNode(SyntaxKind, Significant.CoreToken.Offset)
 {
-  public RawToken Token => Significant.Token;
+  public RawToken Token => Significant.CoreToken;
   public StructuralArray<RawToken> LeadingTrivia => Significant.LeadingTrivia;
   public StructuralArray<RawToken> TrailingTrivia => Significant.TrailingTrivia;
 
@@ -18,8 +18,6 @@ public sealed record GreenToken(
 
   // Convenience for constructing from a raw token when no trivia available (e.g. fabricated/missing)
   public GreenToken(SyntaxKind kind, RawToken raw)
-    : this(kind, new SignificantToken(raw,
-        StructuralArray.Empty<RawToken>(),
-        StructuralArray.Empty<RawToken>())) {}
+    : this(kind, new SignificantToken(raw, [], [])) { }
 }
 

@@ -1,12 +1,17 @@
 using System.Collections;
-using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace Brim.Parse;
 
+/// <summary>
+/// An immutable array that compares its contents for equality and hashing.
+/// </summary>
 public static class StructuralArray
 {
+  /// <summary>
+  /// An empty <see cref="StructuralArray{T}"/>.
+  /// </summary>
   public static StructuralArray<T> Empty<T>() => new([]);
 
 #pragma warning disable IDE0028, IDE0306 // Collection expression can be simplified
@@ -19,9 +24,11 @@ public static class StructuralArray
 /// <summary>
 /// An immutable array that compares its contents for equality and hashing.
 /// </summary>
-public readonly struct StructuralArray<T> : IImmutableList<T>, IEquatable<StructuralArray<T>>
+public readonly struct StructuralArray<T>
+: IImmutableList<T>,
+  IEquatable<StructuralArray<T>>
 {
-  private readonly ImmutableArray<T> _array;
+  readonly ImmutableArray<T> _array;
 
   /// <summary>
   /// Initializes a new instance of <see cref="StructuralArray{T}"/> from an <see cref="ImmutableArray{T}"/>.

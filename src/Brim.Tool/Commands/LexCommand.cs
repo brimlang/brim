@@ -1,5 +1,6 @@
 using System.CommandLine;
 using Brim.Parse;
+using Brim.Parse.Producers;
 using Spectre.Console;
 
 namespace Brim.Tool.Commands;
@@ -28,21 +29,31 @@ class LexCommand : Command
       return -1;
     }
 
+  DiagSink sink = DiagSink.Create();
     string source = File.ReadAllText(file);
     SourceText st = SourceText.From(source);
-    RawTokenProducer prod = new(st);
-    while (prod.TryRead(out RawToken token))
+  RawProducer prod = new(st, sink);
+  while (prod.TryRead(out RawToken token))
     {
-      AnsiConsole.Write(token.GetDebugMarkup(source.AsSpan(), static (kind, args) => kind switch
-      {
-        RawToken.ErrorKind.UnexpectedChar => $"Unexpected character '{args?[0]}'",
-        RawToken.ErrorKind.UnterminatedString => "Unterminated string literal",
-        RawToken.ErrorKind.UnexpectedToken => "Unexpected token",
-        _ => "Unknown error"
-      }));
-      if (token.Kind == RawTokenKind.Eof) break;
+      AnsiConsole.Write(GetMarkup(token, source));
+      if (token.Kind == RawTokenKind.Eob) break;
     }
 
     return 0;
+  }
+
+  static Markup GetMarkup(RawToken token, string source)
+  {
+    return token.Kind switch
+    {
+      RawTokenKind.Terminator => Markup.FromInterpolated($"[magenta]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString().Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t")}[/]'\n"),
+      RawTokenKind.Identifier => Markup.FromInterpolated($"[blue]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString()}[/]'\n"),
+      RawTokenKind.NumberLiteral => Markup.FromInterpolated($"[green]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString()}[/]'\n"),
+      RawTokenKind.StringLiteral => Markup.FromInterpolated($"[green]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString()}[/]'\n"),
+      RawTokenKind.WhitespaceTrivia => Markup.FromInterpolated($"[cyan]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString().Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t")}[/]'\n"),
+      RawTokenKind.CommentTrivia => Markup.FromInterpolated($"[cyan]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString().Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t")}[/]'\n"),
+      RawTokenKind.Error => Markup.FromInterpolated($"[red]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString()}[/]'\n"),
+      _ => Markup.FromInterpolated($"[yellow]{{{token.Kind}}}[/] '[white]{token.Value(source).ToString()}[/]'\n"),
+    };
   }
 }

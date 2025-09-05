@@ -1,50 +1,41 @@
-using System.Collections.Immutable;
-using System;
 using System.Diagnostics;
 using Brim.Parse.Green;
+using Brim.Parse.Producers;
 
 namespace Brim.Parse;
 
-public partial struct Parser
+public sealed partial class Parser(
+  in LookAheadWindow<SignificantToken, SignificantProducer<RawProducer>> look,
+  in DiagSink sink)
 {
-  LookAheadWindow<SignificantToken, SignificantProducer<RawTokenProducer>> _look;
-  readonly List<Diag> _diags;
+  readonly LookAheadWindow<SignificantToken, SignificantProducer<RawProducer>> _look = look;
+  readonly DiagSink _sink = sink;
 
-  public Parser(SourceText source)
-  {
-  _diags = new();
-  RawTokenProducer raw = new(source, _diags);
+  public SignificantToken Current => _look.Current;
+  RawToken CurrentRaw => Current.CoreToken;
 
-    SignificantProducer<RawTokenProducer> sig = new(
-      raw,
-      static (ref prod, out tok) => prod.TryRead(out tok));
-
-    _look = new(
-      sig,
-      static (ref sp, out st) => sp.TryRead(out st),
-      capacity: 4);
-  }
-
-  readonly SignificantToken CurrentSig => _look.Current;
-  readonly RawToken Current => CurrentSig.Token;
+  public IReadOnlyList<Diagnostic> Diagnostics => _sink.Items;
 
   public BrimModule ParseModule()
   {
-    PredictEntry[] table = _moduleTable; // ordered prediction entries
+    PredictEntry[] table = ModuleTable; // ordered prediction entries
 
-    ModuleDirective header = ModuleDirective.Parse(ref this);
+    ModuleDirective header = ModuleDirective.Parse(this);
 
     ImmutableArray<GreenNode>.Builder members = ImmutableArray.CreateBuilder<GreenNode>();
     int iterations = 0;
-  // Reusable buffer for expected K1 kinds (single stackalloc)
-  Span<RawTokenKind> expectedBuf = stackalloc RawTokenKind[4];
-  while (!IsEof(Current))
+
+    // Reusable buffer for expected K1 kinds (single stackalloc)
+    Span<RawTokenKind> expectedBuf = stackalloc RawTokenKind[4];
+    while (!IsEof(CurrentRaw))
     {
+      int startOffset = CurrentRaw.Offset;
       bool progressed = false;
+
       // Standalone syntax (terminators/comments) handled directly.
-      if (IsStandaloneSyntax(Current.Kind))
+      if (IsStandaloneSyntax(CurrentRaw.Kind))
       {
-        members.Add(new GreenToken(MapStandaloneSyntaxKind(Current.Kind), CurrentSig));
+        members.Add(new GreenToken(MapStandaloneSyntaxKind(CurrentRaw.Kind), Current));
         _ = Advance();
         continue;
       }
@@ -55,7 +46,7 @@ public partial struct Parser
         if (Match(entry.LookAhead))
         {
           matched = true;
-          members.Add(entry.Action(ref this));
+          members.Add(entry.Action(this));
           progressed = true;
           break;
         }
@@ -64,95 +55,105 @@ public partial struct Parser
       if (!matched && !progressed)
       {
         // Collect expected K1 tokens from prediction table (unique, up to 4)
-    int ec = 0;
+        int ec = 0;
         foreach (PredictEntry pe in table)
         {
           RawTokenKind k = pe.LookAhead.K1;
-            bool dup = false;
-      for (int i = 0; i < ec; i++) if (expectedBuf[i] == k) { dup = true; break; }
-      if (!dup) { expectedBuf[ec++] = k; if (ec == 4) break; }
+          bool dup = false;
+          for (int i = 0; i < ec; i++) if (expectedBuf[i] == k) { dup = true; break; }
+          if (!dup) { expectedBuf[ec++] = k; if (ec == 4) break; }
         }
-    _diags.Add(DiagFactory.Unexpected(Current, expectedBuf[..ec]));
-  // Always advance at least one token to guarantee progress
-  members.Add(new GreenToken(SyntaxKind.ErrorToken, CurrentSig));
+        _sink.Add(DiagFactory.Unexpected(CurrentRaw, expectedBuf[..ec]));
+
+        // Always advance at least one token to guarantee progress
+        members.Add(new GreenToken(SyntaxKind.ErrorToken, Current));
 
         _ = Advance();
         progressed = true;
       }
 
-      Debug.Assert(progressed, $"Parser did not make progress at token {Current}.");
+      Debug.Assert(progressed, $"Parser did not make progress at token {CurrentRaw}.");
       if (!progressed)
         break; // hard escape to avoid hang in release
+
+      // Additional runtime guard: ensure the raw token offset advances; if not, break to avoid infinite loop.
+      if (CurrentRaw.Offset == startOffset)
+      {
+        _sink.Add(DiagFactory.Unexpected(CurrentRaw, []));
+        break;
+      }
 
       iterations++;
       if (iterations > 200_000)
         throw new InvalidOperationException("Parser iteration guard exceeded (possible infinite loop)");
     }
 
-    // Consume EOF token explicitly
-  GreenToken eof = new(SyntaxKind.EofToken, CurrentSig);
-    return new BrimModule(header, members, eof);
+    // Consume EOB token explicitly
+    GreenToken eob = new(SyntaxKind.EobToken, Current);
+    return new BrimModule(header, members, eob);
   }
 
-  internal readonly bool Match(RawTokenKind kind, int offset = 0) =>
+  internal bool Match(RawTokenKind kind, int offset = 0) =>
     kind == RawTokenKind.Any || PeekKind(offset) == kind;
 
   internal RawToken Expect(RawTokenKind kind)
   {
-    if (Current.Kind == kind)
+    if (CurrentRaw.Kind == kind)
     {
-      RawToken token = Current;
+      RawToken token = CurrentRaw;
       _ = Advance();
       return token;
     }
 
-    return GetErrorToken(kind);
+    return GetErrorToken();
   }
 
   internal GreenToken ExpectSyntax(SyntaxKind kind)
   {
-    if (_tokenMap.TryGetValue(kind, out RawTokenKind tokenKind))
+    if (TokenMap.TryGetValue(kind, out RawTokenKind tokenKind))
     {
       if (Match(tokenKind))
       {
-        SignificantToken sig = CurrentSig;
+        SignificantToken sig = Current;
         _ = Advance();
-        if (sig.Token.Kind != RawTokenKind.Error)
+        if (sig.CoreToken.Kind != RawTokenKind.Error)
           return new GreenToken(kind, sig);
       }
       else
       {
-        _diags.Add(DiagFactory.Missing(tokenKind, Current));
-        RawToken missing = GetErrorToken(tokenKind);
-        SignificantToken fabricated = new(missing,
-          StructuralArray.Empty<RawToken>(),
-          StructuralArray.Empty<RawToken>());
+        _sink.Add(DiagFactory.Missing(tokenKind, CurrentRaw));
+        RawToken missing = GetErrorToken();
+        SignificantToken fabricated = new(
+          missing,
+          LeadingTrivia: [],
+          TrailingTrivia: []);
+
         return new GreenToken(kind, fabricated);
       }
     }
 
-    return new GreenToken(kind, CurrentSig);
+    return new GreenToken(kind, Current);
   }
 
   bool Advance() => _look.Advance();
 
-  readonly bool Match(LookAhead lookAhead) =>
+  bool Match(LookAhead lookAhead) =>
     Match(lookAhead.K1, 0)
     && Match(lookAhead.K2, 1)
     && Match(lookAhead.K3, 2)
     && Match(lookAhead.K4, 3);
 
-  readonly RawTokenKind PeekKind(int offset)
+  RawTokenKind PeekKind(int offset)
   {
     ArgumentOutOfRangeException.ThrowIfNegative(offset);
-    if (offset == 0) return Current.Kind;
+    if (offset == 0) return CurrentRaw.Kind;
     ref readonly SignificantToken st = ref _look.Peek(offset); // throws if > capacity
-    return st.Token.Kind;
+    return st.CoreToken.Kind;
   }
 
   static bool IsStandaloneSyntax(RawTokenKind kind) => kind is RawTokenKind.Terminator or RawTokenKind.CommentTrivia;
 
-  static bool IsEof(RawToken tok) => tok.Kind == RawTokenKind.Eof;
+  static bool IsEof(RawToken tok) => tok.Kind == RawTokenKind.Eob;
 
   static SyntaxKind MapStandaloneSyntaxKind(RawTokenKind kind) => kind switch
   {
@@ -161,14 +162,23 @@ public partial struct Parser
     _ => SyntaxKind.ErrorToken
   };
 
-  readonly RawToken GetErrorToken(RawTokenKind expected) => new(
+  RawToken GetErrorToken() => new(
     RawTokenKind.Error,
-    Current.Offset,
+    CurrentRaw.Offset,
     Length: 0,
-    Current.Line,
-    Current.Column,
-    RawToken.ErrorKind.UnexpectedToken,
-    [expected, Current.Kind]);
+    CurrentRaw.Line,
+    CurrentRaw.Column);
 
-  public IReadOnlyList<Diag> Diagnostics => _diags;
+  internal void AddDiagEmptyGeneric(GreenToken open)
+  {
+    Diagnostic d = DiagFactory.EmptyGenericParamList(open.Token);
+    _sink.Add(d);
+  }
+
+  internal void AddDiagUnexpectedGenericBody() => _sink.Add(DiagFactory.UnexpectedGenericBody(CurrentRaw));
+  internal void AddDiagEmptyGenericArgList(GreenToken open)
+  {
+    Diagnostic d = DiagFactory.EmptyGenericArgList(open.Token);
+    _sink.Add(d);
+  }
 }

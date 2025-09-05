@@ -17,11 +17,11 @@ public sealed record ExportDirective(
     yield return Terminator;
   }
 
-  public static ExportDirective Parse(ref Parser p) =>
+  public static ExportDirective Parse(Parser p) =>
     new(
       p.ExpectSyntax(SyntaxKind.ExportMarkerToken),
       p.ExpectSyntax(SyntaxKind.WhiteSpaceToken),
-      Identifier.Parse(ref p),
+  Identifier.Parse(p),
       p.ExpectSyntax(SyntaxKind.TerminatorToken)
     );
 }

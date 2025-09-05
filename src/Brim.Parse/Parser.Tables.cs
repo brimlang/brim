@@ -2,7 +2,7 @@ using Brim.Parse.Green;
 
 namespace Brim.Parse;
 
-delegate GreenNode ParseAction(ref Parser parser);
+delegate GreenNode ParseAction(Parser parser);
 
 /// <summary>
 /// Ordered prediction entry. The <see cref="LookAhead"/> is matched against the token stream; first matching entry wins.
@@ -22,9 +22,9 @@ readonly record struct LookAhead(
   public static implicit operator LookAhead((RawTokenKind one, RawTokenKind two, RawTokenKind three, RawTokenKind four) t) => new(t.one, t.two, t.three, t.four);
 }
 
-public partial struct Parser
+public sealed partial class Parser
 {
-  static readonly Dictionary<SyntaxKind, RawTokenKind> _tokenMap = new()
+  internal static readonly Dictionary<SyntaxKind, RawTokenKind> TokenMap = new()
   {
     { SyntaxKind.WhiteSpaceToken, RawTokenKind.WhitespaceTrivia },
     { SyntaxKind.TerminatorToken, RawTokenKind.Terminator },
@@ -32,34 +32,43 @@ public partial struct Parser
     { SyntaxKind.ModulePathOpenToken, RawTokenKind.LBracketLBracket},
     { SyntaxKind.ModulePathCloseToken, RawTokenKind.RBracketRBracket},
     { SyntaxKind.ModulePathSepToken, RawTokenKind.ColonColon},
+    { SyntaxKind.GenericOpenToken, RawTokenKind.LBracket },
+    { SyntaxKind.GenericCloseToken, RawTokenKind.RBracket },
     { SyntaxKind.IdentifierToken, RawTokenKind.Identifier },
     { SyntaxKind.NumberToken, RawTokenKind.NumberLiteral },
     { SyntaxKind.StrToken, RawTokenKind.StringLiteral },
     { SyntaxKind.EqualToken, RawTokenKind.Equal },
+    { SyntaxKind.StructToken, RawTokenKind.PercentLBrace },
+    { SyntaxKind.UnionToken, RawTokenKind.PipeLBrace },
     { SyntaxKind.CloseBraceToken, RawTokenKind.RBrace },
     { SyntaxKind.CommentToken, RawTokenKind.CommentTrivia },
-    { SyntaxKind.EofToken, RawTokenKind.Eof },
+    { SyntaxKind.EobToken, RawTokenKind.Eob },
     { SyntaxKind.ColonToken, RawTokenKind.Colon },
-    { SyntaxKind.StructToken, RawTokenKind.PercentLBrace },
     { SyntaxKind.ErrorToken, RawTokenKind.Error },
   };
 
   /// <summary>
   /// Ordered module prediction rules. Keep list short; duplicates guarded in DEBUG.
   /// </summary>
-  static readonly PredictEntry[] _moduleTable =
+  internal static readonly PredictEntry[] ModuleTable =
   [
     new(RawTokenKind.LessLess, ExportDirective.Parse),
     new((RawTokenKind.LBracketLBracket, RawTokenKind.Identifier), ModuleHeader.Parse),
     new((RawTokenKind.Identifier, RawTokenKind.Equal, RawTokenKind.LBracketLBracket), ImportDeclaration.Parse),
+    new((RawTokenKind.Identifier, RawTokenKind.LBracket, RawTokenKind.Identifier, RawTokenKind.Comma), GenericDeclaration.Parse),
+    new((RawTokenKind.Identifier, RawTokenKind.LBracket, RawTokenKind.Identifier, RawTokenKind.Identifier), GenericDeclaration.Parse),
+    new((RawTokenKind.Identifier, RawTokenKind.LBracket, RawTokenKind.Identifier, RawTokenKind.RBracket), GenericDeclaration.Parse),
     new((RawTokenKind.Identifier, RawTokenKind.Equal, RawTokenKind.PercentLBrace), StructDeclaration.Parse),
+    new((RawTokenKind.Identifier, RawTokenKind.Equal, RawTokenKind.PipeLBrace), UnionDeclaration.Parse),
+    // Empty generic parameter list (e.g. Foo[] = ...); 3-token lookahead so trivia before '=' doesn't block match
+    new((RawTokenKind.Identifier, RawTokenKind.LBracket, RawTokenKind.RBracket), GenericDeclaration.Parse),
   ];
 
   static Parser()
   {
 #if DEBUG
     HashSet<LookAhead> seen = [];
-    foreach (PredictEntry e in _moduleTable)
+    foreach (PredictEntry e in ModuleTable)
     {
       if (!seen.Add(e.LookAhead))
       {
@@ -69,11 +78,11 @@ public partial struct Parser
 #endif
   }
 
-  internal static ParseAction MakeTrace(string name, ParseAction action) => (ref p) =>
+  internal static ParseAction MakeTrace(string name, ParseAction action) => p =>
   {
-    Console.WriteLine($"Entering {name} at token {p.Current} (offset {p.Current.Offset})");
-    GreenNode result = action(ref p);
-    Console.WriteLine($"Exiting {name} at token {p.Current} (offset {p.Current.Offset})");
+    Console.WriteLine($"Entering {name} at token {p.CurrentRaw} (offset {p.CurrentRaw.Offset})");
+    GreenNode result = action(p);
+    Console.WriteLine($"Exiting {name} at token {p.CurrentRaw} (offset {p.CurrentRaw.Offset})");
     return result;
   };
 }

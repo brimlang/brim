@@ -1,12 +1,14 @@
+using Brim.Parse.Producers;
+
 namespace Brim.Parse.Tests;
 
-public class RawTokenProducerTests
+public class RawProducerTests
 {
   static List<RawToken> Lex(string input)
   {
-    RawTokenProducer p = new(SourceText.From(input));
+  RawProducer p = new(SourceText.From(input), DiagSink.Create());
     List<RawToken> list = [];
-    while (p.TryRead(out RawToken t)) { list.Add(t); if (t.Kind == RawTokenKind.Eof) break; }
+    while (p.TryRead(out RawToken t)) { list.Add(t); if (t.Kind == RawTokenKind.Eob) break; }
     return list;
   }
 
@@ -55,7 +57,7 @@ public class RawTokenProducerTests
   public void ProducesUnexpectedCharError()
   {
     var toks = Lex("foo $");
-    Assert.Contains(toks, t => t.Kind == RawTokenKind.Error && t.Error == RawToken.ErrorKind.UnexpectedChar);
+    Assert.Contains(toks, static t => t.Kind == RawTokenKind.Error);
   }
 
   [Fact]
@@ -104,7 +106,7 @@ public class RawTokenProducerTests
     var lone = Lex("\"");
     Assert.Contains(lone, t => t.Kind == RawTokenKind.StringLiteral);
     var dangling = Lex("\"foo\\");
-    Assert.Contains(dangling, t => t.Kind == RawTokenKind.Error && t.Error == RawToken.ErrorKind.UnterminatedString);
+    Assert.Contains(dangling, t => t.Kind == RawTokenKind.Error);
   }
 
   [Fact]
@@ -112,7 +114,7 @@ public class RawTokenProducerTests
   {
     var toks = Lex("foo : bar");
     int prevEnd = -1;
-    foreach (var t in toks.Where(t => t.Kind != RawTokenKind.Eof))
+    foreach (var t in toks.Where(t => t.Kind != RawTokenKind.Eob))
     {
       int start = t.Offset;
       int end = t.Offset + t.Length;

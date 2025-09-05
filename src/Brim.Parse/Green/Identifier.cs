@@ -11,7 +11,7 @@ public sealed record Identifier(
     yield return Token;
   }
 
-  public static Identifier Parse(ref Parser p)
+  public static Identifier Parse(Parser p)
   {
     GreenToken token = p.ExpectSyntax(SyntaxKind.IdentifierToken);
     return new Identifier(token);

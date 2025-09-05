@@ -22,6 +22,7 @@ public readonly struct GreenNodeFormatter
     ExportDirective ed => FormatExportDirective(ed, source),
     ImportDeclaration id => FormatImportDirective(id, source),
     StructDeclaration sd => FormatStructDeclaration(sd, source),
+    UnionDeclaration ud => FormatUnionDeclaration(ud, source),
     _ => new Markup($"[red]Unknown node type:[/] {node.Kind}\n")
   };
 
@@ -75,6 +76,24 @@ public readonly struct GreenNodeFormatter
       string fieldType = field.TypeAnnotation.GetText(source);
       if (i > 0) sb.Append(", ");
       sb.Append(Escape(fieldName)).Append(": ").Append(Escape(fieldType));
+    }
+    sb.Append('\n');
+    return new Markup(sb.ToString());
+  }
+
+  Markup FormatUnionDeclaration(UnionDeclaration n, ReadOnlySpan<char> source)
+  {
+    string name = n.Identifier.GetText(source);
+    StringBuilder sb = new();
+    sb.Append("[green]Union:[/] [yellow]").Append(Escape(name)).Append("[/] with ")
+      .Append(n.Variants.Count).Append(" variants: ");
+    for (int i = 0; i < n.Variants.Count; i++)
+    {
+      UnionVariantDeclaration uv = n.Variants[i];
+      string variantName = uv.Identifier.GetText(source);
+      string variantType = uv.Type.GetText(source);
+      if (i > 0) sb.Append(", ");
+      sb.Append(Escape(variantName)).Append(": ").Append(Escape(variantType));
     }
     sb.Append('\n');
     return new Markup(sb.ToString());
