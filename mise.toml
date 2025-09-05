@@ -1,0 +1,62 @@
+[tools]
+dotnet = "9"
+
+[tasks.nuke]
+description = "Deletes all build artifacts"
+run = "rm -rf artifacts"
+
+[tasks.clean]
+description = "Runs the clean target on all projects"
+run = "dotnet clean"
+
+[tasks.lint]
+description = "Runs dotnet format to check code style"
+run = "dotnet format --verify-no-changes"
+alias = "l"
+
+[tasks.format]
+description = "Runs dotnet format to fix code style"
+run = "dotnet format"
+alias = "f"
+
+[tasks.build]
+description = "Builds all projects"
+run = "dotnet build"
+alias = "b"
+sources = [
+  "src/**/*.cs",
+  "src/**/*.csproj",
+  "tests/**/*.cs",
+  "tests/**/*.csproj",
+]
+outputs = { auto = true }
+
+[tasks.test]
+description = "Runs all tests"
+depends = ["build -c Release"]
+run = "dotnet test -c Release --no-build --no-restore --results-directory artifacts/test-results --logger \"trx;LogFilePrefix=TestResults_\""
+
+[tasks.run]
+description = "Runs the Brim.Tool project"
+depends = ["build -c Release src/Brim.Tool"]
+run = "dotnet run -c Release --no-build --no-restore --project src/Brim.Tool --"
+alias = "rx"
+
+[tasks.debug]
+description = "Runs the Brim.Tool project with the debug build"
+depends = ["build -c Debug src/Brim.Tool"]
+run = "dotnet run -c Debug --no-build --no-restore --project src/Brim.Tool --"
+alias = "rdx"
+
+[tasks."aot:linux-x64:publish"]
+description = "Publishes the Brim.Tool project as a self-contained AOT-compiled binary for Linux x64"
+run = "dotnet publish src/Brim.Tool -c Release -r linux-x64 -p:PublishAot=true -p:StripSymbol=false -p:InvariantGlobalization=true"
+alias = "lxp"
+sources = ["src/**/*.cs", "src/**/*.csproj"]
+outputs = { auto = true }
+
+[tasks."aot:linux-x64:exec"]
+description = "Runs the AOT-compiled Brim.Tool binary for Linux x64"
+depends = ["aot:linux-x64:publish"]
+run = "./artifacts/publish/Brim.Tool/release_linux-x64/Brim.Tool"
+alias = "lxx"

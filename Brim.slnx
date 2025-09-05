@@ -16,6 +16,5 @@
     <Project Path="tests/Brim.Emit.WitWasm.Tests/Brim.Emit.WitWasm.Tests.csproj" />
     <Project Path="tests/Brim.Parse.Tests/Brim.Parse.Tests.csproj" />
     <Project Path="tests/Brim.S0.Tests/Brim.S0.Tests.csproj" />
-    <Project Path="tests/Brim.BinaryenSmoke.Tests/Brim.BinaryenSmoke.Tests.csproj" />
   </Folder>
 </Solution>

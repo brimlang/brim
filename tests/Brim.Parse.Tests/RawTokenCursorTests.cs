@@ -1,0 +1,135 @@
+namespace Brim.Parse.Tests;
+
+public class RawTokenProducerTests
+{
+  static List<RawToken> Lex(string input)
+  {
+    RawTokenProducer p = new(SourceText.From(input));
+    List<RawToken> list = [];
+    while (p.TryRead(out RawToken t)) { list.Add(t); if (t.Kind == RawTokenKind.Eof) break; }
+    return list;
+  }
+
+  [Theory]
+  [InlineData("A")]
+  [InlineData("a")]
+  [InlineData("\u01C5")]
+  [InlineData("\u02B0")]
+  [InlineData("\u216B")]
+  [InlineData("A\u0301")]
+  [InlineData("A\u0951")]
+  [InlineData("A0")]
+  [InlineData("A_")]
+  [InlineData("A\u202A")]
+  [InlineData("_foo")]
+  [InlineData("foo_bar")]
+  [InlineData("foo123")]
+  [InlineData("f\u0301oo")]
+  [InlineData("变量")]
+  [InlineData("προβλημa")]
+  [InlineData("foo\u0301")]
+  [InlineData("foo123bar")]
+  [InlineData("fоо")] // mixed scripts
+  public void ValidIdentifierUnicodeCategories(string identifier) => Assert.True(Utilities.IsValidIdentifier(identifier));
+
+  [Theory]
+  [InlineData("")]
+  [InlineData("1foo")]
+  [InlineData("!foo")]
+  [InlineData("foo!")]
+  [InlineData("foo bar")]
+  [InlineData("foo-bar")]
+  [InlineData("123")]
+  [InlineData("!@#")]
+  [InlineData(" foo")]
+  [InlineData("foo\nbar")]
+  [InlineData("\u0301foo")]
+  [InlineData("😀")]
+  [InlineData("\u0301")]
+  [InlineData("foo\u0000bar")]
+  [InlineData("foo\tbar")]
+  [InlineData("foo!bar")]
+  public void InvalidIdentifierCases(string identifier) => Assert.False(Utilities.IsValidIdentifier(identifier));
+
+  [Fact]
+  public void ProducesUnexpectedCharError()
+  {
+    var toks = Lex("foo $");
+    Assert.Contains(toks, t => t.Kind == RawTokenKind.Error && t.Error == RawToken.ErrorKind.UnexpectedChar);
+  }
+
+  [Fact]
+  public void TokenizesLineComments()
+  {
+    string input = "foo -- this is a comment\nbar --another";
+    var toks = Lex(input);
+    var comments = toks.Where(t => t.Kind == RawTokenKind.CommentTrivia).ToArray();
+    Assert.Equal(2, comments.Length);
+    Assert.Equal("-- this is a comment", new string(comments[0].Value(input)));
+    Assert.Equal("--another", new string(comments[1].Value(input)));
+    Assert.Contains(toks, t => t.Kind == RawTokenKind.Identifier && t.Value(input).SequenceEqual("foo"));
+    Assert.Contains(toks, t => t.Kind == RawTokenKind.Identifier && t.Value(input).SequenceEqual("bar"));
+  }
+
+  [Fact]
+  public void TokenizesMultiCharSymbolsGreedily()
+  {
+    var toks = Lex("=> *{ ~=");
+    Assert.Contains(toks, t => t.Kind == RawTokenKind.EqualGreater);
+    Assert.Contains(toks, t => t.Kind == RawTokenKind.StarLBrace);
+    Assert.Contains(toks, t => t.Kind == RawTokenKind.TildeEqual);
+  }
+
+  [Fact]
+  public void GreedyLessLessOverLess()
+  {
+    var toks = Lex("<< <");
+    Assert.Contains(toks, t => t.Kind == RawTokenKind.LessLess);
+    Assert.Contains(toks, t => t.Kind == RawTokenKind.Less);
+  }
+
+  [Fact]
+  public void ColonFamilyTokens()
+  {
+    var toks = Lex(": :: := :* :");
+    Assert.Contains(toks, t => t.Kind == RawTokenKind.Colon);
+    Assert.Contains(toks, t => t.Kind == RawTokenKind.ColonColon);
+    Assert.Contains(toks, t => t.Kind == RawTokenKind.ColonEqual);
+    Assert.Contains(toks, t => t.Kind == RawTokenKind.ColonStar);
+  }
+
+  [Fact]
+  public void UnterminatedStringVariantsMixedBehavior()
+  {
+    var lone = Lex("\"");
+    Assert.Contains(lone, t => t.Kind == RawTokenKind.StringLiteral);
+    var dangling = Lex("\"foo\\");
+    Assert.Contains(dangling, t => t.Kind == RawTokenKind.Error && t.Error == RawToken.ErrorKind.UnterminatedString);
+  }
+
+  [Fact]
+  public void SequentialOffsetsAreMonotonic()
+  {
+    var toks = Lex("foo : bar");
+    int prevEnd = -1;
+    foreach (var t in toks.Where(t => t.Kind != RawTokenKind.Eof))
+    {
+      int start = t.Offset;
+      int end = t.Offset + t.Length;
+      Assert.True(start >= 0);
+      if (prevEnd >= 0) Assert.True(start >= prevEnd, $"Token {t.Kind} starts before prior end");
+      prevEnd = Math.Max(prevEnd, end);
+    }
+  }
+
+  [Fact]
+  public void SymbolTableMultiSymsAreSortedAndPrefixed()
+  {
+    foreach (var kv in RawSymbolTable.SymbolTable)
+    {
+      var arr = kv.Value.multiSyms;
+      for (int i = 1; i < arr.Length; i++) Assert.True(arr[i - 1].symbol.Length >= arr[i].symbol.Length);
+      foreach (var (symbol, _) in arr) Assert.True(symbol.Length > 0 && symbol[0] == kv.Key);
+    }
+  }
+}

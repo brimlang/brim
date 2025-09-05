@@ -1,11 +1,37 @@
-[[[acme::users]]]
+[[acme::auth]]
 
---- toml
-version = "0.8"
-stability = "experimental"
----
+<< User -- the user struct
+<< Reply
+<< Perms
+<< handle
 
-<< User
-<< mk_user
+fs = [[std::fs]]
 
-hits := 0   // top-level var (module state-ish)
+User = %{ id :str, age :i32 }
+Reply[T] = |{ Good :T, Error :str }
+-- missing width
+Perms = &{ read, write, exec }
+
+mk = (id :str, age :i32) User {
+  User%{ id = id, age = age }
+}
+
+pair = (u :User, p :Perms) #(User, Perms) {
+  #(u, p)
+}
+
+emit = `() Reply[i32] { Reply:Good(42) }
+
+handle = (r :Reply[i32]) i32 {
+  r =>
+  | Reply:Good(v)  | { v }
+  | Reply:Error(e) | { -1 }
+}
+
+mask = Perms&{ read, exec }
+
+-- this is a parse error
+@{
+  @>
+  <@ 7
+@}

@@ -1,20 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <OutputType>exe</OutputType>
+    <PublishAot>true</PublishAot>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Spectre.Console" Version="0.50.0" />
-    <PackageReference Include="System.CommandLine" Version="2.0.0-beta7.25380.108" />
-    <PackageReference Include="Tomlyn" Version="0.19.0" />
+    <PackageReference Include="System.CommandLine" />
+    <PackageReference Include="Spectre.Console" />
+    <PackageReference Include="Tomlyn" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Brim.Parse\Brim.Parse.csproj" />
-    <ProjectReference Include="..\Brim.S0\Brim.S0.csproj" />
-    <ProjectReference Include="..\Brim.C0\Brim.C0.csproj" />
-    <ProjectReference Include="..\Brim.Emit.WitWasm\Brim.Emit.WitWasm.csproj" />
+    <!-- <ProjectReference Include="..\Brim.S0\Brim.S0.csproj" /> -->
+    <!-- <ProjectReference Include="..\Brim.C0\Brim.C0.csproj" /> -->
+    <!-- <ProjectReference Include="..\Brim.Emit.WitWasm\Brim.Emit.WitWasm.csproj" /> -->
   </ItemGroup>
 
 </Project>
