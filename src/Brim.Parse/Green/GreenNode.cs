@@ -8,7 +8,6 @@ interface IParsable<out T> where T : GreenNode
 public abstract record GreenNode(SyntaxKind Kind, int Offset)
 {
   public int EndOffset => Offset + FullWidth;
-  public StructuralArray<Diagnostic> Diagnostics { get; init; } = [];
 
   public ReadOnlySpan<char> GetChars(ReadOnlySpan<char> source) => source.Slice(Offset, FullWidth);
   public string GetText(ReadOnlySpan<char> source) => GetChars(source).ToString();

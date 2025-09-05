@@ -1,184 +1,131 @@
 # Brim Diagnostics Design
 
-This document specifies the design and usage conventions for lexical and syntactic diagnostics in the Brim toolchain. It complements the streaming parser architecture and aims to keep hot paths allocation‑light while enabling rich, consistent user‑facing messages (CLI, LSP, DAP, future IDE tooling).
+This document describes the CURRENT implemented diagnostic model (explicit fields) and the DEFERRED packed model (original proposal). The implementation intentionally chose clarity and straightforward access over early bit‑packing; the packed design remains feasible if/when profiling indicates the need.
 
 ---
-## Goals
+## 1. Goals (Active)
 
-* Centralize construction of diagnostics (single source of truth for message semantics).
-* Keep per‑diagnostic memory footprint small (value types; no per‑instance string building on hot path).
-* Defer human‑readable message formatting until a presentation layer renders it.
-* Support fast offset → line/column reporting without repeated mapping work.
-* Allow compact encoding of small payloads (e.g., actual token kind plus up to 3 expected kinds) without heap allocations.
-* Enable future extensibility (related spans, quick fixes, localization) without redesign.
+* Single shared list collected during lexing + parsing.
+* Zero string allocation on hot path (messages rendered later).
+* Predictable, trivially inspectable struct layout (no decoding logic required to write tests).
+* Support LL(4) expected token reporting (up to 4 unique first tokens from prediction table).
+* Fast line/column capture (taken directly from tokens as they are produced).
 
-## Non‑Goals (Current)
+## 2. Non‑Goals (For Now)
 
-* Localization infrastructure (messages are rendered in English only for now).
-* Rich multi‑span related information (can be added incrementally).
-* Semantic / type diagnostics (syntax only at this stage).
+* Localization / message templating.
+* Multi‑span related info.
+* Semantic / type layer diagnostics.
+* Packed field encodings (postponed; see §6).
 
 ---
-## Data Model
+## 3. Current Data Model (Implemented)
+
+Defined in `Diagnostics.cs`:
 
 ````csharp
-public enum DiagnosticId {
+public enum DiagCode {
     UnexpectedToken,
     MissingToken,
     UnterminatedString,
-    UnterminatedBlockComment,
     InvalidCharacter,
-    // Extend with new ids here.
 }
 
-public enum DiagnosticSeverity { Error, Warning, Info }
-
-// Value type to avoid per-instance heap overhead.
-public readonly record struct Diagnostic(
-    DiagnosticId Id,
-    DiagnosticSeverity Severity,
-    int Offset,
-    int Length,
-    ushort Line,
-    ushort Column,
-    uint Data0,
-    uint Data1,
-    uint Data2
-);
-````
-
-### Packing Strategy
-
-`Data0..Data2` are generic 32‑bit slots. Common encodings:
-* UnexpectedToken:
-  * `Data0` = (uint)actualTokenKind
-  * `Data1` = packed expected token kinds (see below)
-  * `Data2` = metadata (e.g. expected count, truncation flag)
-* InvalidCharacter: `Data0` = UTF-16 code unit of offending char
-* Unterminated constructs: `Data0` = (uint)openingTokenKind
-
-Example expected set packing (≤3 kinds, consistent with LL(k ≤ 3)):
-````csharp
-static uint PackExpected(TokenKind a, TokenKind b, TokenKind c) {
-    // 10 bits per kind (supports up to 1024 distinct TokenKind values)
-    return ((uint)a & 0x3FF) | (((uint)b & 0x3FF) << 10) | (((uint)c & 0x3FF) << 20);
-}
-
-static (TokenKind a, TokenKind b, TokenKind c) UnpackExpected(uint packed)
-    => ((TokenKind)(packed & 0x3FF),
-        (TokenKind)((packed >> 10) & 0x3FF),
-        (TokenKind)((packed >> 20) & 0x3FF));
-````
-
-If fewer than 3 expected kinds are used, trailing slots are set to a sentinel (often `TokenKind.None`). `Data2` lower 8 bits can store the actual expected count (0–255 covers future expansion).
-
----
-## Factory API
-
-````csharp
-public static class DiagnosticFactory {
-    public static Diagnostic UnexpectedToken(in Token actual, TokenKind e0, TokenKind e1, TokenKind e2, byte expectedCount, SourceText src) { /* ... */ }
-    public static Diagnostic MissingToken(TokenKind expectedKind, int insertionOffset, SourceText src) { /* ... */ }
-    public static Diagnostic UnterminatedString(in Token start, SourceText src) { /* ... */ }
-    public static Diagnostic UnterminatedBlockComment(in Token start, SourceText src) { /* ... */ }
-    public static Diagnostic InvalidCharacter(int offset, char ch, SourceText src) { /* ... */ }
+public readonly struct Diag {
+    public readonly DiagCode Code;
+    public readonly int Offset;
+    public readonly ushort Length;
+    public readonly ushort Line;
+    public readonly ushort Column;
+    public readonly ushort ActualKind;      // RawTokenKind when relevant
+    public readonly byte   ExpectedCount;   // 0..4
+    public readonly ushort Expect0;
+    public readonly ushort Expect1;
+    public readonly ushort Expect2;
+    public readonly ushort Expect3;
+    public readonly uint   Extra;           // variant payload (char code, etc.)
 }
 ````
 
-Guidelines:
-* Factories compute line/column once via `SourceText` line map and embed them in the `Diagnostic` (fast for downstream display & LSP ranges).
-* Do not allocate arrays or lists within factory methods.
-* Reuse helper packing utilities for expected token sets.
+Rationale:
+* Direct fields outperform ad‑hoc packing until counts are large.
+* Debuggability & test ergonomics outweigh the small (currently theoretical) memory gain of bit packing.
+* Size remains modest (fits in < 32 bytes on typical runtimes after padding).
+
+### 3.1 Factory Helpers
+
+`DiagFactory` creates instances without allocations. Expected kinds are passed as a span and copied into up to 4 slots with deduplication performed upstream (parser collects unique K1 values).
+
+### 3.2 Renderer
+
+`DiagRenderer` converts a `Diag` to a human‑readable message on demand. No caching yet (cost is minimal relative to I/O at CLI boundaries).
 
 ---
-## Rendering Layer
+## 4. Emission Points
 
-A separate renderer converts a `Diagnostic` into a human-readable message (CLI, logs, LSP publishDiagnostics):
+| Layer | Diagnostic Codes | Notes |
+|-------|------------------|-------|
+| Lexer | InvalidCharacter, UnterminatedString | Added immediately when token recognized / fails to terminate. |
+| Parser | UnexpectedToken, MissingToken | Parser aggregates expected K1 tokens per prediction table miss; MissingToken emitted when required syntax kind not present. |
 
-````csharp
-public static class DiagnosticRenderer {
-    public static string ToMessage(Diagnostic d) => d.Id switch {
-        DiagnosticId.UnexpectedToken => RenderUnexpected(d),
-        DiagnosticId.MissingToken => RenderMissing(d),
-        DiagnosticId.UnterminatedString => "unterminated string literal",
-        DiagnosticId.UnterminatedBlockComment => "unterminated block comment",
-        DiagnosticId.InvalidCharacter => RenderInvalidChar(d),
-        _ => d.Id.ToString()
-    };
-}
-````
-
-Message formatting rules:
-* Only decode packed data inside renderer (not on hot path).
-* Avoid slicing source text unless essential (e.g., for invalid character display); when required, limit to minimal spans.
-* Future localization: switch renderer implementation; factories remain unchanged.
+The parser always guarantees progress (advances on unexpected) preventing infinite loops.
 
 ---
-## Usage in Parser / Lexer
+## 5. Testing (Implemented)
 
-Lexer example (invalid character):
-````csharp
-_diags.Add(DiagnosticFactory.InvalidCharacter(_pos, ch, _source));
-````
+`DiagnosticsTests` cover:
+* UnexpectedToken (number literal at start of module).
+* MissingToken (incomplete struct declaration).
+* InvalidCharacter (isolated `$`).
+* UnterminatedString (`"hello`).
 
-Parser example (unexpected token at start of statement):
-````csharp
-if (!IsStartOfStatement(Current.Kind)) {
-    _diags.Add(DiagnosticFactory.UnexpectedToken(CurrentToken, TokenKind.Identifier, TokenKind.Let, TokenKind.Eof, 3, _source));
-    Advance(); // ensure progress
-}
-````
-
-Missing token insertion point (e.g., expecting closing paren):
-````csharp
-if (Current.Kind != TokenKind.RightParen) {
-    _diags.Add(DiagnosticFactory.MissingToken(TokenKind.RightParen, Current.Offset, _source));
-}
-````
+Future enhancements: snapshot message rendering tests, and invariants (e.g., `ExpectedCount` matches non‑zero `Expect*` fields, uniqueness of expected kinds).
 
 ---
-## Performance Considerations
+## 6. Deferred Packed Representation (Original Proposal)
 
-* `Diagnostic` value size target: ≤ 32–40 bytes (current layout ~32 bytes depending on runtime padding).
-* No per‑diagnostic heap allocations (arrays, strings) until rendering.
-* Packing/unpacking uses simple bit ops—branchless and fast.
+The prior design specified a generic 3x `uint` payload (`Data0..Data2`) plus enum id + severity. This remains viable; converting would:
+* Shrink struct by ~4–8 bytes (depending on padding) only if expected fields could be tightly packed.
+* Add indirection (packing/unpacking helpers) harming test readability.
+* Provide easier future expansion beyond 4 expected kinds (currently not needed: LL(4) cap).
 
-### Why Not Store Message Strings Directly?
+Migration trigger criteria:
+1. Memory profiling shows diagnostic storage is a measurable portion of total allocations for large erroneous files.
+2. We require more than 4 expected kinds or multiple additional payload fields.
+3. Localization requires stable numeric template keys (packing could help separate language‑agnostic payload).
 
-* Avoids repeated string formatting during parsing of erroneous code.
-* Enables localization / customization later without rewriting factories.
-* Keeps diagnostics comparable structurally (helpful for testing and tooling).
-
----
-## Testing Strategy
-
-* Factory unit tests: verify line/column and packed data fields for representative tokens.
-* Round‑trip tests: create diagnostic → render → ensure output includes expected token kind names.
-* Edge cases: 0 expected kinds (e.g., stray closing token), 1 expected kind (missing specific punctuator), 3 expected kinds (typical LL(k) boundary), invalid character outside BMP (?) if encountered (ensure `char` to code unit works).
+Until then, explicit fields are simpler.
 
 ---
-## Extensibility Guidelines
+## 7. Follow‑Ups / Backlog
 
-When adding a new diagnostic:
-1. Add a new `DiagnosticId` enum member.
-2. Implement a factory method (pack any payload into `Data0..2`).
-3. Add renderer case to produce human-readable message.
-4. Update docs (this file and a short note/usage example if needed).
-5. Prefer reusing existing packing encodings before inventing a new scheme.
+Short‑term:
+* Dedupe cascaded MissingToken bursts (e.g., consecutive required tokens) to reduce noise.
+* Add severity concept (currently all implicit errors) if/when warnings appear.
+* Add test asserting renderer output contains actual & expected kind names.
+* Implement `UnterminatedBlockComment` (lexer does not yet produce multi‑line block comments).
+* CLI: group diagnostics by line or sort by offset (currently insertion order).
 
-If a diagnostic requires more than 3 x 32-bit slots:
-* First consider compact encoding (e.g., 10 bits per token kind, small integer ranges).
-* If genuinely insufficient, consider introducing a secondary storage (e.g., pool-backed struct with pointer index) but only after profiling proves necessity.
+Medium:
+* Provide structured JSON emission for tooling (LSP bridge).
+* Add quick fix hint scaffolding (e.g., insert missing terminator) via optional metadata struct.
+* Introduce suppression / filtering (e.g., only first N errors) for very noisy inputs.
+
+Longer‑term:
+* Localization: map `DiagCode` + payload to resource templates.
+* Related spans (e.g., open vs missing close brace pairing).
+* Consider packed representation if trigger criteria met (see §6).
+* Optional pooling of large diagnostic bursts for pathological inputs.
 
 ---
-## Future Directions
-
-* Related information (secondary spans) for constructs like mismatched delimiter pairs.
-* Quick fix hints (code + title) for IDE lightbulb integrations.
-* Severity elevation (warnings vs info) for style / lint diagnostics once those layers exist.
-* Localization by mapping `DiagnosticId` + payload to resource templates.
+## 8. Guidelines for Adding a Diagnostic (Current Model)
+1. Add new enum member to `DiagCode`.
+2. Add factory method in `DiagFactory` (reuse existing field semantics; use `Extra` for small scalar payloads).
+3. Extend `DiagRenderer` with message case.
+4. Write unit test (struct field assertions + rendered message if applicable).
+5. Update this document's Follow‑Ups list if new capabilities introduced.
 
 ---
-## Summary
+## 9. Summary
 
-The DiagnosticFactory pattern ensures consistent, low-overhead diagnostic creation in a streaming parser. By separating structural data capture (factory) from presentation (renderer), Brim preserves performance while remaining flexible for future tooling enhancements.
+Brim currently favors a transparent, explicit diagnostic struct that is easy to reason about, test, and render. The more compact packed design remains documented but postponed until real data justifies the complexity. This keeps iteration velocity high while preserving a clear upgrade path.

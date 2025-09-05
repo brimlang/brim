@@ -41,6 +41,17 @@ class ParseCommand : Command
 
     AnsiConsole.WriteLine(module.GetText(source));
 
+  System.Collections.Generic.IReadOnlyList<Diag> diags = parser.Diagnostics;
+    if (diags.Count > 0)
+    {
+      AnsiConsole.MarkupLine("[red]Diagnostics:[/]");
+  foreach (Diag d in diags)
+      {
+        string msg = DiagRenderer.Render(d);
+        AnsiConsole.MarkupLine($"[yellow]{d.Line}:{d.Column}[/] {msg}");
+      }
+    }
+
     return 0;
   }
 }

@@ -419,3 +419,4 @@ FodyWeavers.xsd
 
 # Binaryen toolchain
 toolchain/binaryen/
+.vectorcode/config.json5

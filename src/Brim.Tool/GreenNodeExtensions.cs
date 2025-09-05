@@ -21,8 +21,6 @@ static class GreenNodeExtensions
   {
     return token.Kind switch
     {
-      SyntaxKind.ErrorToken when token.Diagnostics[0] is Diagnostic diag =>
-        Markup.FromInterpolated($"[red]Error:[/] {diag.code} {token.Token.Kind}@{token.Token.Line}:{token.Token.Column}({token.Offset}): '{token.Token.Value(source).ToString()}'\n"),
       SyntaxKind.TerminatorToken => Markup.FromInterpolated($"[green]Token:[/] [yellow]{token.Token.Kind}[/]\n"),
       _ => Markup.FromInterpolated($"[green]Token:[/] [yellow]{token.Token.Kind}[/]\n")
     };

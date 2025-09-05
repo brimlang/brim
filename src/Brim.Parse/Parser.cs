@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System;
 using System.Diagnostics;
 using Brim.Parse.Green;
 
@@ -7,10 +8,12 @@ namespace Brim.Parse;
 public partial struct Parser
 {
   LookAheadWindow<SignificantToken, SignificantProducer<RawTokenProducer>> _look;
+  readonly List<Diag> _diags;
 
   public Parser(SourceText source)
   {
-    RawTokenProducer raw = new(source);
+  _diags = new();
+  RawTokenProducer raw = new(source, _diags);
 
     SignificantProducer<RawTokenProducer> sig = new(
       raw,
@@ -33,7 +36,9 @@ public partial struct Parser
 
     ImmutableArray<GreenNode>.Builder members = ImmutableArray.CreateBuilder<GreenNode>();
     int iterations = 0;
-    while (!IsEof(Current))
+  // Reusable buffer for expected K1 kinds (single stackalloc)
+  Span<RawTokenKind> expectedBuf = stackalloc RawTokenKind[4];
+  while (!IsEof(Current))
     {
       bool progressed = false;
       // Standalone syntax (terminators/comments) handled directly.
@@ -58,11 +63,18 @@ public partial struct Parser
 
       if (!matched && !progressed)
       {
-        // Always advance at least one token to guarantee progress
-        members.Add(new GreenToken(SyntaxKind.ErrorToken, Current)
+        // Collect expected K1 tokens from prediction table (unique, up to 4)
+    int ec = 0;
+        foreach (PredictEntry pe in table)
         {
-          Diagnostics = [Diagnostic.UnexpectedToken(Current.Kind)]
-        });
+          RawTokenKind k = pe.LookAhead.K1;
+            bool dup = false;
+      for (int i = 0; i < ec; i++) if (expectedBuf[i] == k) { dup = true; break; }
+      if (!dup) { expectedBuf[ec++] = k; if (ec == 4) break; }
+        }
+    _diags.Add(DiagFactory.Unexpected(Current, expectedBuf[..ec]));
+        // Always advance at least one token to guarantee progress
+  members.Add(new GreenToken(SyntaxKind.ErrorToken, Current));
 
         _ = Advance();
         progressed = true;
@@ -109,6 +121,7 @@ public partial struct Parser
       }
       else
       {
+        _diags.Add(DiagFactory.Missing(tokenKind, Current));
         token = GetErrorToken(tokenKind);
       }
 
@@ -116,10 +129,7 @@ public partial struct Parser
         return new GreenToken(kind, token);
     }
 
-    return new GreenToken(kind, Current)
-    {
-      Diagnostics = [Diagnostic.UnexpectedToken(Current.Kind)]
-    };
+  return new GreenToken(kind, Current);
   }
 
   bool Advance() => _look.Advance();
@@ -157,4 +167,6 @@ public partial struct Parser
     Current.Column,
     RawToken.ErrorKind.UnexpectedToken,
     [expected, Current.Kind]);
+
+  public IReadOnlyList<Diag> Diagnostics => _diags;
 }

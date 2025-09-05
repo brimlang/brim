@@ -3,7 +3,7 @@ namespace Brim.Parse;
 /// <summary>
 /// Streaming lexer producing RawTokens and a synthesized EOF token.
 /// </summary>
-public struct RawTokenProducer(SourceText source) :
+public struct RawTokenProducer(SourceText source, List<Diag>? diags = null) :
   ITokenProducer<RawToken>
 {
   int _pos = 0; // 0.._span.Length
@@ -78,6 +78,7 @@ public struct RawTokenProducer(SourceText source) :
       }
 
       // unexpected
+  diags?.Add(DiagFactory.InvalidChar(startOffset, startLine, startCol, c));
       return MakeToken(RawTokenKind.Error, 1, startOffset, startLine, startCol, RawToken.ErrorKind.UnexpectedChar, new object[] { c });
     }
 
@@ -187,8 +188,13 @@ public struct RawTokenProducer(SourceText source) :
 
     int len = _pos - startOffset;
 
-    return len <= 0 || source.Span[startOffset] != '"' || source.Span[startOffset + len - 1] != '"'
-      ? new RawToken(RawTokenKind.Error, startOffset, len == 0 ? 1 : len, line, col, RawToken.ErrorKind.UnterminatedString, null)
-      : new RawToken(RawTokenKind.StringLiteral, startOffset, len, line, col);
+    bool terminated = len > 0 && source.Span[startOffset] == '"' && source.Span[startOffset + len - 1] == '"';
+    if (!terminated)
+    {
+      RawToken errTok = new(RawTokenKind.Error, startOffset, len == 0 ? 1 : len, line, col, RawToken.ErrorKind.UnterminatedString, null);
+  diags?.Add(DiagFactory.UnterminatedString(errTok));
+      return errTok;
+    }
+    return new RawToken(RawTokenKind.StringLiteral, startOffset, len, line, col);
   }
 }

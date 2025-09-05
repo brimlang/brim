@@ -16,7 +16,10 @@ public class SignificantProducerTests
   [Fact]
   public void LeadingTriviaAttachedOrNotDependingOnProducerLogic()
   {
-    var list = SigAll("   -- c1\nfoo");
+    var list = SigAll("""
+      -- c1
+      foo
+      """);
     var id = Assert.Single(list, t => t.Token.Kind == RawTokenKind.Identifier);
     // Current implementation discards trivia before first non-terminator significant token.
     Assert.False(id.HasLeading);
