@@ -2,10 +2,24 @@ namespace Brim.Parse.Green;
 
 public sealed record GreenToken(
   SyntaxKind SyntaxKind,
-  RawToken Token)
-: GreenNode(SyntaxKind, Token.Offset)
+  SignificantToken Significant)
+: GreenNode(SyntaxKind, Significant.Token.Offset)
 {
+  public RawToken Token => Significant.Token;
+  public StructuralArray<RawToken> LeadingTrivia => Significant.LeadingTrivia;
+  public StructuralArray<RawToken> TrailingTrivia => Significant.TrailingTrivia;
+
+  public bool HasLeading => LeadingTrivia.Count > 0;
+  public bool HasTrailing => TrailingTrivia.Count > 0;
+
+  // Keep width semantics to core token text (exclude trivia).
   public override int FullWidth => Token.Length;
   public override IEnumerable<GreenNode> GetChildren() => [];
+
+  // Convenience for constructing from a raw token when no trivia available (e.g. fabricated/missing)
+  public GreenToken(SyntaxKind kind, RawToken raw)
+    : this(kind, new SignificantToken(raw,
+        StructuralArray.Empty<RawToken>(),
+        StructuralArray.Empty<RawToken>())) {}
 }
 

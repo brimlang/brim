@@ -44,7 +44,7 @@ public partial struct Parser
       // Standalone syntax (terminators/comments) handled directly.
       if (IsStandaloneSyntax(Current.Kind))
       {
-        members.Add(new GreenToken(MapStandaloneSyntaxKind(Current.Kind), Current));
+        members.Add(new GreenToken(MapStandaloneSyntaxKind(Current.Kind), CurrentSig));
         _ = Advance();
         continue;
       }
@@ -73,8 +73,8 @@ public partial struct Parser
       if (!dup) { expectedBuf[ec++] = k; if (ec == 4) break; }
         }
     _diags.Add(DiagFactory.Unexpected(Current, expectedBuf[..ec]));
-        // Always advance at least one token to guarantee progress
-  members.Add(new GreenToken(SyntaxKind.ErrorToken, Current));
+  // Always advance at least one token to guarantee progress
+  members.Add(new GreenToken(SyntaxKind.ErrorToken, CurrentSig));
 
         _ = Advance();
         progressed = true;
@@ -90,7 +90,7 @@ public partial struct Parser
     }
 
     // Consume EOF token explicitly
-    GreenToken eof = new(SyntaxKind.EofToken, Current);
+  GreenToken eof = new(SyntaxKind.EofToken, CurrentSig);
     return new BrimModule(header, members, eof);
   }
 
@@ -113,23 +113,25 @@ public partial struct Parser
   {
     if (_tokenMap.TryGetValue(kind, out RawTokenKind tokenKind))
     {
-      RawToken token;
       if (Match(tokenKind))
       {
-        token = Current;
+        SignificantToken sig = CurrentSig;
         _ = Advance();
+        if (sig.Token.Kind != RawTokenKind.Error)
+          return new GreenToken(kind, sig);
       }
       else
       {
         _diags.Add(DiagFactory.Missing(tokenKind, Current));
-        token = GetErrorToken(tokenKind);
+        RawToken missing = GetErrorToken(tokenKind);
+        SignificantToken fabricated = new(missing,
+          StructuralArray.Empty<RawToken>(),
+          StructuralArray.Empty<RawToken>());
+        return new GreenToken(kind, fabricated);
       }
-
-      if (token.Kind != RawTokenKind.Error)
-        return new GreenToken(kind, token);
     }
 
-  return new GreenToken(kind, Current);
+    return new GreenToken(kind, CurrentSig);
   }
 
   bool Advance() => _look.Advance();

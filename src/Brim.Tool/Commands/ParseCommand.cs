@@ -33,19 +33,18 @@ class ParseCommand : Command
     Parser parser = new(SourceText.From(source));
     BrimModule module = parser.ParseModule();
 
-    AnsiConsole.Write(module.ModuleDirective.Format(source));
+    GreenNodeFormatter formatter = new(RenderFlags.Default);
+    AnsiConsole.Write(formatter.Render(source, module.ModuleDirective));
     foreach (GreenNode member in module.Members)
-    {
-      AnsiConsole.Write(member.Format(source));
-    }
+      AnsiConsole.Write(formatter.Render(source, member));
 
     AnsiConsole.WriteLine(module.GetText(source));
 
-  System.Collections.Generic.IReadOnlyList<Diag> diags = parser.Diagnostics;
+    IReadOnlyList<Diag> diags = parser.Diagnostics;
     if (diags.Count > 0)
     {
       AnsiConsole.MarkupLine("[red]Diagnostics:[/]");
-  foreach (Diag d in diags)
+      foreach (Diag d in diags)
       {
         string msg = DiagRenderer.Render(d);
         AnsiConsole.MarkupLine($"[yellow]{d.Line}:{d.Column}[/] {msg}");
