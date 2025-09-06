@@ -1,6 +1,7 @@
 using System.CommandLine;
 using Brim.Parse;
 using Brim.Parse.Green;
+using Brim.Tool.Diagnostics;
 using Brim.Parse.Producers;
 using Spectre.Console;
 
@@ -13,17 +14,23 @@ class ParseCommand : Command
     Description = "Brim source file to parse",
     Arity = ArgumentArity.ExactlyOne,
   };
+  static readonly Option<bool> _diagnosticsOption = new Option<bool>("--diagnostics")
+  {
+    Arity = ArgumentArity.ZeroOrOne
+  };
 
   public ParseCommand() : base("parse")
   {
     Description = "Parse a Brim source file and print the module header";
-    Arguments.Add(_fileArgument);
+  Arguments.Add(_fileArgument);
+  Options.Add(_diagnosticsOption);
     SetAction(Handle);
   }
 
   static int Handle(ParseResult parseResult)
   {
     string file = parseResult.GetValue(_fileArgument)!;
+    bool showDiagnostics = parseResult.GetValue(_diagnosticsOption);
     if (!File.Exists(file))
     {
       AnsiConsole.MarkupLine($"[red]File not found:[/] {file}");
@@ -39,21 +46,22 @@ class ParseCommand : Command
     Parser parser = new(la, sink);
     BrimModule module = parser.ParseModule();
 
-    GreenNodeFormatter formatter = new(RenderFlags.Default);
-    AnsiConsole.Write(formatter.Render(source, module.ModuleDirective));
-    foreach (GreenNode member in module.Members)
-      AnsiConsole.Write(formatter.Render(source, member));
+  AnsiConsole.MarkupLine("[bold]Parse Tree:[/]");
+  AnsiConsole.Write(GreenNodeFormatter.RenderTree(source, module));
 
     AnsiConsole.WriteLine(module.GetText(source));
 
-    IReadOnlyList<Diagnostic> diags = parser.Diagnostics;
-    if (diags.Count > 0)
+    if (showDiagnostics)
     {
-      AnsiConsole.MarkupLine("[red]Diagnostics:[/]");
-      foreach (Diagnostic d in diags)
+      IReadOnlyList<Diagnostic> diags = parser.Diagnostics;
+      if (diags.Count > 0)
       {
-        string msg = DiagRenderer.Render(d);
-        AnsiConsole.MarkupLine($"[yellow]{d.Line}:{d.Column}[/] {msg}");
+        AnsiConsole.MarkupLine("[red]Diagnostics:[/]");
+        foreach (Diagnostic d in diags)
+        {
+          string msg = DiagnosticRenderer.Render(d);
+          AnsiConsole.MarkupLineInterpolated($"[yellow]{d.Line}:{d.Column}[/] {msg}");
+        }
       }
     }
 

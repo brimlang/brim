@@ -1,148 +1,217 @@
 
-# Instructions for Agents
+﻿# Instructions for Agents
 
 Dev dependencies are managed using mise. See https://mise.jdx.dev/
 
-./mise.toml contains the configuration for mise.
+`./mise.toml` contains the configuration for mise.
 
-To install the dependencies, run:
+Install / update toolchain:
 
 ```
 mise trust
 mise install
 ```
 
-Common dev tasks are also defined in ./mise.toml
+Common dev tasks are also defined in `./mise.toml`.
 
 # Purpose
 
-This project is the single binary toolchain for the Brim programming language.
+Single binary toolchain for the Brim programming language.
 
 It supports:
 
 * LSP
 * DAP
 * Compile and emit WIT/WASMGC
+* Rich CLI developer introspection (parse tree, diagnostics, formatting helpers)
 
 # Project Status
 
-There is no stable release yet. The project is in active development.
+No stable release yet. Active development; APIs / grammar will change.
 
 # Brim Programming Language
 
-* See the [Brim Syntax Summary](./brim_syntax_summary.md) for a summary on the Brim programming language syntax.
-* See the [simple demo](./demo.brim) for a small example of a Brim program.
-* See [parser pipeline overview](/docs/compiler_pipeline.md).
+* See the [Brim Syntax Summary](./brim_syntax_summary.md) for a syntax overview.
+* See the [demo program](./demo.brim) for a small example.
+
 
 ## Grammar Strategy
 
-The brim grammar is designed to be LL(k) parsable for k <= 3. For expression parsing, we can use a Pratt parser.
-Where LL(k) for k = 3 is not possible, prefer proposing a refactoring to the language to make it LL(k) for k <= 3.
+Grammar is designed for LL(k) with k ≤ 4. Expressions may later use a Pratt parser. If a construct appears to require k > 4, prefer a language tweak before increasing k.
 
-Maps and tables for driving the parser are preferred over large switch statements.
+Prediction tables/maps are preferred over large nested switches.
 
-Parser previously targeted a Roslyn-style red/green tree. We have since simplified to a single immutable syntax tree built by a fully streaming pipeline (see below). Any legacy references to “red/green” in code comments are candidates for cleanup.
+Parser previously targeted a Roslyn-style red/green tree. We now use a single immutable syntax tree; any legacy “green/red” terminology is historical—do not reintroduce a dual layer. Current type names such as `GreenNode` remain but represent the single layer.
 
-Diagnostics are produced through a centralized factory (see docs/diagnostics.md) that creates compact value-type `Diagnostic` instances without allocating message strings. Human‑readable text is generated later by a renderer so that parsing/lexing hot paths remain allocation‑light.
+Diagnostics use a centralized factory producing compact value-type instances with no message string allocation. Rendering happens later (CLI, LSP). Each diagnostic stores Phase (lex/parse/semantic) and Severity (error/warning/info). A flood cap (512) replaces the final entry with a `TooManyErrors` sentinel; further diagnostics are suppressed.
 
 ---
 
 # Compiler Architecture (Agent Quick Reference)
 
 High-level goals:
-* Approachability for contributors (avoid over-engineering or deep compiler jargon).
-* Streaming from source → syntax tree (no eager materialization of all tokens).
-* Strong LSP/DAP support: precise offsets, lines, columns; trivia preserved where useful.
-* Grammar remains LL(k) with k ≤ 3; expression layer may use Pratt parser.
-* Avoid allocating full source strings repeatedly; rely on offsets into a single backing buffer.
+* Approachability over cleverness.
+* Streaming source → syntax tree; no full token buffering.
+* Strong LSP/DAP fidelity: offsets + line/col + trivia.
+* LL(k) (k ≤ 4) grammar discipline.
+* Minimize repeated string slicing / allocations.
 
-## Streaming Pipeline Overview
+## Streaming Pipeline
 
 ```
 SourceText (ReadOnlyMemory<char>)
-  → RawTokenSource (ref struct lexer; outputs Token incl. trivia & terminator runs)
-  → SignificantTokenEnumerator (ref struct; attaches leading trivia only)
-  → LookaheadWindow (ref struct; k ≤ 3 significant tokens)
-  → Parser (ref struct; constructs SyntaxNode / SyntaxTokenNode tree)
-  → Immutable Syntax Tree (nodes store offsets/lengths; no spans captured)
+  → RawTokenSource (lexer; trivia + collapsed terminators)
+  → SignificantTokenEnumerator (attaches leading trivia only)
+  → LookAheadWindow (k ≤ 4)
+  → Parser (produces immutable nodes + diagnostics)
+  → Immutable Syntax Tree
 ```
-
-All span-based operations are confined to short-lived `ref struct` layers. Persistent objects (tokens, syntax nodes) store only scalar metadata (offset, length, line, column, kind, optional diagnostics).
 
 ## Tokenization Invariants
 
-* Whitespace and comments are trivia; they never appear as distinct syntax nodes—only as leading trivia attached to significant tokens (currently we do not attach trailing trivia; add later if required).
-* Newline ("\n") and semicolon (';') characters are both statement separators. Any contiguous run of one or more of these forms a single `Terminator` token (collapsed). The parser treats every `Terminator` uniformly.
-* The composition (counts of newlines vs semicolons) is intentionally **not** precomputed or stored. Future tools (formatter, linter) can analyze the token slice on demand.
-* Identifiers: Unicode rules per `Lexer.IsIdentifierStart/Part` helpers; casing not semantic.
-* No lookahead beyond 3 significant tokens should be required—design new grammar constructs with this constraint in mind.
+* Whitespace/comments = trivia (leading only for now).
+* Runs of newline / semicolon collapse into one `Terminator` token.
+* Terminator composition (counts) intentionally not stored.
+* Identifiers follow `Lexer.IsIdentifierStart/Part` rules; case not semantic.
+* No lookahead beyond 3 significant tokens for any prediction.
 
-## Parser Design Principles
+## Parser Principles
 
-* Table/map driven prediction for top-level constructs (see existing predict tables) rather than large cascaded switch statements.
-* Always guarantee progress: on failure emit an error token/node with diagnostic and advance at least one significant token.
-* Keep error recovery localized—do not attempt complex panic-mode until language surface demands it.
-* Expression parser (when implemented) should isolate precedence logic (Pratt) from the rest of the LL(k) structure.
+* Table-driven predictions for top-level forms.
+* Guaranteed progress: on mismatch emit diagnostic + advance.
+* Local recovery (no complex panic strategies yet).
+* Expression layer (future) isolates precedence logic.
 
 ## Syntax Tree Model
 
-* Single immutable tree (no separate green/red layers).
-* Leaf nodes are `SyntaxTokenNode` wrapping a `SignificantToken` (which itself holds the core token + leading trivia list).
-* Internal nodes aggregate children; their span (offset/length) is derived from first/last child.
-* Diagnostics attach to nodes or tokens as structural arrays / immutable lists; they reference offsets only.
+* Single immutable tree; node span = first-to-last child.
+* Leaf tokens carry line/column/offset/width + leading trivia list.
+* Diagnostics kept externally sorted (offset, line, column, code) for stable output.
 
 ## Source Handling
 
-* `SourceText` owns the immutable backing `ReadOnlyMemory<char>` plus a precomputed line-start index for fast (offset ↔ line/column) mapping.
-* No component stores `ReadOnlySpan<char>` beyond `ref struct` lifetimes.
-* Reconstruct original lexeme text by slicing `SourceText.AsSpan().Slice(offset, length)`.
+* `SourceText` retains full buffer + line index for O(1) offset→line/col mapping.
+* Slicing only when producing lexemes for display/formatting.
 
-## Naming Conventions
+## Naming Conventions (Current Codebase)
 
 | Concept | Name |
 |---------|------|
-| Raw lexer token (incl. trivia) | `Token` |
+| Raw lexer token (incl. trivia) | `RawToken` |
 | Significant token + leading trivia | `SignificantToken` |
-| Leaf syntax node | `SyntaxTokenNode` |
-| Internal node | (Specific, e.g. `ModuleNode`, or generic `CompositeNode`) |
-| Statement boundary token | `TokenKind.Terminator` |
-| Parser lookahead window | `LookaheadWindow` |
-| Trivia attach layer | `SignificantTokenEnumerator` |
+| Leaf syntax node | `GreenToken` |
+| Internal composite | Specific record (e.g. `StructDeclaration`) |
+| Statement boundary | `TerminatorToken` |
+| Lookahead buffer | `LookAheadWindow` |
+| Trivia attach layer | `SignificantProducer` |
+| Parse tree renderer | `GreenNodeFormatter` |
+| Diagnostic sink | `DiagSink` |
 
-Avoid reintroducing Roslyn-specific terms (e.g., “GreenNode”, “RedNode”) unless strictly required.
+Avoid resurrecting obsolete “red” layer concepts.
 
 ## Performance & Memory Guidelines
 
-* Prefer value `record struct` for lightweight immutable tokens; keep them small (avoid large reference fields).
-* `ref struct` only where holding a `ReadOnlySpan<char>` or tight hot-path state (lexer, enumerators, lookahead, parser).
-* Do not prematurely cache terminator composition; measure first if style tools iterate heavily.
-* Honor streaming: avoid collecting all tokens unless adding an explicit *batch* mode for tooling.
+* Favor small value types; avoid capturing slices beyond transient `ref struct` lifetimes.
+* Measure before micro‑optimizing (inlining, packing) except in trivially hot loops.
+* Flood cap prevents pathological diagnostic explosions; keep it configurable only if profiling demands.
 
-## Extensibility Guidelines for Agents
+## Diagnostics Model Enhancements
 
-When adding or modifying grammar features:
-1. Confirm they are LL(k) with k ≤ 3; if not, propose a language refactor before increasing k.
-2. If a new token category is needed, update `TokenKind`, the lexer symbol table, and any predict tables.
-3. Keep error diagnostics minimal but precise (unexpected token, unterminated literal, etc.).
-4. Maintain the invariant that all trivia before a significant token is captured as leading trivia.
+Currently emitted phases: lex, parse. Future: semantic. Severities presently all errors—add at least one warning soon to validate pipeline.
 
-When introducing formatting or lint passes:
-* Implement them as consumers of the syntax tree + original `SourceText` (an additional streaming walk is fine).
-* Use utilities to analyze terminator token slices on demand.
+Flood Cap Logic:
+* Max 512 diagnostics.
+* Upon overflow, last slot replaced by `TooManyErrors` diagnostic; `IsCapped` flag set; further adds ignored.
 
-## Common Agent Tasks (Cheat Sheet)
+Binary Search Index:
+* `BrimModule.FindFirstDiagnosticAtOrAfter(offset)` enables quick mapping from offset → diagnostics sequence (used for future editor features).
 
-* Add language feature: extend lexer → add predict table entry → implement parse node → update docs.
-* Improve diagnostics: add new `Diagnostic` factory method and attach where parse failure surfaces.
-* Add formatting rule: create separate pass; never mutate existing tokens—produce edits / suggestions referencing offsets.
-* LSP hover/completion: map from offset to leaf token via tree walk (can add simple index if hotspots arise later).
+## CLI Tree View (`parse` Command)
 
-## Non-Goals (Current)
+* Default output: parse tree + original source echo (diagnostics suppressed by default).
+* Enable diagnostics with `--diagnostics`.
+* Node line format: `Kind @line:column(width)`; token lexeme (escaped, truncated ≤16 chars) follows in quotes.
+* Comment trivia rendered as child lines beginning with `#` in grey.
+* Colors: identifiers cyan; generic tokens grey; directives green; declarations (types/functions/import/export) magenta; errors red; containers blue/purple/teal; misc yellow fallback.
 
-* Incremental parsing / incremental re-lexing across edits (can be added later if needed for performance).
-* Full red/green dual tree layering.
-* Semantic analysis layer (type checking, etc.)—not part of this syntactic pipeline doc.
+Examples:
+```
+brim parse demo.brim
+brim parse demo.brim --diagnostics
+```
+
+## Extensibility Guidelines
+
+When adding grammar:
+1. Verify LL(k ≤ 4). If not, propose grammar alteration.
+2. Extend lexer token kinds + prediction tables.
+3. Emit diagnostics via factory (`DiagFactory.*`).
+4. Write tests (prediction collisions, diagnostic correctness).
+
+Formatting / Lint passes:
+* Consume existing tree; do not mutate nodes—produce edits referencing offsets.
+* Avoid dependence on offset ranges for readability; prefer line:col in user output.
+
+## Common Agent Tasks
+
+* New feature: lexer → prediction table → parse node → docs/tests.
+* Diagnostics: add code + factory + renderer case + tests (respect cap).
+* Output tweaks: adjust `GreenNodeFormatter` (keep location format compact, avoid raw offset ranges).
+* LSP integration: use binary search + node token lookup for position mapping.
+
+## Non‑Goals (Current)
+
+* Incremental / partial reparse.
+* Dual red/green layering.
+* Full semantic/type system (future layer will build atop current tree).
 
 ---
 
-If an agent encounters ambiguity (e.g., conflicting design comments), default to the rules in this section and suggest a cleanup PR to align outdated comments.
+Ambiguities: default to rules here; mark stale comments for cleanup PR.
+
+---
+
+## Backlog (Supersedes Older List)
+
+1. Prediction / Grammar
+  - [x] Split per-nonterminal prediction arrays.
+  - [x] FIRST collision validator.
+  - [ ] Collapse identical prediction prefixes (micro perf).
+
+2. Tree & Nodes
+  - [ ] Centralize `FullWidth` calc in base.
+  - [ ] Consider `ITokenNode` to unify leaf access.
+
+3. Diagnostics
+  - [x] Phase & severity fields added.
+  - [x] Stable sort (offset,line,col,code).
+  - [x] Flood cap (512 + sentinel).
+  - [ ] Emit first warning (e.g., trailing whitespace) to validate severity path.
+  - [ ] Dedupe consecutive identical unexpected/missing bursts.
+
+4. CLI / Tooling
+  - [x] Compact location format `@line:col(width)`.
+  - [x] `--diagnostics` flag (default suppress).
+  - [ ] Monochrome fallback mode.
+
+5. Docs & Tests
+  - [ ] Update / add `docs/parse-pipeline.md` (xref this file).
+  - [ ] Golden output tests for tree renderer.
+  - [ ] Diagnostic renderer message snapshot tests.
+
+6. Future / Semantic
+  - [ ] Introduce semantic analysis pass (types, name resolution).
+  - [ ] Semantic diagnostics (phase=semantic) integration.
+
+7. Localization & Formatting
+  - [ ] Resource string scaffolding for diagnostic messages.
+  - [ ] Configurable color theme / no-color env detection.
+
+8. Performance
+  - [ ] Benchmark harness (lexer, parser, renderer) w/ large corpus.
+  - [ ] Investigate expected-kind dedupe branch-free variant.
+
+---
+
+Contribute improvements incrementally; keep hot paths allocation‑lean; favor clarity over premature compression. Profile before deep optimization.
+

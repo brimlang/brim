@@ -17,7 +17,8 @@ public sealed record ImportDeclaration(
     yield return Terminator;
   }
 
-  public static ImportDeclaration Parse(Parser p) => new(
+    // EBNF: ImportDecl ::= Identifier '=' ModuleHeader Terminator
+    public static ImportDeclaration Parse(Parser p) => new(
   Identifier.Parse(p),
     p.ExpectSyntax(SyntaxKind.EqualToken),
   ModuleHeader.Parse(p),

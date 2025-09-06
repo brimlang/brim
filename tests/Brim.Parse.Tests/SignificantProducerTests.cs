@@ -25,20 +25,22 @@ public class SignificantProducerTests
   }
 
   [Fact]
-  public void IdentifierFollowedByTerminatorKeepsTrailingTrivia()
+  public void IdentifierFollowedByTerminatorTriviaBecomesLeadingOfTerminator()
   {
     var list = SigAll("foo   -- t\n");
     var id = Assert.Single(list, static t => t.CoreToken.Kind == RawTokenKind.Identifier);
-    Assert.True(id.HasTrailing);
-    Assert.True(id.TrailingTrivia.Count >= 2);
-    Assert.Contains(list, static t => t.CoreToken.Kind == RawTokenKind.Terminator);
+  // Identifier should have no leading trivia in this scenario (source starts with identifier)
+  Assert.False(id.HasLeading);
+    var term = Assert.Single(list, static t => t.CoreToken.Kind == RawTokenKind.Terminator);
+    Assert.True(term.HasLeading); // whitespace + comment now leading on terminator
+    Assert.True(term.LeadingTrivia.Count >= 2);
   }
 
   [Fact]
-  public void SingleIdentifierAtEOFHasNoTrailing()
+  public void SingleIdentifierAtEOFHasNoFollowingTriviaModel()
   {
     var list = SigAll("foo");
     var id = Assert.Single(list, static t => t.CoreToken.Kind == RawTokenKind.Identifier);
-    Assert.False(id.HasTrailing);
+    Assert.False(id.HasLeading);
   }
 }

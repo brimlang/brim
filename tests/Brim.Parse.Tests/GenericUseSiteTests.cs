@@ -4,12 +4,12 @@ namespace Brim.Parse.Tests;
 
 public class GenericUseSiteTests
 {
-  static (BrimModule module, IReadOnlyList<Diagnostic> diags) Parse(string src) => ParseFacade.ParseModule(src);
+  static BrimModule Parse(string src) => Parser.ParseModule(src);
 
   [Fact]
   public void StructFieldWithGenericArgumentListParses()
   {
-    var (m, _) = Parse("[[m]];\nBox[T] = %{ inner:Wrapper[T] };");
+  var m = Parse("[[m]];\nBox[T] = %{ inner:Wrapper[T] };");
     var sd = m.Members.OfType<StructDeclaration>().First();
     var field = sd.Fields[0];
     _ = Assert.IsType<GenericType>(field.TypeAnnotation);
@@ -20,7 +20,7 @@ public class GenericUseSiteTests
   [Fact]
   public void UnionVariantWithGenericArgumentListParses()
   {
-    var (m, _) = Parse("[[m]];\nResult[T] = |{ Ok:Ok[T], Err:Err };");
+  var m = Parse("[[m]];\nResult[T] = |{ Ok:Ok[T], Err:Err };");
     var ud = m.Members.OfType<UnionDeclaration>().First();
     var ok = ud.Variants[0];
     _ = Assert.IsType<GenericType>(ok.Type);

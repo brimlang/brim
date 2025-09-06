@@ -43,6 +43,7 @@ IParsable<StructDeclaration>
     return new GenericParameterList(open, items.ToImmutable(), close);
   }
 
+  // EBNF: StructDecl ::= Identifier GenericParams? '=' StructToken FieldDecl*("," FieldDecl)* '}' Terminator
   public static StructDeclaration Parse(Parser p)
   {
     Identifier id = Identifier.Parse(p);

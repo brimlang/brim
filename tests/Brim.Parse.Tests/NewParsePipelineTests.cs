@@ -63,11 +63,13 @@ public class NewParsePipelineTests
   }
 
   [Fact]
-  public void SignificantProducerAttachesTrailingTriviaToPrecedingToken()
+  public void SignificantProducerAttachesFormerTrailingAsLeadingOnNext()
   {
     var toks = SigAll("foo   -- c\n"); // identifier, whitespace+comment, terminator
     SignificantToken id = Assert.Single(toks, static t => t.CoreToken.Kind == RawTokenKind.Identifier);
-    Assert.True(id.HasTrailing); // whitespace + comment
-    Assert.True(id.TrailingTrivia.Count >= 2);
+  Assert.False(id.HasLeading);
+    var term = Assert.Single(toks, static t => t.CoreToken.Kind == RawTokenKind.Terminator);
+    Assert.True(term.HasLeading);
+    Assert.True(term.LeadingTrivia.Count >= 2);
   }
 }

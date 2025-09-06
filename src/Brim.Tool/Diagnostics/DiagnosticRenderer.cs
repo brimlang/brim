@@ -1,8 +1,9 @@
+using Brim.Parse;
 using System.Text;
 
-namespace Brim.Parse;
+namespace Brim.Tool.Diagnostics;
 
-public static class DiagRenderer
+public static class DiagnosticRenderer
 {
   public static string Render(in Diagnostic d)
   {

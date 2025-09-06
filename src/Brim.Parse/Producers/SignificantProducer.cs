@@ -14,7 +14,6 @@ public sealed class SignificantProducer<TProducer>(in TProducer inner) :
   State _state = State.Gathering;
   RawToken _coreToken;
   List<RawToken>? _leading;
-  List<RawToken>? _trailing;
   bool _emittedEob;
 
   RawToken _look; // single token look ahead slot
@@ -70,8 +69,7 @@ public sealed class SignificantProducer<TProducer>(in TProducer inner) :
           Length: 0,
           next.Line,
           next.Column),
-        LeadingTrivia: [],
-        TrailingTrivia: []);
+        LeadingTrivia: []);
 
       return true;
     }
@@ -85,13 +83,9 @@ public sealed class SignificantProducer<TProducer>(in TProducer inner) :
 
     if (IsTerminator(next.Kind))
     {
-      // Always attach accumulated trivia to this terminator (leading on first emission of that token)
-      StructuralArray<RawToken> leading = _leading is { Count: > 0 }
-        ? _leading.ToArray()
-        : [];
-
+      StructuralArray<RawToken> leading = _leading is { Count: > 0 } ? _leading.ToArray() : [];
       _leading = null;
-      tok = new SignificantToken(next, leading, []);
+      tok = new SignificantToken(next, leading);
       return true;
     }
 
@@ -108,16 +102,18 @@ public sealed class SignificantProducer<TProducer>(in TProducer inner) :
     RawToken look = PeekRaw();
     if (look.Kind == RawTokenKind.Eob)
     {
-      // EOB: finalize current core including trailing; then EOB pass handled in Gathering
       tok = EmitCore();
       return true;
     }
 
     if (IsTrivia(look.Kind))
     {
-      _ = Read(out look);
-      (_trailing ??= []).Add(look);
-      return false;
+      // Emit the current core first (with its existing leading only), then start collecting
+      // trivia as leading for the NEXT token.
+      tok = EmitCore();
+      _ = Read(out look); // consume trivia after emitting core
+      (_leading ??= []).Add(look);
+      return true;
     }
 
     if (IsTerminator(look.Kind))
@@ -163,14 +159,10 @@ public sealed class SignificantProducer<TProducer>(in TProducer inner) :
 
     _leading = null;
 
-    StructuralArray<RawToken> trailingArr = _trailing is { Count: > 0 }
-      ? _trailing.ToArray()
-      : [];
-
-    SignificantToken sig = new(_coreToken, leadingArr, trailingArr);
+  SignificantToken sig = new(_coreToken, leadingArr);
 
     _coreToken = default;
-    _trailing = null;
+  // _leading may already hold trivia for the next token (if we just transitioned)
     _state = State.Gathering;
     return sig;
   }

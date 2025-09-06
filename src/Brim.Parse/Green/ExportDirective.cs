@@ -2,17 +2,15 @@ namespace Brim.Parse.Green;
 
 public sealed record ExportDirective(
   GreenToken ExportMarker,
-  GreenToken WhiteSpace,
   Identifier Identifier,
   GreenToken Terminator)
-: GreenNode(SyntaxKind.ExportDeclaration, ExportMarker.Offset)
+: GreenNode(SyntaxKind.ExportDirective, ExportMarker.Offset)
 , IParsable<ExportDirective>
 {
   public override int FullWidth => Identifier.EndOffset - ExportMarker.Offset;
   public override IEnumerable<GreenNode> GetChildren()
   {
     yield return ExportMarker;
-    yield return WhiteSpace;
     yield return Identifier;
     yield return Terminator;
   }
@@ -20,7 +18,6 @@ public sealed record ExportDirective(
   public static ExportDirective Parse(Parser p) =>
     new(
       p.ExpectSyntax(SyntaxKind.ExportMarkerToken),
-      p.ExpectSyntax(SyntaxKind.WhiteSpaceToken),
   Identifier.Parse(p),
       p.ExpectSyntax(SyntaxKind.TerminatorToken)
     );

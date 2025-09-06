@@ -5,133 +5,141 @@ using Spectre.Console;
 
 namespace Brim.Tool;
 
-/// <summary>
-/// Stateless re-usable formatter (struct) configured with options once.
-/// Call Render(source, node) to obtain markup for any green node.
-/// </summary>
-public readonly struct GreenNodeFormatter
+public static class GreenNodeFormatter
 {
-  readonly RenderFlags _flags;
-
-  public GreenNodeFormatter(RenderFlags flags = RenderFlags.Default) => _flags = flags;
-
-  public Markup Render(ReadOnlySpan<char> source, GreenNode node) => node switch
+  public static Markup RenderTree(string source, GreenNode root)
   {
-    GreenToken gt => FormatToken(gt, source),
-    ModuleDirective md => FormatModuleDirective(md, source),
-    ExportDirective ed => FormatExportDirective(ed, source),
-    ImportDeclaration id => FormatImportDirective(id, source),
-    StructDeclaration sd => FormatStructDeclaration(sd, source),
-    UnionDeclaration ud => FormatUnionDeclaration(ud, source),
-    _ => new Markup($"[red]Unknown node type:[/] {node.Kind}\n")
+    StringBuilder sb = new();
+    WriteNode(sb, source, root, 0, isLast:true);
+    return new Markup(sb.ToString());
+  }
+
+  static void WriteNode(StringBuilder sb, string source, GreenNode node, int depth, bool isLast)
+  {
+    // tree branch prefix
+    if (depth > 0)
+    {
+      sb.Append(' ');
+      for (int i = 0; i < depth - 1; i++) sb.Append("│   ");
+      sb.Append(isLast ? "└── " : "├── ");
+    }
+
+    int width = node.FullWidth;
+    (int line, int col) = GetPrimaryLocation(node);
+    sb.Append(NodeColor(node.Kind)).Append(node.Kind).Append("[/]")
+      .Append($" [grey]@{line}:{col}[[{width}]][/]");
+
+  GreenToken? tokenForComments = null;
+  switch (node)
+    {
+      case GreenToken t:
+    sb.Append(" ").Append(TokenSummary(t, source));
+    tokenForComments = t;
+        break;
+      case ModuleDirective md:
+        sb.Append(" path=").Append(Escape(md.ModuleHeader.GetText(source)));
+        break;
+      case ExportDirective ed:
+        sb.Append(" name=").Append(Escape(ed.Identifier.GetText(source)));
+        break;
+      case ImportDeclaration id:
+        sb.Append(" name=").Append(Escape(id.Identifier.GetText(source)));
+        sb.Append(" from=").Append(Escape(id.ModuleHeader.GetText(source)));
+        break;
+      case StructDeclaration sd:
+        sb.Append(" name=").Append(Escape(sd.Identifier.GetText(source))).Append($" fields={sd.Fields.Count}");
+        break;
+      case UnionDeclaration ud:
+        sb.Append(" name=").Append(Escape(ud.Identifier.GetText(source))).Append($" variants={ud.Variants.Count}");
+        break;
+    }
+    sb.Append('\n');
+
+    // append comments after newline so they are on their own lines
+    if (tokenForComments is not null)
+      AppendComments(sb, tokenForComments, source, depth + 1);
+
+    // children
+    IReadOnlyList<GreenNode> children = node.GetChildren().ToList();
+    for (int i = 0; i < children.Count; i++)
+      WriteNode(sb, source, children[i], depth + 1, i == children.Count - 1);
+  }
+
+  static string TokenSummary(GreenToken t, string source)
+  {
+    if (t.Token.Kind == RawTokenKind.Error) return "[red]<error>[/]";
+    string text = t.GetText(source);
+    if (t.SyntaxKind == SyntaxKind.TerminatorToken)
+    {
+      // visualize newline(s)
+      text = text.Replace("\r", "\\r").Replace("\n", "\\n");
+    }
+    if (text.Length > 16) text = text[..16] + "…";
+    text = Escape(text);
+    return $"'{text}'"; // line:col now shown with the node header
+  }
+
+  static (int line, int col) GetPrimaryLocation(GreenNode node)
+  {
+    // For tokens, use their own coordinates
+    if (node is GreenToken gt)
+      return (gt.Token.Line, gt.Token.Column);
+
+    // Walk first-token descendant
+    foreach (GreenNode child in node.GetChildren())
+    {
+      (int line, int col) loc = GetPrimaryLocation(child);
+      if (loc.line != 0 || loc.col != 0) return loc; // found
+    }
+    return (0, 0); // unknown
+  }
+
+  static void AppendComments(StringBuilder sb, GreenToken token, string source, int depth)
+  {
+    if (!token.HasLeading) return;
+    foreach (RawToken trivia in token.LeadingTrivia)
+    {
+      if (trivia.Kind == RawTokenKind.CommentTrivia)
+      {
+        // indentation similar to children; simple spaces for now
+        sb.Append(' ');
+        for (int i = 0; i < depth - 1; i++) sb.Append("│   ");
+        sb.Append("└── [grey]# ");
+        string txt = new string(trivia.Value(source)).Trim();
+        txt = Escape(txt);
+  sb.Append(txt).Append($"[/] [dim]@{trivia.Line}:{trivia.Column}[/]\n");
+      }
+    }
+  }
+
+  static string Escape(string s) => s.Replace("[", "[[").Replace("]", "]]");
+
+  static string NodeColor(SyntaxKind kind) => kind switch
+  {
+  // Specific token colors
+  SyntaxKind.ErrorToken => "[red]",
+  SyntaxKind.IdentifierToken => "[cyan]",
+  // All other tokens default to grey for low visual weight
+  _ when kind <= SyntaxKind.EobToken => "[grey]",
+
+  // Declarations (types/functions + import/export) magenta
+  SyntaxKind.FunctionDeclaration or
+  SyntaxKind.StructDeclaration or
+  SyntaxKind.UnionDeclaration or
+  SyntaxKind.FieldDeclaration or
+  SyntaxKind.UnionVariantDeclaration or
+ SyntaxKind.ImportDeclaration => "[magenta]",
+
+  // Directive node (module header) green
+  SyntaxKind.ModuleDirective or SyntaxKind.ExportDirective => "[green]",
+
+  // Other structural / container nodes
+  SyntaxKind.Module => "[bold blue]",
+  SyntaxKind.ModuleHeader or SyntaxKind.ModulePath => "[blue]",
+  SyntaxKind.FieldList => "[teal]",
+  SyntaxKind.Block or SyntaxKind.ParameterList => "[purple]",
+  SyntaxKind.GenericParameterList or SyntaxKind.GenericArgumentList => "[purple]",
+  SyntaxKind.GenericType => "[yellow]",
+  _ => "[yellow]"
   };
-
-  Markup FormatToken(GreenToken token, ReadOnlySpan<char> source)
-  {
-    StringBuilder sb = new();
-
-    if ((_flags & RenderFlags.LeadingComments) != 0 && token.HasLeading)
-      AppendTrivia(sb, token.LeadingTrivia, source, leading: true);
-
-    sb.Append("[green]Token:[/] ")
-      .Append("[yellow]")
-      .Append(token.Token.Kind)
-      .Append("[/]\n");
-
-    if ((_flags & RenderFlags.TrailingComments) != 0 && token.HasTrailing)
-      AppendTrivia(sb, token.TrailingTrivia, source, leading: false);
-
-    return new Markup(sb.ToString());
-  }
-
-  Markup FormatModuleDirective(ModuleDirective n, ReadOnlySpan<char> source)
-  {
-    string path = n.ModuleHeader.GetText(source);
-    return new Markup($"[blue]ModuleHeader:[/] [yellow]{Escape(path)}[/]\n");
-  }
-
-  Markup FormatExportDirective(ExportDirective n, ReadOnlySpan<char> source)
-  {
-    string name = n.Identifier.GetText(source);
-    return new Markup($"[blue]Export:[/] [yellow]{Escape(name)}[/]\n");
-  }
-
-  Markup FormatImportDirective(ImportDeclaration n, ReadOnlySpan<char> source)
-  {
-    string name = n.Identifier.GetText(source);
-    string header = n.ModuleHeader.GetText(source);
-    return new Markup($"[blue]Import:[/] '[yellow]{Escape(name)}[/]' from '[yellow]{Escape(header)}[/]'\n");
-  }
-
-  Markup FormatStructDeclaration(StructDeclaration n, ReadOnlySpan<char> source)
-  {
-    string name = n.Identifier.GetText(source);
-    StringBuilder sb = new();
-    sb.Append("[green]Struct:[/] [yellow]").Append(Escape(name)).Append("[/] with ")
-      .Append(n.Fields.Count).Append(" fields: ");
-    for (int i = 0; i < n.Fields.Count; i++)
-    {
-      FieldDeclaration field = n.Fields[i];
-      string fieldName = field.Identifier.GetText(source);
-      string fieldType = field.TypeAnnotation.GetText(source);
-      if (i > 0) sb.Append(", ");
-      sb.Append(Escape(fieldName)).Append(": ").Append(Escape(fieldType));
-    }
-    sb.Append('\n');
-    return new Markup(sb.ToString());
-  }
-
-  Markup FormatUnionDeclaration(UnionDeclaration n, ReadOnlySpan<char> source)
-  {
-    string name = n.Identifier.GetText(source);
-    StringBuilder sb = new();
-    sb.Append("[green]Union:[/] [yellow]").Append(Escape(name)).Append("[/] with ")
-      .Append(n.Variants.Count).Append(" variants: ");
-    for (int i = 0; i < n.Variants.Count; i++)
-    {
-      UnionVariantDeclaration uv = n.Variants[i];
-      string variantName = uv.Identifier.GetText(source);
-      string variantType = uv.Type.GetText(source);
-      if (i > 0) sb.Append(", ");
-      sb.Append(Escape(variantName)).Append(": ").Append(Escape(variantType));
-    }
-    sb.Append('\n');
-    return new Markup(sb.ToString());
-  }
-
-  void AppendTrivia(StringBuilder sb, StructuralArray<RawToken> trivia, ReadOnlySpan<char> source, bool leading)
-  {
-    for (int i = 0; i < trivia.Count; i++)
-    {
-      RawToken t = trivia[i];
-      if (t.Kind == RawTokenKind.CommentTrivia && ((_flags & RenderFlags.Comments) != 0))
-      {
-        string txt = new string(t.Value(source))
-          .Replace("[", "[[")
-          .Replace("]", "]]")
-          .TrimEnd('\r', '\n');
-        sb.Append("[grey]").Append(txt).Append("[/]\n");
-      }
-      else if (t.Kind == RawTokenKind.WhitespaceTrivia && ((_flags & RenderFlags.Whitespace) != 0))
-      {
-        string txt = new string(t.Value(source));
-        if (txt.Contains('\n')) sb.Append("[dim]⏎[/]\n");
-      }
-    }
-  }
-
-  static string Escape(string s) => s
-    .Replace("[", "[[")
-    .Replace("]", "]]");
-}
-
-[System.Flags]
-public enum RenderFlags : uint
-{
-  None = 0,
-  Comments = 1 << 0,
-  LeadingComments = 1 << 1,
-  TrailingComments = 1 << 2,
-  Whitespace = 1 << 3,
-  Default = Comments | LeadingComments | TrailingComments
 }

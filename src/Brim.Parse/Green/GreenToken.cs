@@ -7,10 +7,8 @@ public sealed record GreenToken(
 {
   public RawToken Token => Significant.CoreToken;
   public StructuralArray<RawToken> LeadingTrivia => Significant.LeadingTrivia;
-  public StructuralArray<RawToken> TrailingTrivia => Significant.TrailingTrivia;
 
   public bool HasLeading => LeadingTrivia.Count > 0;
-  public bool HasTrailing => TrailingTrivia.Count > 0;
 
   // Keep width semantics to core token text (exclude trivia).
   public override int FullWidth => Token.Length;
@@ -18,6 +16,6 @@ public sealed record GreenToken(
 
   // Convenience for constructing from a raw token when no trivia available (e.g. fabricated/missing)
   public GreenToken(SyntaxKind kind, RawToken raw)
-    : this(kind, new SignificantToken(raw, [], [])) { }
+    : this(kind, new SignificantToken(raw, [])) { }
 }
 

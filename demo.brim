@@ -9,8 +9,8 @@ fs = [[std::fs]]
 
 User = %{ id :str, age :i32 }
 Reply[T] = |{ Good :T, Error :str }
--- missing width
-Perms = &{ read, write, exec }
+-- flag width u8
+Perms = &u8{ read, write, exec }
 
 mk = (id :str, age :i32) User {
   User%{ id = id, age = age }
