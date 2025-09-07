@@ -24,13 +24,13 @@ public static class GenericDeclaration
     ImmutableArray<Identifier>.Builder parms = ImmutableArray.CreateBuilder<Identifier>();
     bool first = true;
     bool empty = false;
-    if (p.Match(RawTokenKind.RBracket))
+    if (p.MatchRaw(RawKind.RBracket))
     {
       empty = true; // record emptiness; still consume later via expect close
     }
     else
     {
-      while (!p.Match(RawTokenKind.RBracket) && !p.Match(RawTokenKind.Eob))
+      while (!p.MatchRaw(RawKind.RBracket) && !p.MatchRaw(RawKind.Eob))
       {
         // Progress guard: Identifier.Parse may fabricate a missing identifier without consuming
         // any real token (ExpectSyntax returns a fabricated token on mismatch). If the current
@@ -39,8 +39,8 @@ public static class GenericDeclaration
         int before = p.Current.CoreToken.Offset;
         if (!first)
         {
-          if (p.Match(RawTokenKind.Comma))
-            _ = p.Expect(RawTokenKind.Comma);
+          if (p.MatchRaw(RawKind.Comma))
+            _ = p.ExpectRaw(RawKind.Comma);
           else break;
         }
 
@@ -53,6 +53,7 @@ public static class GenericDeclaration
         }
       }
     }
+
     GreenToken close = p.ExpectSyntax(SyntaxKind.GenericCloseToken);
     if (empty)
     {
@@ -62,11 +63,11 @@ public static class GenericDeclaration
     GenericParameterList gpl = new(open, parms.ToImmutable(), close);
     GreenToken eq = p.ExpectSyntax(SyntaxKind.EqualToken);
 
-    if (p.Match(RawTokenKind.PercentLBrace))
+    if (p.MatchRaw(RawKind.PercentLBrace))
     {
       return ParseGenericStructBody(p, name, gpl, eq);
     }
-    if (p.Match(RawTokenKind.PipeLBrace))
+    if (p.MatchRaw(RawKind.PipeLBrace))
     {
       return ParseGenericUnionBody(p, name, gpl, eq);
     }
@@ -79,11 +80,11 @@ public static class GenericDeclaration
   {
     GreenToken openStruct = p.ExpectSyntax(SyntaxKind.StructToken);
     ImmutableArray<FieldDeclaration>.Builder fields = ImmutableArray.CreateBuilder<FieldDeclaration>();
-    while (!p.Match(RawTokenKind.RBrace) && !p.Match(RawTokenKind.Eob))
+    while (!p.MatchRaw(RawKind.RBrace) && !p.MatchRaw(RawKind.Eob))
     {
       int before = p.Current.CoreToken.Offset;
       fields.Add(FieldDeclaration.Parse(p));
-      if (p.Match(RawTokenKind.Comma)) _ = p.Expect(RawTokenKind.Comma);
+      if (p.MatchRaw(RawKind.Comma)) _ = p.ExpectRaw(RawKind.Comma);
       if (p.Current.CoreToken.Offset == before)
       {
         // Field parse made no progress; break to avoid infinite loop (recover via close brace expectation).
@@ -102,17 +103,18 @@ public static class GenericDeclaration
   {
     GreenToken openUnion = p.ExpectSyntax(SyntaxKind.UnionToken); // PipeLBrace
     ImmutableArray<UnionVariantDeclaration>.Builder vars = ImmutableArray.CreateBuilder<UnionVariantDeclaration>();
-    while (!p.Match(RawTokenKind.RBrace) && !p.Match(RawTokenKind.Eob))
+    while (!p.MatchRaw(RawKind.RBrace) && !p.MatchRaw(RawKind.Eob))
     {
       int before = p.Current.CoreToken.Offset;
       vars.Add(UnionVariantDeclaration.Parse(p));
-      if (p.Match(RawTokenKind.Comma)) _ = p.Expect(RawTokenKind.Comma);
+      if (p.MatchRaw(RawKind.Comma)) _ = p.ExpectRaw(RawKind.Comma);
       if (p.Current.CoreToken.Offset == before)
       {
         // Variant parse made no progress; break to avoid infinite loop.
         break;
       }
     }
+
     StructuralArray<UnionVariantDeclaration> arr = [.. vars];
     GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBraceToken);
     GreenToken term = p.ExpectSyntax(SyntaxKind.TerminatorToken);

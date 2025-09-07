@@ -21,7 +21,7 @@ if (Environment.GetCommandLineArgs().First().EndsWith("hinky"))
 // Attach console trace listener when BRIM_TRACE env set
 if (Environment.GetEnvironmentVariable("BRIM_TRACE") == "1")
 {
-  System.Diagnostics.Trace.Listeners.Add(new System.Diagnostics.ConsoleTraceListener());
+  _ = System.Diagnostics.Trace.Listeners.Add(new System.Diagnostics.ConsoleTraceListener());
 }
 
 return await rootCommand.Parse(args).InvokeAsync();

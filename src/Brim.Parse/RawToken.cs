@@ -12,7 +12,7 @@ namespace Brim.Parse;
 /// <param name="Column">The column number of the token (1-based).</param>
 [DebuggerDisplay("{ToString(),nq}")]
 public readonly record struct RawToken(
-    RawTokenKind Kind,
+    RawKind Kind,
     int Offset,
     int Length,
     int Line,

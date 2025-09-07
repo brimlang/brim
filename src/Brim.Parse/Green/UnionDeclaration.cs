@@ -3,12 +3,16 @@ namespace Brim.Parse.Green;
 public sealed record UnionVariantDeclaration(
   Identifier Identifier,
   GreenToken Colon,
-  GreenNode Type) : GreenNode(SyntaxKind.UnionVariantDeclaration, Identifier.Offset)
+  GreenNode Type) :
+GreenNode(SyntaxKind.UnionVariantDeclaration, Identifier.Offset),
+IParsable<UnionVariantDeclaration>
 {
   public override int FullWidth => Type.EndOffset - Identifier.Offset;
   public override IEnumerable<GreenNode> GetChildren()
   {
-    yield return Identifier; yield return Colon; yield return Type;
+    yield return Identifier;
+    yield return Colon;
+    yield return Type;
   }
 
   public static UnionVariantDeclaration Parse(Parser p)
@@ -17,10 +21,11 @@ public sealed record UnionVariantDeclaration(
     GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
     Identifier typeName = Identifier.Parse(p);
     GreenNode ty = typeName;
-    if (p.Match(RawTokenKind.LBracket) && !p.Match(RawTokenKind.LBracketLBracket))
+    if (p.MatchRaw(RawKind.LBracket) && !p.MatchRaw(RawKind.LBracketLBracket))
     {
       ty = GenericType.ParseAfterName(p, typeName);
     }
+
     return new(name, colon, ty);
   }
 }
@@ -38,10 +43,17 @@ public sealed record UnionDeclaration(
   public override IEnumerable<GreenNode> GetChildren()
   {
     yield return Identifier;
-    if (GenericParams is not null) yield return GenericParams;
-    yield return Equal; yield return UnionOpen;
-    foreach (UnionVariantDeclaration v in Variants) yield return v;
-    yield return Close; yield return Terminator;
+    if (GenericParams is not null)
+      yield return GenericParams;
+
+    yield return Equal;
+    yield return UnionOpen;
+
+    foreach (UnionVariantDeclaration v in Variants)
+      yield return v;
+
+    yield return Close;
+    yield return Terminator;
   }
 
   public static UnionDeclaration Parse(Parser p)
@@ -50,17 +62,20 @@ public sealed record UnionDeclaration(
     GreenToken eq = p.ExpectSyntax(SyntaxKind.EqualToken);
     GreenToken open = p.ExpectSyntax(SyntaxKind.UnionToken);
     ImmutableArray<UnionVariantDeclaration>.Builder vars = ImmutableArray.CreateBuilder<UnionVariantDeclaration>();
-    while (!p.Match(RawTokenKind.RBrace) && !p.Match(RawTokenKind.Eob))
+    while (!p.MatchRaw(RawKind.RBrace) && !p.MatchRaw(RawKind.Eob))
     {
       int before = p.Current.CoreToken.Offset;
       vars.Add(UnionVariantDeclaration.Parse(p));
-      if (p.Match(RawTokenKind.Comma)) _ = p.Expect(RawTokenKind.Comma);
+      if (p.MatchRaw(RawKind.Comma))
+        _ = p.ExpectRaw(RawKind.Comma);
+
       if (p.Current.CoreToken.Offset == before)
       {
         // No progress; break to avoid infinite loop.
         break;
       }
     }
+
     StructuralArray<UnionVariantDeclaration> arr = [.. vars];
     GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBraceToken);
     GreenToken term = p.ExpectSyntax(SyntaxKind.TerminatorToken);

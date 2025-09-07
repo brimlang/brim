@@ -2,9 +2,9 @@ namespace Brim.Parse.Green;
 
 public sealed record ModuleDirective(
     ModuleHeader ModuleHeader,
-    GreenToken Terminator)
-: GreenNode(SyntaxKind.ModuleDirective, ModuleHeader.Offset)
-, IParsable<ModuleDirective>
+    GreenToken Terminator) :
+GreenNode(SyntaxKind.ModuleDirective, ModuleHeader.Offset),
+IParsable<ModuleDirective>
 {
   public override int FullWidth => Terminator.EndOffset - ModuleHeader.Offset;
   public override IEnumerable<GreenNode> GetChildren()
@@ -14,7 +14,7 @@ public sealed record ModuleDirective(
   }
 
   public static ModuleDirective Parse(Parser p) => new(
-  ModuleHeader.Parse(p),
+    ModuleHeader.Parse(p),
     p.ExpectSyntax(SyntaxKind.TerminatorToken)
   );
 }

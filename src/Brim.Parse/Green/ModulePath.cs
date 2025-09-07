@@ -17,7 +17,7 @@ public sealed record class ModulePath(
     ImmutableArray<GreenToken>.Builder parts = ImmutableArray.CreateBuilder<GreenToken>();
 
     parts.Add(p.ExpectSyntax(SyntaxKind.IdentifierToken));
-    while (p.Match(RawTokenKind.ColonColon))
+    while (p.MatchRaw(RawKind.ColonColon))
     {
       parts.Add(p.ExpectSyntax(SyntaxKind.ModulePathSepToken));
       parts.Add(p.ExpectSyntax(SyntaxKind.IdentifierToken));

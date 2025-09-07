@@ -4,9 +4,9 @@ public sealed record ImportDeclaration(
   Identifier Identifier,
   GreenToken Equal,
   ModuleHeader ModuleHeader,
-  GreenToken Terminator)
-: GreenNode(SyntaxKind.ImportDeclaration, Identifier.Offset)
-, IParsable<ImportDeclaration>
+  GreenToken Terminator) :
+GreenNode(SyntaxKind.ImportDeclaration, Identifier.Offset),
+IParsable<ImportDeclaration>
 {
   public override int FullWidth => ModuleHeader.EndOffset - Identifier.Offset;
   public override IEnumerable<GreenNode> GetChildren()
@@ -17,11 +17,11 @@ public sealed record ImportDeclaration(
     yield return Terminator;
   }
 
-    // EBNF: ImportDecl ::= Identifier '=' ModuleHeader Terminator
-    public static ImportDeclaration Parse(Parser p) => new(
-  Identifier.Parse(p),
+  // EBNF: ImportDecl ::= Identifier '=' ModuleHeader Terminator
+  public static ImportDeclaration Parse(Parser p) => new(
+    Identifier.Parse(p),
     p.ExpectSyntax(SyntaxKind.EqualToken),
-  ModuleHeader.Parse(p),
+    ModuleHeader.Parse(p),
     p.ExpectSyntax(SyntaxKind.TerminatorToken)
   );
 }

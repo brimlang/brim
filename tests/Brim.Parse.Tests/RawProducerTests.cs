@@ -6,9 +6,9 @@ public class RawProducerTests
 {
   static List<RawToken> Lex(string input)
   {
-  RawProducer p = new(SourceText.From(input), DiagSink.Create());
+    RawProducer p = new(SourceText.From(input), DiagSink.Create());
     List<RawToken> list = [];
-    while (p.TryRead(out RawToken t)) { list.Add(t); if (t.Kind == RawTokenKind.Eob) break; }
+    while (p.TryRead(out RawToken t)) { list.Add(t); if (t.Kind == RawKind.Eob) break; }
     return list;
   }
 
@@ -57,7 +57,7 @@ public class RawProducerTests
   public void ProducesUnexpectedCharError()
   {
     var toks = Lex("foo $");
-    Assert.Contains(toks, static t => t.Kind == RawTokenKind.Error);
+    Assert.Contains(toks, static t => t.Kind == RawKind.Error);
   }
 
   [Fact]
@@ -65,48 +65,48 @@ public class RawProducerTests
   {
     string input = "foo -- this is a comment\nbar --another";
     var toks = Lex(input);
-    var comments = toks.Where(t => t.Kind == RawTokenKind.CommentTrivia).ToArray();
+    var comments = toks.Where(t => t.Kind == RawKind.CommentTrivia).ToArray();
     Assert.Equal(2, comments.Length);
     Assert.Equal("-- this is a comment", new string(comments[0].Value(input)));
     Assert.Equal("--another", new string(comments[1].Value(input)));
-    Assert.Contains(toks, t => t.Kind == RawTokenKind.Identifier && t.Value(input).SequenceEqual("foo"));
-    Assert.Contains(toks, t => t.Kind == RawTokenKind.Identifier && t.Value(input).SequenceEqual("bar"));
+    Assert.Contains(toks, t => t.Kind == RawKind.Identifier && t.Value(input).SequenceEqual("foo"));
+    Assert.Contains(toks, t => t.Kind == RawKind.Identifier && t.Value(input).SequenceEqual("bar"));
   }
 
   [Fact]
   public void TokenizesMultiCharSymbolsGreedily()
   {
     var toks = Lex("=> *{ ~=");
-    Assert.Contains(toks, t => t.Kind == RawTokenKind.EqualGreater);
-    Assert.Contains(toks, t => t.Kind == RawTokenKind.StarLBrace);
-    Assert.Contains(toks, t => t.Kind == RawTokenKind.TildeEqual);
+    Assert.Contains(toks, t => t.Kind == RawKind.EqualGreater);
+    Assert.Contains(toks, t => t.Kind == RawKind.StarLBrace);
+    Assert.Contains(toks, t => t.Kind == RawKind.TildeEqual);
   }
 
   [Fact]
   public void GreedyLessLessOverLess()
   {
     var toks = Lex("<< <");
-    Assert.Contains(toks, t => t.Kind == RawTokenKind.LessLess);
-    Assert.Contains(toks, t => t.Kind == RawTokenKind.Less);
+    Assert.Contains(toks, t => t.Kind == RawKind.LessLess);
+    Assert.Contains(toks, t => t.Kind == RawKind.Less);
   }
 
   [Fact]
   public void ColonFamilyTokens()
   {
     var toks = Lex(": :: := :* :");
-    Assert.Contains(toks, t => t.Kind == RawTokenKind.Colon);
-    Assert.Contains(toks, t => t.Kind == RawTokenKind.ColonColon);
-    Assert.Contains(toks, t => t.Kind == RawTokenKind.ColonEqual);
-    Assert.Contains(toks, t => t.Kind == RawTokenKind.ColonStar);
+    Assert.Contains(toks, t => t.Kind == RawKind.Colon);
+    Assert.Contains(toks, t => t.Kind == RawKind.ColonColon);
+    Assert.Contains(toks, t => t.Kind == RawKind.ColonEqual);
+    Assert.Contains(toks, t => t.Kind == RawKind.ColonStar);
   }
 
   [Fact]
   public void UnterminatedStringVariantsMixedBehavior()
   {
     var lone = Lex("\"");
-    Assert.Contains(lone, t => t.Kind == RawTokenKind.StringLiteral);
+    Assert.Contains(lone, t => t.Kind == RawKind.StringLiteral);
     var dangling = Lex("\"foo\\");
-    Assert.Contains(dangling, t => t.Kind == RawTokenKind.Error);
+    Assert.Contains(dangling, t => t.Kind == RawKind.Error);
   }
 
   [Fact]
@@ -114,7 +114,7 @@ public class RawProducerTests
   {
     var toks = Lex("foo : bar");
     int prevEnd = -1;
-    foreach (var t in toks.Where(t => t.Kind != RawTokenKind.Eob))
+    foreach (var t in toks.Where(t => t.Kind != RawKind.Eob))
     {
       int start = t.Offset;
       int end = t.Offset + t.Length;

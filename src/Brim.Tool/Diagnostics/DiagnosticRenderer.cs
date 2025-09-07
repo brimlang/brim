@@ -1,5 +1,5 @@
-using Brim.Parse;
 using System.Text;
+using Brim.Parse;
 
 namespace Brim.Tool.Diagnostics;
 
@@ -23,7 +23,7 @@ public static class DiagnosticRenderer
     return $"{d.Severity.ToString().ToLower()}[{d.Phase.ToString().ToLower()}]: {core}";
   }
 
-  static string KindName(ushort kind) => kind == 0 ? "<none>" : ((RawTokenKind)kind).ToString();
+  static string KindName(ushort kind) => kind == 0 ? "<none>" : ((RawKind)kind).ToString();
 
   static string RenderUnexpected(in Diagnostic d)
   {

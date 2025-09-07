@@ -11,5 +11,5 @@ public readonly record struct SignificantToken(
   StructuralArray<RawToken> LeadingTrivia) : IToken
 {
   public bool HasLeading => LeadingTrivia.Count > 0;
-  public RawTokenKind Kind => CoreToken.Kind;
+  public RawKind Kind => CoreToken.Kind;
 }

@@ -18,7 +18,6 @@ public enum SyntaxKind
   ColonToken,
   GenericOpenToken,
   GenericCloseToken,
-  CommentToken,
   TerminatorToken,
   EobToken,
 

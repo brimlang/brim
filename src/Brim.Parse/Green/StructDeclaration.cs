@@ -25,20 +25,21 @@ IParsable<StructDeclaration>
 
   static GenericParameterList? TryParseGenericParams(Parser p)
   {
-    if (!p.Match(RawTokenKind.LBracket)) return null; // must not be module path
-    if (p.Match(RawTokenKind.LBracketLBracket)) return null; // module path head
+    if (!p.MatchRaw(RawKind.LBracket)) return null; // must not be module path
     GreenToken open = p.ExpectSyntax(SyntaxKind.GenericOpenToken);
+
     ImmutableArray<Identifier>.Builder items = ImmutableArray.CreateBuilder<Identifier>();
     bool first = true;
-    while (!p.Match(RawTokenKind.RBracket) && !p.Match(RawTokenKind.Eob))
+    while (!p.MatchRaw(RawKind.RBracket) && !p.MatchRaw(RawKind.Eob))
     {
       if (!first)
       {
-        if (p.Match(RawTokenKind.Comma)) _ = p.Expect(RawTokenKind.Comma); else break;
+        if (p.MatchRaw(RawKind.Comma)) _ = p.ExpectRaw(RawKind.Comma); else break;
       }
       items.Add(Identifier.Parse(p));
       first = false;
     }
+
     GreenToken close = p.ExpectSyntax(SyntaxKind.GenericCloseToken);
     return new GenericParameterList(open, items.ToImmutable(), close);
   }
@@ -52,18 +53,19 @@ IParsable<StructDeclaration>
     GreenToken open = p.ExpectSyntax(SyntaxKind.StructToken);
 
     ImmutableArray<FieldDeclaration>.Builder fields = ImmutableArray.CreateBuilder<FieldDeclaration>();
-    while (!p.Match(RawTokenKind.RBrace) && !p.Match(RawTokenKind.Eob))
+    while (!p.MatchRaw(RawKind.RBrace) && !p.MatchRaw(RawKind.Eob))
     {
       int before = p.Current.CoreToken.Offset;
       fields.Add(FieldDeclaration.Parse(p));
-      if (p.Match(RawTokenKind.Comma))
-        _ = p.Expect(RawTokenKind.Comma);
+      if (p.MatchRaw(RawKind.Comma))
+        _ = p.ExpectRaw(RawKind.Comma);
       if (p.Current.CoreToken.Offset == before)
       {
         // Parsing this field made no progress (likely fabricated tokens). Break to prevent infinite loop.
         break;
       }
     }
+
     StructuralArray<FieldDeclaration> fieldArray = [.. fields];
 
     GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBraceToken);

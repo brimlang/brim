@@ -3,7 +3,7 @@ namespace Brim.Parse;
 /// <summary>
 /// Kinds of tokens in Brim source code.
 /// </summary>
-public enum RawTokenKind
+public enum RawKind
 {
   // Special
   Any = -1, // Wildcard for parsing

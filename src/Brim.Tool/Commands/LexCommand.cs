@@ -13,7 +13,7 @@ class LexCommand : Command
     Arity = ArgumentArity.ExactlyOne,
   };
 
-  public LexCommand() : base("lex")
+  internal LexCommand() : base("lex")
   {
     Description = "Lex a Brim source file and print tokens";
     Arguments.Add(_fileArgument);
@@ -29,14 +29,16 @@ class LexCommand : Command
       return -1;
     }
 
-  DiagSink sink = DiagSink.Create();
+    DiagSink sink = DiagSink.Create();
     string source = File.ReadAllText(file);
     SourceText st = SourceText.From(source);
-  RawProducer prod = new(st, sink);
-  while (prod.TryRead(out RawToken token))
+    RawProducer prod = new(st, sink);
+
+    while (prod.TryRead(out RawToken token))
     {
       AnsiConsole.Write(GetMarkup(token, source));
-      if (token.Kind == RawTokenKind.Eob) break;
+      if (token.Kind == RawKind.Eob)
+        break;
     }
 
     return 0;
@@ -46,13 +48,13 @@ class LexCommand : Command
   {
     return token.Kind switch
     {
-      RawTokenKind.Terminator => Markup.FromInterpolated($"[magenta]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString().Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t")}[/]'\n"),
-      RawTokenKind.Identifier => Markup.FromInterpolated($"[blue]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString()}[/]'\n"),
-      RawTokenKind.NumberLiteral => Markup.FromInterpolated($"[green]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString()}[/]'\n"),
-      RawTokenKind.StringLiteral => Markup.FromInterpolated($"[green]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString()}[/]'\n"),
-      RawTokenKind.WhitespaceTrivia => Markup.FromInterpolated($"[cyan]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString().Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t")}[/]'\n"),
-      RawTokenKind.CommentTrivia => Markup.FromInterpolated($"[cyan]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString().Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t")}[/]'\n"),
-      RawTokenKind.Error => Markup.FromInterpolated($"[red]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString()}[/]'\n"),
+      RawKind.Terminator => Markup.FromInterpolated($"[magenta]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString().Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t")}[/]'\n"),
+      RawKind.Identifier => Markup.FromInterpolated($"[blue]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString()}[/]'\n"),
+      RawKind.NumberLiteral => Markup.FromInterpolated($"[green]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString()}[/]'\n"),
+      RawKind.StringLiteral => Markup.FromInterpolated($"[green]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString()}[/]'\n"),
+      RawKind.WhitespaceTrivia => Markup.FromInterpolated($"[cyan]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString().Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t")}[/]'\n"),
+      RawKind.CommentTrivia => Markup.FromInterpolated($"[cyan]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString().Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t")}[/]'\n"),
+      RawKind.Error => Markup.FromInterpolated($"[red]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString()}[/]'\n"),
       _ => Markup.FromInterpolated($"[yellow]{{{token.Kind}}}[/] '[white]{token.Value(source).ToString()}[/]'\n"),
     };
   }

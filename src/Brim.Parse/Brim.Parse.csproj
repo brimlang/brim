@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-	<PropertyGroup>
-		<InternalsVisibleTo>Brim.Parse.Tests</InternalsVisibleTo>
-	</PropertyGroup>
+	<ItemGroup>
+    <InternalsVisibleTo Include="Brim.Parse.Tests" />
+	</ItemGroup>
 </Project>

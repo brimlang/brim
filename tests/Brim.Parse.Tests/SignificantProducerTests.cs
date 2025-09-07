@@ -6,10 +6,10 @@ public class SignificantProducerTests
 {
   static List<SignificantToken> SigAll(string text)
   {
-  RawProducer raw = new(SourceText.From(text), DiagSink.Create());
-  SignificantProducer<RawProducer> sig = new(raw);
+    RawProducer raw = new(SourceText.From(text), DiagSink.Create());
+    SignificantProducer<RawProducer> sig = new(raw);
     List<SignificantToken> list = [];
-    while (sig.TryRead(out SignificantToken st)) { list.Add(st); if (st.CoreToken.Kind == RawTokenKind.Eob) break; }
+    while (sig.TryRead(out SignificantToken st)) { list.Add(st); if (st.CoreToken.Kind == RawKind.Eob) break; }
     return list;
   }
 
@@ -20,7 +20,7 @@ public class SignificantProducerTests
       -- c1
       foo
       """);
-    var id = Assert.Single(list, static t => t.CoreToken.Kind == RawTokenKind.Identifier);
+    var id = Assert.Single(list, static t => t.CoreToken.Kind == RawKind.Identifier);
     Assert.False(id.HasLeading);
   }
 
@@ -28,10 +28,10 @@ public class SignificantProducerTests
   public void IdentifierFollowedByTerminatorTriviaBecomesLeadingOfTerminator()
   {
     var list = SigAll("foo   -- t\n");
-    var id = Assert.Single(list, static t => t.CoreToken.Kind == RawTokenKind.Identifier);
-  // Identifier should have no leading trivia in this scenario (source starts with identifier)
-  Assert.False(id.HasLeading);
-    var term = Assert.Single(list, static t => t.CoreToken.Kind == RawTokenKind.Terminator);
+    var id = Assert.Single(list, static t => t.CoreToken.Kind == RawKind.Identifier);
+    // Identifier should have no leading trivia in this scenario (source starts with identifier)
+    Assert.False(id.HasLeading);
+    var term = Assert.Single(list, static t => t.CoreToken.Kind == RawKind.Terminator);
     Assert.True(term.HasLeading); // whitespace + comment now leading on terminator
     Assert.True(term.LeadingTrivia.Count >= 2);
   }
@@ -40,7 +40,7 @@ public class SignificantProducerTests
   public void SingleIdentifierAtEOFHasNoFollowingTriviaModel()
   {
     var list = SigAll("foo");
-    var id = Assert.Single(list, static t => t.CoreToken.Kind == RawTokenKind.Identifier);
+    var id = Assert.Single(list, static t => t.CoreToken.Kind == RawKind.Identifier);
     Assert.False(id.HasLeading);
   }
 }

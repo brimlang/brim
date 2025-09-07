@@ -1,3 +1,4 @@
+
 namespace Brim.Parse;
 
 /// <summary>
@@ -7,7 +8,6 @@ namespace Brim.Parse;
 public struct DiagSink
 {
   readonly List<Diagnostic> _list;
-  int _tooManyFlag; // 0 = not tripped, 1 = tripped
 
   public const int MaxDiagnostics = 512; // flood cap (option 2)
 
@@ -15,9 +15,13 @@ public struct DiagSink
 
   public static DiagSink Create(int capacity = 8) => new(new List<Diagnostic>(capacity));
 
+  public bool IsCapped { get; private set; }
+
+  public readonly int Count => _list.Count;
+
   public void Add(Diagnostic d)
   {
-    if (_tooManyFlag != 0) return; // already capped
+    if (IsCapped) return; // already capped
     if (_list.Count >= MaxDiagnostics)
     {
       // Replace last slot with TooManyErrors if not already present and mark flag.
@@ -25,16 +29,35 @@ public struct DiagSink
       {
         // Emit special cap diagnostic using last diagnostic for positional context.
         Diagnostic last = _list[^1];
-        RawToken pseudo = new(RawTokenKind.Error, last.Offset, 0, last.Line, last.Column);
-        _list[^1] = DiagFactory.TooManyErrors(pseudo);
+        RawToken pseudo = new(RawKind.Error, last.Offset, 0, last.Line, last.Column);
+        _list[^1] = Diagnostic.TooManyErrors(pseudo);
       }
-      _tooManyFlag = 1;
+      IsCapped = true;
       return;
     }
+
     _list.Add(d);
   }
 
-  public IReadOnlyList<Diagnostic> Items => _list;
+  public readonly ImmutableArray<Diagnostic> GetSortedDiagnostics()
+  {
+    // Stable sort diagnostics (already in emission order; ensure order by offset then insertion)
+    if (_list.Count > 1)
+    {
+      _list.Sort(static (a, b) =>
+      {
+        int cmp = a.Offset.CompareTo(b.Offset);
+        if (cmp != 0) return cmp;
 
-  public bool IsCapped => _tooManyFlag != 0;
+        // tie-breaker: line, column to maintain determinism
+        cmp = a.Line.CompareTo(b.Line);
+        if (cmp != 0) return cmp;
+
+        // fallback: code (semi-stable; list.Sort is not stable in .NET so we emulate minimal extra ordering)
+        return ((int)a.Code).CompareTo((int)b.Code);
+      });
+    }
+
+    return [.. _list];
+  }
 }

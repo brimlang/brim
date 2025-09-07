@@ -20,11 +20,13 @@ IParsable<FieldDeclaration>
     Identifier name = Identifier.Parse(p);
     GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
     Identifier typeName = Identifier.Parse(p);
+
     GreenNode type = typeName;
-    if (p.Match(RawTokenKind.LBracket) && !p.Match(RawTokenKind.LBracketLBracket))
+    if (p.MatchRaw(RawKind.LBracket) && !p.MatchRaw(RawKind.LBracketLBracket))
     {
       type = GenericType.ParseAfterName(p, typeName);
     }
+
     return new FieldDeclaration(name, colon, type);
   }
 }

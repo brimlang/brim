@@ -44,18 +44,18 @@ public sealed class SignificantProducer<TProducer>(in TProducer inner) :
     }
   }
 
-  static bool IsTrivia(RawTokenKind k) => k is RawTokenKind.WhitespaceTrivia or RawTokenKind.CommentTrivia;
+  static bool IsTrivia(RawKind k) => k is RawKind.WhitespaceTrivia or RawKind.CommentTrivia;
 
-  static bool IsTerminator(RawTokenKind k) => k == RawTokenKind.Terminator;
+  static bool IsTerminator(RawKind k) => k == RawKind.Terminator;
 
   // Handles logic for the Gathering state. Returns true if a token is emitted.
   bool HandleGatheringState(out SignificantToken tok)
   {
     tok = default;
     RawToken next = PeekRaw();
-    if (next.Kind == RawTokenKind.Eob)
+    if (next.Kind == RawKind.Eob)
     {
-      if (_coreToken.Kind > RawTokenKind.Default)
+      if (_coreToken.Kind > RawKind.Default)
       {
         tok = EmitCore();
         return true;
@@ -64,7 +64,7 @@ public sealed class SignificantProducer<TProducer>(in TProducer inner) :
       _emittedEob = true;
       tok = new SignificantToken(
         new RawToken(
-          RawTokenKind.Eob,
+          RawKind.Eob,
           next.Offset,
           Length: 0,
           next.Line,
@@ -98,9 +98,8 @@ public sealed class SignificantProducer<TProducer>(in TProducer inner) :
   // Handles logic for the HaveCore state. Returns true if a token is emitted.
   bool HandleHaveCoreState(out SignificantToken tok)
   {
-    tok = default;
     RawToken look = PeekRaw();
-    if (look.Kind == RawTokenKind.Eob)
+    if (look.Kind == RawKind.Eob)
     {
       tok = EmitCore();
       return true;
@@ -147,7 +146,7 @@ public sealed class SignificantProducer<TProducer>(in TProducer inner) :
     if (!_haveLook && Read(out _look)) _haveLook = true;
     return _haveLook
       ? _look
-      : new RawToken(RawTokenKind.Eob, 0, 0, 0, 0);
+      : new RawToken(RawKind.Eob, 0, 0, 0, 0);
   }
 
   SignificantToken EmitCore()
@@ -159,10 +158,10 @@ public sealed class SignificantProducer<TProducer>(in TProducer inner) :
 
     _leading = null;
 
-  SignificantToken sig = new(_coreToken, leadingArr);
+    SignificantToken sig = new(_coreToken, leadingArr);
 
     _coreToken = default;
-  // _leading may already hold trivia for the next token (if we just transitioned)
+    // _leading may already hold trivia for the next token (if we just transitioned)
     _state = State.Gathering;
     return sig;
   }

@@ -27,13 +27,13 @@ public sealed class RawProducer(
     ReadOnlySpan<char> span = _source.Span;
     if (_pos >= span.Length)
     {
-      tok = new(RawTokenKind.Eob, _source.Length, Length: 0, _line, _col);
+      tok = new(RawKind.Eob, _source.Length, Length: 0, _line, _col);
       _emittedEob = true;
       return true;
     }
 
     tok = LexNext();
-    if (tok.Kind == RawTokenKind.Eob)
+    if (tok.Kind == RawKind.Eob)
     {
       _emittedEob = true;
     }
@@ -99,9 +99,9 @@ public sealed class RawProducer(
       if (char.IsDigit(c))
         return LexNumber(startOffset, startLine, startCol);
 
-      if (RawSymbolTable.SymbolTable.TryGetValue(c, out (RawTokenKind singleKind, (string symbol, RawTokenKind kind)[] multiSyms) entry))
+      if (RawSymbolTable.SymbolTable.TryGetValue(c, out (RawKind singleKind, (string symbol, RawKind kind)[] multiSyms) entry))
       {
-        foreach ((string symbol, RawTokenKind kind) in entry.multiSyms)
+        foreach ((string symbol, RawKind kind) in entry.multiSyms)
         {
           if (Matches(symbol))
             return MakeToken(kind, symbol.Length, startOffset, startLine, startCol);
@@ -109,13 +109,13 @@ public sealed class RawProducer(
         return MakeToken(entry.singleKind, 1, startOffset, startLine, startCol);
       }
 
-      _sink.Add(DiagFactory.InvalidChar(startOffset, startLine, startCol, c));
-      return MakeToken(RawTokenKind.Error, 1, startOffset, startLine, startCol);
+      _sink.Add(Diagnostic.InvalidChar(startOffset, startLine, startCol, c));
+      return MakeToken(RawKind.Error, 1, startOffset, startLine, startCol);
     }
-    return new RawToken(RawTokenKind.Eob, _source.Length, 0, _line, _col);
+    return new RawToken(RawKind.Eob, _source.Length, 0, _line, _col);
   }
 
-  RawToken MakeToken(RawTokenKind kind, int length, int startOffset, int startLine, int startCol)
+  RawToken MakeToken(RawKind kind, int length, int startOffset, int startLine, int startCol)
   {
     ReadOnlySpan<char> span = _source.Span;
     for (int i = 0; i < length && _pos < span.Length; i++)
@@ -126,19 +126,19 @@ public sealed class RawProducer(
   RawToken LexWhitespace(int startOffset, int line, int col)
   {
     AdvanceCharWhile(static c => Chars.IsNonTerminalWhitespace(c));
-    return new RawToken(RawTokenKind.WhitespaceTrivia, startOffset, _pos - startOffset, line, col);
+    return new RawToken(RawKind.WhitespaceTrivia, startOffset, _pos - startOffset, line, col);
   }
 
   RawToken LexIdentifier(int startOffset, int line, int col)
   {
     AdvanceCharWhile(static c => Chars.IsIdentifierPart(c));
-    return new RawToken(RawTokenKind.Identifier, startOffset, _pos - startOffset, line, col);
+    return new RawToken(RawKind.Identifier, startOffset, _pos - startOffset, line, col);
   }
 
   RawToken LexNumber(int startOffset, int line, int col)
   {
     AdvanceCharWhile(static c => char.IsDigit(c));
-    return new RawToken(RawTokenKind.NumberLiteral, startOffset, _pos - startOffset, line, col);
+    return new RawToken(RawKind.NumberLiteral, startOffset, _pos - startOffset, line, col);
   }
 
   RawToken LexLineComment(int startOffset, int line, int col)
@@ -146,13 +146,13 @@ public sealed class RawProducer(
     AdvanceChar();
     AdvanceChar();
     AdvanceCharWhile(static c => c is not Chars.NewLine);
-    return new RawToken(RawTokenKind.CommentTrivia, startOffset, _pos - startOffset, line, col);
+    return new RawToken(RawKind.CommentTrivia, startOffset, _pos - startOffset, line, col);
   }
 
   RawToken LexTerminator(int startOffset, int line, int col)
   {
     AdvanceCharWhile(static c => Chars.IsTerminator(c));
-    return new RawToken(RawTokenKind.Terminator, startOffset, _pos - startOffset, line, col);
+    return new RawToken(RawKind.Terminator, startOffset, _pos - startOffset, line, col);
   }
 
   RawToken LexString(int startOffset, int line, int col, ReadOnlySpan<char> span)
@@ -176,11 +176,11 @@ public sealed class RawProducer(
     bool terminated = len > 0 && span[startOffset] == '"' && span[startOffset + len - 1] == '"';
     if (!terminated)
     {
-      RawToken errTok = new(RawTokenKind.Error, startOffset, len == 0 ? 1 : len, line, col);
-      _sink.Add(DiagFactory.UnterminatedString(errTok));
+      RawToken errTok = new(RawKind.Error, startOffset, len == 0 ? 1 : len, line, col);
+      _sink.Add(Diagnostic.UnterminatedString(errTok));
       return errTok;
     }
 
-    return new RawToken(RawTokenKind.StringLiteral, startOffset, len, line, col);
+    return new RawToken(RawKind.StringLiteral, startOffset, len, line, col);
   }
 }

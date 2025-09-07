@@ -82,7 +82,7 @@ public sealed class LookAheadWindow<T, TProd>
       _buffer[slot] = item;
       _count++;
 
-      if (Utilities.GetRawTokenKind(item) == RawTokenKind.Eob)
+      if (Utilities.GetRawTokenKind(item) == RawKind.Eob)
         _sawEob = true;
 
       needed = _index + k + 1 - _count;
