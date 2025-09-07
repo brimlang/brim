@@ -1,5 +1,3 @@
-using Xunit;
-
 namespace Brim.Parse.Tests;
 
 public class SourceTextTests

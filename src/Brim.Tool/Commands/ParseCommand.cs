@@ -41,7 +41,7 @@ class ParseCommand : Command
 
     string source = File.ReadAllText(file);
     SourceText st = SourceText.From(source);
-    DiagSink sink = DiagSink.Create();
+    DiagnosticList sink = DiagnosticList.Create();
     RawProducer raw = new(st, sink);
     SignificantProducer<RawProducer> sig = new(raw);
     LookAheadWindow<SignificantToken, SignificantProducer<RawProducer>> la = new(sig, 4);

@@ -6,7 +6,7 @@ public class RawProducerTests
 {
   static List<RawToken> Lex(string input)
   {
-    RawProducer p = new(SourceText.From(input), DiagSink.Create());
+    RawProducer p = new(SourceText.From(input), DiagnosticList.Create());
     List<RawToken> list = [];
     while (p.TryRead(out RawToken t)) { list.Add(t); if (t.Kind == RawKind.Eob) break; }
     return list;
@@ -77,36 +77,36 @@ public class RawProducerTests
   public void TokenizesMultiCharSymbolsGreedily()
   {
     var toks = Lex("=> *{ ~=");
-    Assert.Contains(toks, t => t.Kind == RawKind.EqualGreater);
-    Assert.Contains(toks, t => t.Kind == RawKind.StarLBrace);
-    Assert.Contains(toks, t => t.Kind == RawKind.TildeEqual);
+    Assert.Contains(toks, static t => t.Kind == RawKind.EqualGreater);
+    Assert.Contains(toks, static t => t.Kind == RawKind.StarLBrace);
+    Assert.Contains(toks, static t => t.Kind == RawKind.TildeEqual);
   }
 
   [Fact]
   public void GreedyLessLessOverLess()
   {
     var toks = Lex("<< <");
-    Assert.Contains(toks, t => t.Kind == RawKind.LessLess);
-    Assert.Contains(toks, t => t.Kind == RawKind.Less);
+    Assert.Contains(toks, static t => t.Kind == RawKind.LessLess);
+    Assert.Contains(toks, static t => t.Kind == RawKind.Less);
   }
 
   [Fact]
   public void ColonFamilyTokens()
   {
     var toks = Lex(": :: := :* :");
-    Assert.Contains(toks, t => t.Kind == RawKind.Colon);
-    Assert.Contains(toks, t => t.Kind == RawKind.ColonColon);
-    Assert.Contains(toks, t => t.Kind == RawKind.ColonEqual);
-    Assert.Contains(toks, t => t.Kind == RawKind.ColonStar);
+    Assert.Contains(toks, static t => t.Kind == RawKind.Colon);
+    Assert.Contains(toks, static t => t.Kind == RawKind.ColonColon);
+    Assert.Contains(toks, static t => t.Kind == RawKind.ColonEqual);
+    Assert.Contains(toks, static t => t.Kind == RawKind.ColonStar);
   }
 
   [Fact]
   public void UnterminatedStringVariantsMixedBehavior()
   {
     var lone = Lex("\"");
-    Assert.Contains(lone, t => t.Kind == RawKind.StringLiteral);
+    Assert.Contains(lone, static t => t.Kind == RawKind.StringLiteral);
     var dangling = Lex("\"foo\\");
-    Assert.Contains(dangling, t => t.Kind == RawKind.Error);
+    Assert.Contains(dangling, static t => t.Kind == RawKind.Error);
   }
 
   [Fact]
@@ -114,24 +114,25 @@ public class RawProducerTests
   {
     var toks = Lex("foo : bar");
     int prevEnd = -1;
-    foreach (var t in toks.Where(t => t.Kind != RawKind.Eob))
+    foreach (var t in toks.Where(static t => t.Kind != RawKind.Eob))
     {
       int start = t.Offset;
       int end = t.Offset + t.Length;
       Assert.True(start >= 0);
-      if (prevEnd >= 0) Assert.True(start >= prevEnd, $"Token {t.Kind} starts before prior end");
+      if (prevEnd >= 0)
+        Assert.True(start >= prevEnd, $"Token {t.Kind} starts before prior end");
       prevEnd = Math.Max(prevEnd, end);
     }
   }
 
   [Fact]
-  public void SymbolTableMultiSymsAreSortedAndPrefixed()
+  public void RawKindTableEntriesAreSorted()
   {
-    foreach (var kv in RawSymbolTable.SymbolTable)
+    foreach (RawKindTableEntry entry in RawKindTable.Lookup)
     {
-      var arr = kv.Value.multiSyms;
-      for (int i = 1; i < arr.Length; i++) Assert.True(arr[i - 1].symbol.Length >= arr[i].symbol.Length);
-      foreach (var (symbol, _) in arr) Assert.True(symbol.Length > 0 && symbol[0] == kv.Key);
+      var arr = entry.Sequences.IsDefault ? [] : entry.Sequences;
+      for (int i = 1; i < arr.Length; i++)
+        Assert.True(arr[i - 1].Seq.Length >= arr[i].Seq.Length);
     }
   }
 }

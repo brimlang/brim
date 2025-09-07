@@ -2,7 +2,7 @@ using System.Globalization;
 
 namespace Brim.Parse;
 
-static class Chars
+static class BrimChars
 {
   /// <summary>
   /// Characters not allowed in identifiers.

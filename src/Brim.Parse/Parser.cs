@@ -6,12 +6,12 @@ namespace Brim.Parse;
 
 public sealed partial class Parser(
   in LookAheadWindow<SignificantToken, SignificantProducer<RawProducer>> look,
-  in DiagSink sink)
+  in DiagnosticList sink)
 {
   internal const int StallLimit = 512; // max consecutive non-advancing iterations allowed
 
   readonly LookAheadWindow<SignificantToken, SignificantProducer<RawProducer>> _look = look;
-  readonly DiagSink _diags = sink;
+  readonly DiagnosticList _diags = sink;
 
   public static BrimModule ParseModule(string source)
   {
@@ -21,7 +21,7 @@ public sealed partial class Parser(
 
   public static BrimModule ParseModule(SourceText st)
   {
-    DiagSink sink = DiagSink.Create();
+    DiagnosticList sink = DiagnosticList.Create();
     RawProducer raw = new(st, sink);
     SignificantProducer<RawProducer> sig = new(raw);
     LookAheadWindow<SignificantToken, SignificantProducer<RawProducer>> la = new(sig, capacity: 4);

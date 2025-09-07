@@ -7,7 +7,7 @@ public class NewParsePipelineTests
   static List<RawToken> LexAll(string text)
   {
     var src = SourceText.From(text);
-    RawProducer raw = new(src, DiagSink.Create());
+    RawProducer raw = new(src, DiagnosticList.Create());
     List<RawToken> list = [];
     while (raw.TryRead(out RawToken t)) { list.Add(t); if (t.Kind == RawKind.Eob) break; }
     return list;
@@ -16,7 +16,7 @@ public class NewParsePipelineTests
   static List<SignificantToken> SigAll(string text)
   {
     var src = SourceText.From(text);
-    RawProducer raw = new(src, DiagSink.Create());
+    RawProducer raw = new(src, DiagnosticList.Create());
     SignificantProducer<RawProducer> sig = new(raw);
     List<SignificantToken> list = [];
     while (sig.TryRead(out SignificantToken st)) { list.Add(st); if (st.CoreToken.Kind == RawKind.Eob) break; }
@@ -35,8 +35,8 @@ public class NewParsePipelineTests
   [Fact]
   public void Lookahead4HardFail()
   {
-    var src = SourceText.From("foo bar baz qux");
-    RawProducer raw = new(src, DiagSink.Create());
+    var src = SourceText.From("foo bar baz quux");
+    RawProducer raw = new(src, DiagnosticList.Create());
     SignificantProducer<RawProducer> signif = new(raw);
     LookAheadWindow<SignificantToken, SignificantProducer<RawProducer>> la = new(signif, 4);
     _ = la.Peek(3); // ok

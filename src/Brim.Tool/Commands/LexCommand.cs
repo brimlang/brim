@@ -29,7 +29,7 @@ class LexCommand : Command
       return -1;
     }
 
-    DiagSink sink = DiagSink.Create();
+    DiagnosticList sink = DiagnosticList.Create();
     string source = File.ReadAllText(file);
     SourceText st = SourceText.From(source);
     RawProducer prod = new(st, sink);

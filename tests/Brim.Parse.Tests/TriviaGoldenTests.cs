@@ -6,7 +6,7 @@ public class TriviaGoldenTests
 {
   static List<SignificantToken> SigAll(string text)
   {
-    RawProducer raw = new(SourceText.From(text), DiagSink.Create());
+    RawProducer raw = new(SourceText.From(text), DiagnosticList.Create());
     SignificantProducer<RawProducer> sig = new(raw);
     List<SignificantToken> list = [];
     while (sig.TryRead(out SignificantToken st)) { list.Add(st); if (st.CoreToken.Kind == RawKind.Eob) break; }

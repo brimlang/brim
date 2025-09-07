@@ -11,12 +11,12 @@ public static class Utilities
     if (string.IsNullOrEmpty(ident))
       return false;
 
-    if (!Chars.IsIdentifierStart(ident[0]))
+    if (!BrimChars.IsIdentifierStart(ident[0]))
       return false;
 
     for (int i = 1; i < ident.Length; i++)
     {
-      if (!Chars.IsIdentifierPart(ident[i]))
+      if (!BrimChars.IsIdentifierPart(ident[i]))
         return false;
     }
 

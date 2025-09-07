@@ -7,8 +7,8 @@ public class GenericUseSiteDiagnosticsTests
   [Fact]
   public void EmptyGenericArgumentListDiagnostic()
   {
-  var m = Parse("[[m]];\nBox[T] = %{ bad:Foo[] };");
-  Assert.Contains(m.Diagnostics, static d => d.Code == DiagCode.EmptyGenericArgList);
+    var m = Parse("[[m]];\nBox[T] = %{ bad:Foo[] };");
+    Assert.Contains(m.Diagnostics, static d => d.Code == DiagCode.EmptyGenericArgList);
   }
 
   // Nested generic arguments deferred; add later when full tree supported.

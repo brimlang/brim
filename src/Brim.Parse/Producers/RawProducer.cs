@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace Brim.Parse.Producers;
 
 /// <summary>
@@ -5,11 +7,11 @@ namespace Brim.Parse.Producers;
 /// </summary>
 public sealed class RawProducer(
     in SourceText source,
-    in DiagSink sink)
-: ITokenProducer<RawToken>
+    in DiagnosticList sink) :
+ITokenProducer<RawToken>
 {
   readonly SourceText _source = source;
-  readonly DiagSink _sink = sink;
+  readonly DiagnosticList _sink = sink;
 
   int _pos; // 0.._span.Length
   int _line = 1;
@@ -41,15 +43,11 @@ public sealed class RawProducer(
     return true;
   }
 
-  bool Matches(string symbol) =>
-    _source.Length - _pos >= symbol.Length &&
-    _source.Span.Slice(_pos, symbol.Length).SequenceEqual(symbol);
-
   char PeekChar(int k)
   {
     int idx = _pos + k;
     ReadOnlySpan<char> span = _source.Span;
-    return idx < span.Length ? span[idx] : Chars.EOB;
+    return idx < span.Length ? span[idx] : BrimChars.EOB;
   }
 
   void AdvanceChar()
@@ -59,7 +57,7 @@ public sealed class RawProducer(
       return;
 
     char c = span[_pos];
-    if (c == Chars.NewLine)
+    if (c == BrimChars.NewLine)
     {
       _line++;
       _col = 1;
@@ -88,30 +86,29 @@ public sealed class RawProducer(
 
       if (c == '-' && PeekChar(1) == '-')
         return LexLineComment(startOffset, startLine, startCol);
-      if (Chars.IsNonTerminalWhitespace(c))
+
+      if (BrimChars.IsNonTerminalWhitespace(c))
         return LexWhitespace(startOffset, startLine, startCol);
-      if (Chars.IsTerminator(c))
+
+      if (BrimChars.IsTerminator(c))
         return LexTerminator(startOffset, startLine, startCol);
+
       if (c == '"')
         return LexString(startOffset, startLine, startCol, _source.Span);
-      if (Chars.IsIdentifierStart(c))
+
+      if (BrimChars.IsIdentifierStart(c))
         return LexIdentifier(startOffset, startLine, startCol);
+
       if (char.IsDigit(c))
         return LexNumber(startOffset, startLine, startCol);
 
-      if (RawSymbolTable.SymbolTable.TryGetValue(c, out (RawKind singleKind, (string symbol, RawKind kind)[] multiSyms) entry))
-      {
-        foreach ((string symbol, RawKind kind) in entry.multiSyms)
-        {
-          if (Matches(symbol))
-            return MakeToken(kind, symbol.Length, startOffset, startLine, startCol);
-        }
-        return MakeToken(entry.singleKind, 1, startOffset, startLine, startCol);
-      }
+      if (RawKindTable.TryMatch(span[_pos..], out RawKind kind, out int matchedLength))
+        return MakeToken(kind, matchedLength, startOffset, startLine, startCol);
 
       _sink.Add(Diagnostic.InvalidChar(startOffset, startLine, startCol, c));
       return MakeToken(RawKind.Error, 1, startOffset, startLine, startCol);
     }
+
     return new RawToken(RawKind.Eob, _source.Length, 0, _line, _col);
   }
 
@@ -120,38 +117,44 @@ public sealed class RawProducer(
     ReadOnlySpan<char> span = _source.Span;
     for (int i = 0; i < length && _pos < span.Length; i++)
       AdvanceChar();
+
     return new(kind, startOffset, length, startLine, startCol);
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   RawToken LexWhitespace(int startOffset, int line, int col)
   {
-    AdvanceCharWhile(static c => Chars.IsNonTerminalWhitespace(c));
+    AdvanceCharWhile(static c => BrimChars.IsNonTerminalWhitespace(c));
     return new RawToken(RawKind.WhitespaceTrivia, startOffset, _pos - startOffset, line, col);
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   RawToken LexIdentifier(int startOffset, int line, int col)
   {
-    AdvanceCharWhile(static c => Chars.IsIdentifierPart(c));
+    AdvanceCharWhile(static c => BrimChars.IsIdentifierPart(c));
     return new RawToken(RawKind.Identifier, startOffset, _pos - startOffset, line, col);
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   RawToken LexNumber(int startOffset, int line, int col)
   {
     AdvanceCharWhile(static c => char.IsDigit(c));
     return new RawToken(RawKind.NumberLiteral, startOffset, _pos - startOffset, line, col);
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   RawToken LexLineComment(int startOffset, int line, int col)
   {
     AdvanceChar();
     AdvanceChar();
-    AdvanceCharWhile(static c => c is not Chars.NewLine);
+    AdvanceCharWhile(static c => c is not BrimChars.NewLine);
     return new RawToken(RawKind.CommentTrivia, startOffset, _pos - startOffset, line, col);
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   RawToken LexTerminator(int startOffset, int line, int col)
   {
-    AdvanceCharWhile(static c => Chars.IsTerminator(c));
+    AdvanceCharWhile(static c => BrimChars.IsTerminator(c));
     return new RawToken(RawKind.Terminator, startOffset, _pos - startOffset, line, col);
   }
 
