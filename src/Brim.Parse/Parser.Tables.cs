@@ -14,6 +14,7 @@ public sealed partial class Parser
     new(GenericDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.RBracket)),
     new(StructDeclaration.Parse, (RawKind.Identifier, RawKind.Equal, RawKind.PercentLBrace)),
     new(UnionDeclaration.Parse, (RawKind.Identifier, RawKind.Equal, RawKind.PipeLBrace)),
+    new(FlagsDeclaration.Parse, (RawKind.Identifier, RawKind.Equal, RawKind.Ampersand)),
     new(GenericDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.RBracket)), // empty generic param list
   ];
 
@@ -34,6 +35,8 @@ public sealed partial class Parser
     SyntaxKind.EqualToken => RawKind.Equal,
     SyntaxKind.StructToken => RawKind.PercentLBrace,
     SyntaxKind.UnionToken => RawKind.PipeLBrace,
+    SyntaxKind.AmpersandToken => RawKind.Ampersand,
+    SyntaxKind.OpenBraceToken => RawKind.LBrace,
     SyntaxKind.CloseBraceToken => RawKind.RBrace,
     SyntaxKind.EobToken => RawKind.Eob,
     SyntaxKind.ColonToken => RawKind.Colon,

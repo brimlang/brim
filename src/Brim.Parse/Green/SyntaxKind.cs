@@ -13,6 +13,8 @@ public enum SyntaxKind
   EqualToken,
   StructToken,
   UnionToken,
+  AmpersandToken,
+  OpenBraceToken,
   CloseBraceToken,
   ExportMarkerToken,
   ColonToken,
@@ -26,6 +28,7 @@ public enum SyntaxKind
   FunctionDeclaration,
   StructDeclaration,
   UnionDeclaration,
+  FlagsDeclaration,
   ExportDirective,
   ImportDeclaration,
   ParameterList,
@@ -38,5 +41,6 @@ public enum SyntaxKind
   ModuleDirective,
   FieldDeclaration,
   UnionVariantDeclaration,
+  FlagMemberDeclaration,
   GenericType,
 }

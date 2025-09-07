@@ -56,6 +56,9 @@ public static class GreenNodeFormatter
       case UnionDeclaration ud:
         _ = sb.Append(" name=").Append(Escape(ud.Identifier.GetText(source))).Append($" variants={ud.Variants.Count}");
         break;
+      case FlagsDeclaration fd:
+        _ = sb.Append(" name=").Append(Escape(fd.Identifier.GetText(source))).Append($" flags={fd.Members.Count}");
+        break;
       default:
         break;
     }
@@ -135,8 +138,10 @@ public static class GreenNodeFormatter
     SyntaxKind.FunctionDeclaration or
     SyntaxKind.StructDeclaration or
     SyntaxKind.UnionDeclaration or
+    SyntaxKind.FlagsDeclaration or
     SyntaxKind.FieldDeclaration or
     SyntaxKind.UnionVariantDeclaration or
+    SyntaxKind.FlagMemberDeclaration or
     SyntaxKind.ImportDeclaration => "[magenta]",
 
     // Directive node (module header) green
