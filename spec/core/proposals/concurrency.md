@@ -1,8 +1,9 @@
 ---
-level: C0+std+S0
+id: core.concurrency
+layer: core
 title: Concurrency surfaces
 authors: ['trippwill']
-date: 2025-09-08
+updated: 2025-09-08
 status: draft
 ---
 

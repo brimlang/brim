@@ -1,8 +1,9 @@
 ---
-level: C0+std+S0
+id: sugar.res_opt_unwrap
+layer: sugar
 title: res and opt early returns and sugar
 authors: ['trippwill']
-date: 2025-09-08
+updated: 2025-09-08
 status: draft
 ---
 

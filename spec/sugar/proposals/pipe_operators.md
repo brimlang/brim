@@ -1,9 +1,10 @@
 ---
-level: S0
+id: sugar.pipe_operators
+layer: sugar
 title: Pipe Operators
 authors: ['trippwill']
-date: 2025-09-08
-status: proposal
+updated: 2025-09-08
+status: proposed
 ---
 
 # Pipe Operators (`/>`, `</`) — S0 Proposal (v0.8‑draft)
