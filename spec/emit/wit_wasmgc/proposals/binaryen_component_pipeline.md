@@ -1,6 +1,12 @@
 ---
+id: emit.binaryen_component_pipeline
+layer: emit
+title: Core Build with Binaryen & Component Composition
+authors: ['trippwill']
+updated: 2025-09-08
 status: draft
 ---
+
 # Brim Toolchain Appendix — Core Build with Binaryen & Component Composition
 
 Describes how we **build & optimize core WasmGC with Binaryen**, and how we **wrap/compose** components with the WIT/Component toolchain. It complements the GC-only and pipeline decisions already in the corpus.

@@ -1,7 +1,7 @@
 ---
 id: core.fundamentals
 title: Fundamentals
-layer : core
+layer: core
 authors: ['trippwill']
 updated: 2025-09-08
 status: accepted
@@ -173,5 +173,5 @@ Core types do not carry methods; helpers live in the standard library.
 
 ## See also:
 - Aggregate construction & pattern forms: see `spec/core/syntax/aggregates.md` (Aggregate Types).
-- Service declarations & interfaces: see `spec/core/syntax/services.md` (Services, Interfaces, and Constraints).
+- Service declarations & protocols: see `spec/core/syntax/services.md` (Services, Protocols, and Constraints).
 

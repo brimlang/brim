@@ -1,7 +1,7 @@
 ---
 id: core.aggregates
 version: 0.1.0
-layer : core
+layer: core
 title: Aggregate Types
 authors: ['trippwill']
 updated: 2025-09-08

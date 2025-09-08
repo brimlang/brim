@@ -1,7 +1,7 @@
 ---
 id: core.generics
 title: Generics
-layer : core
+layer: core
 authors: ['trippwill']
 updated: 2025-09-08
 status: accepted
@@ -13,7 +13,7 @@ version: 0.1.0
 Defines canonical syntax & minimal semantics for parametric polymorphism.
 
 ## Scope
-Applies to: functions, struct types, union types, services, interfaces, builtin parametric types (`opt[T]`, `res[T]`, `*[T]`).
+Applies to: functions, struct types, union types, services, protocols, builtin parametric types (`opt[T]`, `res[T]`, `*[T]`).
 Excludes: higher-kinded types, value generics, variadics, partial application.
 
 ## Parameter Lists
@@ -28,19 +28,19 @@ Grammar (informal):
 ```
 GenericParams  ::= '[' GenericParam (',' GenericParam)* ']'
 GenericParam   ::= Ident (':' ConstraintList)?
-ConstraintList ::= InterfaceRef ('+' InterfaceRef)*
+ConstraintList ::= ProtocolRef ('+' ProtocolRef)*
 ```
 Rules:
 - No trailing comma.
 - Duplicate parameter name → EGEN001.
-- Duplicate interface in a list → EGEN002.
-- Unknown interface → EGEN003.
+- Duplicate protocol in a list → EGEN002.
+- Unknown protocol → EGEN003.
 
 Colon spacing: space before colon, none after (matches Brim style): `T :Eq + Show`.
 
 ## Constraints
-Any generic parameter may include zero or more interfaces after a single colon.
-All listed interfaces must be satisfied (conjunction).
+Any generic parameter may include zero or more protocols after a single colon.
+All listed protocols must be satisfied (conjunction).
 
 Examples:
 ```brim
@@ -48,8 +48,8 @@ Cache[K :Eq + Hash, V] = %{ entries: *[(K, V)] }
 all_equal[T :Eq] = (xs :*[T]) bool { ... }
 ```
 
-## Services & Interfaces
-Interfaces:
+## Services & Protocols
+Protocols:
 ```brim
 Iterable[T] = .{ next :() opt[T] }
 Show[T]     = .{ show :(T) str }
@@ -99,12 +99,12 @@ val => |Good(v) => v
 
 ## Diagnostics (Seed)
 - EGEN001 duplicate generic parameter name
-- EGEN002 duplicate interface in constraint list
-- EGEN003 unknown interface in constraint list
+- EGEN002 duplicate protocol in constraint list
+- EGEN003 unknown protocol in constraint list
 - EGEN004 cannot infer generic parameter
 - EGEN005 unused generic parameter
 - EGEN006 conflicting inferred types for parameter
-- EGEN007 interface constraint not satisfied
+- EGEN007 protocol constraint not satisfied
 
 ## Open Deferrals
 - Explicit type application syntax
@@ -113,4 +113,4 @@ val => |Good(v) => v
 - Partial specialization
 
 ## Rationale
-Removes the legacy `:*` marker; colon-driven constraint form unifies all generic parameter contexts. Star sigil reserved solely for homogeneous lists; dot adopted for interfaces, sharpening semantic taxonomy.
+Removes the legacy `:*` marker; colon-driven constraint form unifies all generic parameter contexts. Star sigil reserved solely for homogeneous lists; `.` adopted for protocol declarations, sharpening semantic taxonomy.

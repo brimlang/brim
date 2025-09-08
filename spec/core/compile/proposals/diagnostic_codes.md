@@ -1,7 +1,7 @@
 ---
 id: core.diagnostics
 title: Diagnostic Codes
-layer : core
+layer: core
 authors: ['trippwill']
 updated: 2025-09-08
 status: draft

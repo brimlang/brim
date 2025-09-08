@@ -1,22 +1,22 @@
 ---
 id: core.services
 title: Services, Interfaces, and Constraints
-layer : core
+layer: core
 authors: ['trippwill']
 updated: 2025-09-08
 status: accepted
 version: 0.1.0
 ---
 
-# Brim C0 — Services, Interfaces, and Constraints
+# Brim C0 — Services, Protocols, and Constraints
 
 - **Qualified service field access.** In C0, service fields must be accessed as `recv.field` (no bare names).
 
 ## Services
 
-- **Declaration Block:** `Type = ^|recv| :Iface (+ Iface)* { … }`
+- **Declaration Block:** `Type = ^|recv| :Proto (+ Proto)* { … }`
   - `^|recv|` introduces a service with named receiver `recv`.
-  - `:Iface (+Iface)*` lists implemented interfaces (constraint form unified).
+  - `:Proto (+Proto)*` lists implemented protocols (constraint form unified).
 
 Service block members are ordered as follows:
 
@@ -39,10 +39,10 @@ Logger = ^|log| :Fmt + Flush {
 }
 ```
 
-## Interfaces
+## Protocols
 
-- **Declare:** `Iface[T?] = .{ method : (params) Ret, … }`
-- The dot sigil denotes behavioral shape (interface) post-swap.
+- **Declare:** `Proto[T?] = .{ method :(params) Ret, … }`
+- The leading `.` denotes behavioral shape (protocol).
 
 ```brim
 Fmt = .{ to_string :() str }
@@ -50,7 +50,7 @@ Fmt = .{ to_string :() str }
 
 ## Generic constraints
 
-- **Form:** `T :Iface (+ Iface)*` (any generic parameter may carry zero or more interface constraints).
+- **Form:** `T :Proto (+ Proto)*` (any generic parameter may carry zero or more protocol constraints).
 
 ```brim
 map[T :Iterable, U :Eq] = (f :(T) U, xs :*[T]) *[T] { ... }

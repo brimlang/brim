@@ -17,7 +17,7 @@ Status: draft (informative). This document is a convenience index; canonical mea
 
 ## Core Lexical Tokens
 - Identifiers: Unicode (canonicalization rules TBD) — Cat: lexical — Canonical?: Y
-- Integer literals: (spec forthcoming) — Cat: literal — Canonical?: draft gap
+- Integer literals: see [numeric literals](./core/syntax/numeric_literals.md) (may include type suffix) — Cat: literal — Canonical?: Y
 - Rune literal quotes: `'` ... `'` — Cat: delim — Canonical?: Y
 - String literal quotes: `"` ... `"` — Cat: delim — Canonical?: Y
 - Comment start: `--` (to end of line) — Cat: comment — Canonical?: Y
@@ -47,10 +47,10 @@ Status: draft (informative). This document is a convenience index; canonical mea
 - Export: `<< Symbol` — Cat: module — Canonical?: Y
 - Import (module alias): `alias = [[pkg::path]]` — Cat: module — Canonical?: Y
 
-## Services & Interfaces
+## Services & Protocols
 - Service decl introducer: `^|recv|` — Cat: service — Canonical?: Y
-- Interface decl marker: `.{ ... }` — Cat: interface — Canonical?: Y
-- Service implements list: `:Iface (+Iface)*` — Cat: service — Canonical?: Y
+- Protocol decl marker: `.{ ... }` — Cat: protocol — Canonical?: Y
+- Service implements list: `:Proto (+Proto)*` — Cat: service — Canonical?: Y
 - Destructor: `~()` inside service block — Cat: service — Canonical?: Y
 
 ## Control Flow & Patterns
@@ -65,7 +65,7 @@ Status: draft (informative). This document is a convenience index; canonical mea
 ## Function & Type Annotation
 - Parameter annotation: `x :Type` (single space before colon) — Cat: type-anno — Canonical?: Y
 - Return type separator: `) Ret` — Cat: type-anno — Canonical?: Y
-- Generic constraints (syntax illustration): `[T :Iface + Other]` — Cat: generic — Canonical?: Y
+- Generic constraints (syntax illustration): `[T :Proto + Other]` — Cat: generic — Canonical?: Y
 
 ## Builtin Preamble Types
 - Optional: `opt[T]` — Cat: builtin — Canonical?: Y
@@ -81,7 +81,6 @@ Status: draft (informative). This document is a convenience index; canonical mea
 - Selection helper tokens for concurrency (no special tokens in core) — Cat: draft
 
 ## Open Clarifications Needed
-- Numeric literal grammar (hex, bin, underscores?)
 - Identifier normalization algorithm
 - Generic parameter list grammar outside services
 - Exhaustiveness definition for list patterns (in semantics layer)

@@ -1,6 +1,6 @@
 ---
 id: core.reserved_extra
-layer : core
+layer: core
 title: Additional Reserved Tokens
 authors: ['trippwill']
 updated: 2025-09-08

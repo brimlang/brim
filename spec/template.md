@@ -1,11 +1,11 @@
 ---
-id: core.aggregates
-layer : core
-title: Aggregate Types
-authors: ['trippwill']
-updated: 2025-09-08
-status: accepted
-version: 0.1.0
+id: layer.topic # required
+layer: core|sugar|emit|std|toolchain # required
+title: Your Title # required
+authors: ['your-handle'] # required
+updated: YYYY-MM-DD # required
+status: draft|proposed|accepted|deprecated # required
+version: 0.0.0 # optional; include when status is accepted
 ---
 
 # Spec Template

@@ -10,7 +10,7 @@ status: draft
 
 **Status:** Proposal (stdlib + S0 sugar); C0 unchanged
 
-This consolidates Brim’s concurrency surface *outside* the core. Futures/streams and message passing are expressed as **services** and **interfaces** in the standard library.
+This consolidates Brim’s concurrency surface *outside* the core. Futures/streams and message passing are expressed as **services** and **protocols** in the standard library.
 
 - Core types: `fut[T]`, `strm[T]`
 - Stdlib (`std::task`): `spawn`, `await`, `join_all`, `select`, `with_cancel`
@@ -57,7 +57,7 @@ select = (...) unit { /* see signature in §4 */ }
 
 ---
 
-## 2) Channels as services + capability interfaces
+## 2) Channels as services + capability protocols
 
 ```brim
 [[[std::chan]]]
@@ -75,12 +75,12 @@ select = (...) unit { /* see signature in §4 */ }
 Tx[T] = ^{ }   // send handle
 Rx[T] = ^{ }   // receive handle
 
-Sender[T]     = *{ send :(v :T) Fut[res[unit]] }
-TrySender[T]  = *{ try_send :(v :T) res[unit] }     // err(full|closed)
-AsyncSender[T]= *{ send_async :(v :T) Fut[unit] }   // optional flavor
-Receiver[T]   = *{ recv :() Fut[opt[T]] }
-TryReceiver[T]= *{ try_recv :() opt[T] }
-Closeable     = *{ close :() unit }
+Sender[T]     = .{ send :(v :T) Fut[res[unit]] }
+TrySender[T]  = .{ try_send :(v :T) res[unit] }     // err(full|closed)
+AsyncSender[T]= .{ send_async :(v :T) Fut[unit] }   // optional flavor
+Receiver[T]   = .{ recv :() Fut[opt[T]] }
+TryReceiver[T]= .{ try_recv :() opt[T] }
+Closeable     = .{ close :() unit }
 
 bounded   = (cap :u32) (Tx[T], Rx[T]) { /* bounded queue */ }
 unbounded = ()        (Tx[T], Rx[T]) { /* unbounded queue */ }
@@ -225,7 +225,7 @@ merge = (a :Receiver[str], b :Receiver[str]) Fut[list[str]] {
 
 **Decide**
 - Futures/streams move to stdlib (`std::task`).
-- Channels are services with capability interfaces (`Sender`, `Receiver`, etc.).
+- Channels are services with capability protocols (`Sender`, `Receiver`, etc.).
 - Backpressure via `send : T -> Fut[res[unit]]`.
 
 **Defer**
