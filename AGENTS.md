@@ -14,6 +14,12 @@ mise install
 
 Common dev tasks are also defined in `./mise.toml`.
 
+Test lexer - `mise rx lex ./demo.brim`
+Test parser - `mise rx parse ./demo.brim`
+Test parser with diagnostics - `mise rx parse --diagnostics ./demo.brim`
+
+All outputs go to stdout.
+
 # Purpose
 
 Single binary toolchain for the Brim programming language.
@@ -31,8 +37,9 @@ No stable release yet. Active development; APIs / grammar will change.
 
 # Brim Programming Language
 
-* See the [Brim Syntax Summary](./brim_syntax_summary.md) for a syntax overview.
+* See the [Brim Syntax Summary](./brim_syntax_summary.md) for a brief syntax overview for early development.
 * See the [demo program](./demo.brim) for a small example.
+* See the [Spec corpus](./spec) for detailed design documentation.
 
 
 ## Grammar Strategy
@@ -60,8 +67,8 @@ High-level goals:
 
 ```
 SourceText (ReadOnlyMemory<char>)
-  → RawTokenSource (lexer; trivia + collapsed terminators)
-  → SignificantTokenEnumerator (attaches leading trivia only)
+  → RawTokenProducer (lexer)
+  → SignificantTokenProducer (attaches leading trivia only)
   → LookAheadWindow (k ≤ 4)
   → Parser (produces immutable nodes + diagnostics)
   → Immutable Syntax Tree
@@ -73,7 +80,8 @@ SourceText (ReadOnlyMemory<char>)
 * Runs of newline / semicolon collapse into one `Terminator` token.
 * Terminator composition (counts) intentionally not stored.
 * Identifiers follow `Lexer.IsIdentifierStart/Part` rules; case not semantic.
-* No lookahead beyond 3 significant tokens for any prediction.
+* No lookahead beyond 4 significant tokens for any prediction.
+* Materialized strings never stored in tree; only positions.
 
 ## Parser Principles
 
@@ -130,7 +138,6 @@ Binary Search Index:
 
 * Default output: parse tree + original source echo (diagnostics suppressed by default).
 * Enable diagnostics with `--diagnostics`.
-* Node line format: `Kind @line:column(width)`; token lexeme (escaped, truncated ≤16 chars) follows in quotes.
 * Comment trivia rendered as child lines beginning with `#` in grey.
 * Colors: identifiers cyan; generic tokens grey; directives green; declarations (types/functions/import/export) magenta; errors red; containers blue/purple/teal; misc yellow fallback.
 
@@ -195,7 +202,6 @@ Ambiguities: default to rules here; mark stale comments for cleanup PR.
   - [ ] Monochrome fallback mode.
 
 5. Docs & Tests
-  - [ ] Update / add `docs/parse-pipeline.md` (xref this file).
   - [ ] Golden output tests for tree renderer.
   - [ ] Diagnostic renderer message snapshot tests.
 
