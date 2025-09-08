@@ -23,7 +23,6 @@ public enum RawKind
   Greater, // >
   Slash, // /
   Backslash, // \
-  Stop, // .
 
   // Possible compound glyph runs
   Less, LessLess, LessAt, // < << <@
@@ -39,6 +38,7 @@ public enum RawKind
   Hash, HashLParen, // # #(
   Ampersand, // &
   Percent, PercentLBrace, // % %{
+  Stop, StopLBrace, // . .{
   Question, QuestionLParen, // ? ?(
 
   // Literals

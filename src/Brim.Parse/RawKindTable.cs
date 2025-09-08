@@ -1,17 +1,37 @@
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace Brim.Parse;
 
+/// <summary>
+/// An entry in the raw kind table for a compound glyph sequence.
+/// </summary>
+/// <param name="Seq">The character sequence.</param>
+/// <param name="Kind">The corresponding raw kind.</param>
 public readonly record struct RawKindSequenceEntry(CharSequence Seq, RawKind Kind);
 
+/// <summary>
+/// An entry in the raw kind table.
+/// </summary>
+/// <param name="SingleKind">The single-character raw kind.</param>
+/// <param name="Sequences">The possible compound sequences starting with this character.</param>
+/// <remarks>
+/// <paramref name="Sequences"/> must be sorted in descending order of length.
+/// </remarks>
 public readonly record struct RawKindTableEntry(RawKind SingleKind, ImmutableArray<RawKindSequenceEntry> Sequences)
 {
-  public bool IsMulti => Sequences.IsDefault ? false : Sequences.Length > 0;
+  /// <summary>
+  /// Gets a value indicating whether this entry has multi-character sequences.
+  /// </summary>
+  public bool IsMulti => !Sequences.IsDefaultOrEmpty;
 }
 
+/// <summary>
+/// A static table mapping ASCII characters to their corresponding single-character and multi-character raw kinds.
+/// </summary>
 public static class RawKindTable
 {
-  internal static int MaxEntries => 128; // ASCII range
+  public const int MaxEntries = 128; // Basic ASCII range - No Unicode
 
 #pragma warning disable IDE0032 // Use auto property
   static readonly RawKindTableEntry[] _lookup = new RawKindTableEntry[MaxEntries];
@@ -39,6 +59,7 @@ public static class RawKindTable
     _lookup['['] = new(RawKind.LBracket, [new("[[", RawKind.LBracketLBracket)]);
     _lookup[']'] = new(RawKind.RBracket, [new("]]", RawKind.RBracketRBracket)]);
     _lookup['?'] = new(RawKind.Question, [new("?(", RawKind.QuestionLParen)]);
+    _lookup['.'] = new(RawKind.Stop, [new(".{", RawKind.StopLBrace)]);
     _lookup['-'] = new(RawKind.Minus, []);
     _lookup['&'] = new(RawKind.Ampersand, []);
     _lookup['('] = new(RawKind.LParen, []);
@@ -50,11 +71,28 @@ public static class RawKindTable
     _lookup['+'] = new(RawKind.Plus, []);
     _lookup['>'] = new(RawKind.Greater, []);
     _lookup['/'] = new(RawKind.Slash, []);
-    _lookup['.'] = new(RawKind.Stop, []);
     _lookup['\\'] = new(RawKind.Backslash, []);
+
+#if DEBUG
+    for (int i = 0; i < _lookup.Length; i++)
+    {
+      ImmutableArray<RawKindSequenceEntry> seqs = _lookup[i].Sequences;
+      if (seqs.IsDefault)
+        continue;
+
+      for (int j = 1; j < seqs.Length; j++)
+        Debug.Assert(seqs[j - 1].Seq.Length >= seqs[j].Seq.Length, "Sequences must be sorted by descending length.");
+    }
+#endif
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  /// <summary>
+  /// Attempts to retrieve the table entry for the ASCII character <paramref name="c"/>.
+  /// </summary>
+  /// <param name="c">The character to look up.</param>
+  /// <param name="entry">The resulting table entry when the lookup succeeds.</param>
+  /// <returns><c>true</c> if the character is registered; otherwise <c>false</c>.</returns>
   public static bool TryGetEntry(char c, out RawKindTableEntry entry)
   {
     if (c < MaxEntries)
@@ -67,6 +105,32 @@ public static class RawKindTable
     return false;
   }
 
+  /// <summary>
+  /// Gets the single-character raw kind for <paramref name="c"/> or <see cref="RawKind.Default"/> if none exists.
+  /// </summary>
+  /// <param name="c">The character to look up.</param>
+  /// <returns>The associated single-character <see cref="RawKind"/> or <see cref="RawKind.Default"/>.</returns>
+  public static RawKind GetSingleKind(char c) =>
+    TryGetEntry(c, out RawKindTableEntry entry)
+    ? entry.SingleKind
+    : RawKind.Default;
+
+  /// <summary>
+  /// Determines whether <paramref name="c"/> corresponds to a single-character token with no multi-character continuations.
+  /// </summary>
+  /// <param name="c">The character to test.</param>
+  /// <returns><c>true</c> if the character maps only to a single-character token; otherwise <c>false</c>.</returns>
+  public static bool IsSingleKind(char c) =>
+    TryGetEntry(c, out RawKindTableEntry entry)
+    && !entry.IsMulti;
+
+  /// <summary>
+  /// Attempts to match the longest raw kind at the start of <paramref name="span"/>.
+  /// </summary>
+  /// <param name="span">The input character span.</param>
+  /// <param name="kind">On success, the matched <see cref="RawKind"/>.</param>
+  /// <param name="matchedLength">On success, the number of characters consumed.</param>
+  /// <returns><c>true</c> if a kind was matched; otherwise <c>false</c>.</returns>
   public static bool TryMatch(ReadOnlySpan<char> span, out RawKind kind, out int matchedLength)
   {
     if (span.Length == 0 || !TryGetEntry(span[0], out RawKindTableEntry entry))
@@ -76,13 +140,16 @@ public static class RawKindTable
       return false;
     }
 
-    foreach (RawKindSequenceEntry seq in entry.Sequences)
+    if (entry.IsMulti)
     {
-      if (seq.Seq.PrefixMatch(span))
+      foreach (RawKindSequenceEntry seq in entry.Sequences)
       {
-        kind = seq.Kind;
-        matchedLength = seq.Seq.Length;
-        return true;
+        if (seq.Seq.PrefixMatch(span))
+        {
+          kind = seq.Kind;
+          matchedLength = seq.Seq.Length;
+          return true;
+        }
       }
     }
 
@@ -91,8 +158,6 @@ public static class RawKindTable
     return true;
   }
 
-#pragma warning disable IDE0032 // Use auto property
-  internal static RawKindTableEntry[] Lookup => _lookup;
-#pragma warning restore IDE0032
+  internal static ReadOnlySpan<RawKindTableEntry> AsSpan() => _lookup;
 }
 

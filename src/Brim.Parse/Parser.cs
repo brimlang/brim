@@ -37,10 +37,10 @@ public sealed partial class Parser(
     ModuleDirective header = ModuleDirective.Parse(this);
 
     ImmutableArray<GreenNode>.Builder members = ImmutableArray.CreateBuilder<GreenNode>();
-    ParserProgress progress = new(Current.CoreToken.Offset);
+    ParserProgress progress = new(Current);
     ExpectedSet expectedSet = default; // reused accumulator
 
-    while (Current.CoreToken.Kind is not RawKind.Eob)
+    while (!IsEob(Current))
     {
       // Standalone syntax (terminators/comments) handled directly.
       if (IsStandaloneSyntax(Current.Kind))
@@ -48,7 +48,7 @@ public sealed partial class Parser(
         members.Add(new GreenToken(MapStandaloneSyntaxKind(Current.CoreToken.Kind), Current));
 
         Advance();
-        progress = progress.Update(Current.CoreToken.Offset);
+        progress = progress.Update(Current);
 
         if (progress.StallCount > StallLimit)
         {
@@ -100,6 +100,8 @@ public sealed partial class Parser(
       Diagnostics = _diags.GetSortedDiagnostics()
     };
   }
+
+  static bool IsEob(TokenView tok) => tok.Kind == RawKind.Eob;
 
   internal bool MatchRaw(RawKind kind, int offset = 0) =>
     kind == RawKind.Any || PeekKind(offset) == kind;
@@ -206,10 +208,14 @@ public sealed partial class Parser(
   /// </summary>
   readonly record struct ParserProgress(int LastOffset, int StallCount = 0)
   {
+    public ParserProgress(TokenView tok) : this(tok.Offset, 0) { }
+
     public ParserProgress Update(int currentOffset) =>
       currentOffset == LastOffset
         ? new ParserProgress(LastOffset, StallCount + 1)
         : new ParserProgress(currentOffset, 0);
+
+    public ParserProgress Update(TokenView tok) => Update(tok.Offset);
   }
 }
 
