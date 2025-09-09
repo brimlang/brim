@@ -42,7 +42,8 @@ public enum RawKind
   Question, QuestionLParen, // ? ?(
 
   // Literals
-  NumberLiteral,
+  IntegerLiteral,
+  DecimalLiteral,
   StringLiteral,
 
   // Trivia

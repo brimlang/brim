@@ -138,8 +138,77 @@ ITokenProducer<RawToken>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   RawToken LexNumber(int startOffset, int line, int col)
   {
-    AdvanceCharWhile(static c => char.IsDigit(c));
-    return new RawToken(RawKind.NumberLiteral, startOffset, _pos - startOffset, line, col);
+    bool isDecimal = false;
+
+    // Hexadecimal
+    if (PeekChar(0) == '0' && (PeekChar(1) == 'x' || PeekChar(1) == 'X'))
+    {
+      AdvanceChar(); // 0
+      AdvanceChar(); // x
+      while (true)
+      {
+        char c = PeekChar(0);
+        if (IsHexDigit(c)) { AdvanceChar(); }
+        else if (c == '_' && IsHexDigit(PeekChar(1))) { AdvanceChar(); AdvanceChar(); }
+        else { break; }
+      }
+    }
+    // Binary
+    else if (PeekChar(0) == '0' && (PeekChar(1) == 'b' || PeekChar(1) == 'B'))
+    {
+      AdvanceChar(); // 0
+      AdvanceChar(); // b
+      while (true)
+      {
+        char c = PeekChar(0);
+        if (c is '0' or '1') { AdvanceChar(); }
+        else if (c == '_' && (PeekChar(1) is '0' or '1')) { AdvanceChar(); AdvanceChar(); }
+        else { break; }
+      }
+    }
+    else
+    {
+      // Decimal or fractional
+      while (true)
+      {
+        char c = PeekChar(0);
+        if (char.IsDigit(c)) { AdvanceChar(); }
+        else if (c == '_' && char.IsDigit(PeekChar(1))) { AdvanceChar(); AdvanceChar(); }
+        else { break; }
+      }
+
+      if (PeekChar(0) == '.' && char.IsDigit(PeekChar(1)))
+      {
+        isDecimal = true;
+        AdvanceChar(); // '.'
+        while (true)
+        {
+          char c = PeekChar(0);
+          if (char.IsDigit(c)) { AdvanceChar(); }
+          else if (c == '_' && char.IsDigit(PeekChar(1))) { AdvanceChar(); AdvanceChar(); }
+          else { break; }
+        }
+      }
+    }
+
+    if (!isDecimal)
+    {
+      char c = PeekChar(0);
+      if (c is 'i' or 'u')
+      {
+        AdvanceChar(); // consume i/u
+        if (PeekChar(0) == '1' && PeekChar(1) == '6') { AdvanceChar(); AdvanceChar(); }
+        else if (PeekChar(0) == '3' && PeekChar(1) == '2') { AdvanceChar(); AdvanceChar(); }
+        else if (PeekChar(0) == '6' && PeekChar(1) == '4') { AdvanceChar(); AdvanceChar(); }
+        else if (PeekChar(0) == '8') { AdvanceChar(); }
+      }
+    }
+
+    RawKind kind = isDecimal ? RawKind.DecimalLiteral : RawKind.IntegerLiteral;
+    return new RawToken(kind, startOffset, _pos - startOffset, line, col);
+
+    static bool IsHexDigit(char c) =>
+      char.IsDigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]

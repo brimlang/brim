@@ -48,9 +48,10 @@ public class NewParsePipelineTests
   [Fact]
   public void RawProducerLexesIdentifiersNumbersStringsAndWhitespace()
   {
-    List<RawToken> list = LexAll("foo 123 \"bar\"");
+    List<RawToken> list = LexAll("foo 123 1.23 \"bar\"");
     Assert.Contains(list, static t => t.Kind == RawKind.Identifier);
-    Assert.Contains(list, static t => t.Kind == RawKind.NumberLiteral);
+    Assert.Contains(list, static t => t.Kind == RawKind.IntegerLiteral);
+    Assert.Contains(list, static t => t.Kind == RawKind.DecimalLiteral);
     Assert.Contains(list, static t => t.Kind == RawKind.StringLiteral);
     Assert.Contains(list, static t => t.Kind == RawKind.WhitespaceTrivia);
   }

@@ -50,7 +50,8 @@ class LexCommand : Command
     {
       RawKind.Terminator => Markup.FromInterpolated($"[magenta]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString().Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t")}[/]'\n"),
       RawKind.Identifier => Markup.FromInterpolated($"[blue]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString()}[/]'\n"),
-      RawKind.NumberLiteral => Markup.FromInterpolated($"[green]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString()}[/]'\n"),
+      RawKind.IntegerLiteral => Markup.FromInterpolated($"[green]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString()}[/]'\n"),
+      RawKind.DecimalLiteral => Markup.FromInterpolated($"[green]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString()}[/]'\n"),
       RawKind.StringLiteral => Markup.FromInterpolated($"[green]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString()}[/]'\n"),
       RawKind.WhitespaceTrivia => Markup.FromInterpolated($"[cyan]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString().Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t")}[/]'\n"),
       RawKind.CommentTrivia => Markup.FromInterpolated($"[cyan]{{{token.Kind}}}[/] '[grey]{token.Value(source).ToString().Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t")}[/]'\n"),
