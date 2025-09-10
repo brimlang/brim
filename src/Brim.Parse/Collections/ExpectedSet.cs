@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace Brim.Parse;
+namespace Brim.Parse.Collections;
 
 /// <summary>
 /// Small fixed-capacity (≤4) set of unique RawKind values used when building

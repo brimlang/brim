@@ -1,7 +1,7 @@
 namespace Brim.Parse;
 
-public interface IToken
-{
-  RawKind Kind { get; }
-}
-
+// public interface IToken
+// {
+//   RawKind Kind { get; }
+// }
+//

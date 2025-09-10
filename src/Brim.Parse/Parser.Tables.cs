@@ -1,3 +1,4 @@
+using Brim.Parse.Collections;
 using Brim.Parse.Green;
 
 namespace Brim.Parse;
@@ -66,6 +67,7 @@ public sealed partial class Parser
           if (i > 0) sb.Append(',');
           sb.Append((int)ls[i]);
         }
+
         string key = sb.ToString();
         if (!seen.Add(key))
           throw new InvalidOperationException($"Duplicate TokenSequence in prediction table '{name}': {key}");

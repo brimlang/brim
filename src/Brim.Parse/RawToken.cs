@@ -16,7 +16,7 @@ public readonly record struct RawToken(
     int Offset,
     int Length,
     int Line,
-    int Column) : IToken
+    int Column)
 {
   /// <summary>
   /// Returns the token's text as a span from the given input buffer.

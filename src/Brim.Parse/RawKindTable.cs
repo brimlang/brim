@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using Brim.Parse.Collections;
 
 namespace Brim.Parse;
 
@@ -8,7 +9,9 @@ namespace Brim.Parse;
 /// </summary>
 /// <param name="Seq">The character sequence.</param>
 /// <param name="Kind">The corresponding raw kind.</param>
-public readonly record struct RawKindSequenceEntry(CharSequence Seq, RawKind Kind);
+public readonly record struct RawKindSequenceEntry(
+  CharSequence Seq,
+  RawKind Kind);
 
 /// <summary>
 /// An entry in the raw kind table.
@@ -18,7 +21,9 @@ public readonly record struct RawKindSequenceEntry(CharSequence Seq, RawKind Kin
 /// <remarks>
 /// <paramref name="Sequences"/> must be sorted in descending order of length.
 /// </remarks>
-public readonly record struct RawKindTableEntry(RawKind SingleKind, ImmutableArray<RawKindSequenceEntry> Sequences)
+public readonly record struct RawKindTableEntry(
+  RawKind SingleKind,
+  ImmutableArray<RawKindSequenceEntry> Sequences)
 {
   /// <summary>
   /// Gets a value indicating whether this entry has multi-character sequences.
@@ -33,9 +38,7 @@ public static class RawKindTable
 {
   public const int MaxEntries = 128; // Basic ASCII range - No Unicode
 
-#pragma warning disable IDE0032 // Use auto property
   static readonly RawKindTableEntry[] _lookup = new RawKindTableEntry[MaxEntries];
-#pragma warning restore IDE0032
 
   static RawKindTable()
   {

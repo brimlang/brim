@@ -1,4 +1,4 @@
-namespace Brim.Parse;
+namespace Brim.Parse.Collections;
 
 /// <summary>
 /// Immutable, stack-only sequence of up to 3 chars, for efficient operator matching.
@@ -16,6 +16,7 @@ public readonly struct CharSequence :
   /// Maximum allowed length of a <see cref="CharSequence"/> (always 3).
   /// </summary>
   public const int MaxLength = 3;
+
   /// <summary>
   /// Represents an empty sequence (equivalent to <c>default</c>).
   /// </summary>
@@ -107,9 +108,7 @@ public readonly struct CharSequence :
       0 => _c0,
       1 => _c1,
       2 => _c2,
-#pragma warning disable CA2201 // Do not raise reserved exception types
       _ => throw new IndexOutOfRangeException(),
-#pragma warning restore CA2201
     };
   }
 

@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace Brim.Parse;
 
 /// <summary>
@@ -14,13 +16,11 @@ public readonly partial struct SourceText
 
   public static SourceText From(string text) => new(text.AsMemory());
 
-  public static SourceText FromFile(string path)
-  {
-    return new(File.ReadAllText(path).AsMemory())
+  public static SourceText FromFile(string path) =>
+    new(File.ReadAllText(path, Encoding.UTF8).AsMemory())
     {
       FilePath = path
     };
-  }
 
   /// <summary>Optional originating file path (empty if not provided).</summary>
   public readonly string FilePath { get; init; } = string.Empty;

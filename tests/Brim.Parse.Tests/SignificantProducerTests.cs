@@ -1,3 +1,4 @@
+using Brim.Parse.Collections;
 using Brim.Parse.Producers;
 
 namespace Brim.Parse.Tests;

@@ -22,10 +22,4 @@ public static class Utilities
 
     return true;
   }
-
-  ///<summary>
-  /// Gets the RawKind of a token implementing IToken.
-  ///</summary>
-  internal static RawKind GetRawTokenKind<U>(U token) where U : struct, IToken => token.Kind;
-
 }

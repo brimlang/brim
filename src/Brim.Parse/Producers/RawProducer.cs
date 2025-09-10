@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Brim.Parse.Collections;
 
 namespace Brim.Parse.Producers;
 
@@ -17,6 +18,8 @@ ITokenProducer<RawToken>
   int _line = 1;
   int _col = 1;
   bool _emittedEob;
+
+  public bool IsEndOfSource(in RawToken item) => Tokens.IsEob(item);
 
   public bool TryRead(out RawToken tok)
   {
@@ -255,4 +258,5 @@ ITokenProducer<RawToken>
 
     return new RawToken(RawKind.StringLiteral, startOffset, len, line, col);
   }
+
 }

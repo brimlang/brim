@@ -1,5 +1,4 @@
-
-﻿# Instructions for Agents
+# Instructions for Agents
 
 Dev dependencies are managed using mise. See https://mise.jdx.dev/
 

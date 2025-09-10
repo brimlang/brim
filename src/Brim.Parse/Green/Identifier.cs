@@ -1,9 +1,8 @@
 namespace Brim.Parse.Green;
 
-public sealed record Identifier(
-  GreenToken Token)
-: GreenNode(SyntaxKind.IdentifierToken, Token.Offset)
-, IParsable<Identifier>
+public sealed record Identifier(GreenToken Token) :
+  GreenNode(SyntaxKind.IdentifierToken, Token.Offset),
+  IParsable<Identifier>
 {
   public override int FullWidth => Token.FullWidth;
   public override IEnumerable<GreenNode> GetChildren()

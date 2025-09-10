@@ -1,3 +1,4 @@
+using Brim.Parse.Collections;
 using Brim.Parse.Green;
 
 namespace Brim.Parse;
@@ -20,7 +21,10 @@ readonly ref struct PredictionTable
   readonly ReadOnlySpan<int> _groupStart; // -1 if none
   readonly ReadOnlySpan<byte> _groupCount; // 0 if none
 
-  public PredictionTable(ReadOnlySpan<Prediction> entries, ReadOnlySpan<int> starts, ReadOnlySpan<byte> counts)
+  public PredictionTable(
+    ReadOnlySpan<Prediction> entries,
+    ReadOnlySpan<int> starts,
+    ReadOnlySpan<byte> counts)
   {
     Entries = entries;
     _groupStart = starts;

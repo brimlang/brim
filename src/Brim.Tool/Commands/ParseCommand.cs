@@ -1,7 +1,6 @@
 using System.CommandLine;
 using Brim.Parse;
 using Brim.Parse.Green;
-using Brim.Parse.Producers;
 using Brim.Tool.Diagnostics;
 using Spectre.Console;
 
@@ -41,26 +40,16 @@ class ParseCommand : Command
 
     string source = File.ReadAllText(file);
     SourceText st = SourceText.From(source);
-    DiagnosticList sink = DiagnosticList.Create();
-    RawProducer raw = new(st, sink);
-    SignificantProducer<RawProducer> sig = new(raw);
-    LookAheadWindow<SignificantToken, SignificantProducer<RawProducer>> la = new(sig, 4);
-    Parser parser = new(la, sink);
-    BrimModule module = parser.ParseModule();
+    BrimModule module = Parser.ModuleFrom(st);
 
     AnsiConsole.MarkupLine("[bold]Parse Tree:[/]");
     AnsiConsole.Write(GreenNodeFormatter.RenderTree(source, module));
-
     AnsiConsole.WriteLine(module.GetText(source));
 
     if (module.Diagnostics.Count == 0)
-    {
       AnsiConsole.MarkupLine("[green]No diagnostics.[/]");
-    }
     else
-    {
       AnsiConsole.MarkupLine($"[red]{module.Diagnostics.Count} diagnostics.[/]");
-    }
 
     if (showDiagnostics)
     {
@@ -69,7 +58,7 @@ class ParseCommand : Command
       foreach (Diagnostic d in diags)
       {
         string msg = DiagnosticRenderer.Render(d);
-        AnsiConsole.MarkupLineInterpolated($"[yellow]{d.Line}:{d.Column}[/] {msg}");
+        AnsiConsole.MarkupLineInterpolated($"[yellow]{d.Line:D3}:{d.Column:D3}[/] {msg}");
       }
     }
 

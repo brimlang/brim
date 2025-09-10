@@ -1,3 +1,4 @@
+using Brim.Parse.Collections;
 using Brim.Parse.Producers;
 
 namespace Brim.Parse.Tests;
@@ -38,7 +39,7 @@ public class NewParsePipelineTests
     var src = SourceText.From("foo bar baz quux");
     RawProducer raw = new(src, DiagnosticList.Create());
     SignificantProducer<RawProducer> signif = new(raw);
-    LookAheadWindow<SignificantToken, SignificantProducer<RawProducer>> la = new(signif, 4);
+    RingBuffer<SignificantToken, SignificantProducer<RawProducer>> la = new(signif, 4);
     _ = la.Peek(3); // ok
     bool threw = false;
     try { _ = la.Peek(4); } catch (ArgumentOutOfRangeException) { threw = true; }

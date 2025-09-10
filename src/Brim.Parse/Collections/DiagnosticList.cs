@@ -1,4 +1,4 @@
-namespace Brim.Parse;
+namespace Brim.Parse.Collections;
 
 /// <summary>
 /// Ref-friendly diagnostic sink that aggregates diagnostics into a single List on the heap.

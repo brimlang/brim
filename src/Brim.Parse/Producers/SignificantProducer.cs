@@ -19,6 +19,8 @@ public sealed class SignificantProducer<TProducer>(in TProducer inner) :
   RawToken _look; // single token look ahead slot
   bool _haveLook;
 
+  public bool IsEndOfSource(in SignificantToken item) => Tokens.IsEob(item);
+
   public bool TryRead(out SignificantToken tok)
   {
     tok = default;

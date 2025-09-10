@@ -3,9 +3,9 @@ namespace Brim.Parse.Green;
 public sealed record ExportDirective(
   GreenToken ExportMarker,
   Identifier Identifier,
-  GreenToken Terminator)
-: GreenNode(SyntaxKind.ExportDirective, ExportMarker.Offset)
-, IParsable<ExportDirective>
+  GreenToken Terminator) :
+GreenNode(SyntaxKind.ExportDirective, ExportMarker.Offset),
+IParsable<ExportDirective>
 {
   public override int FullWidth => Identifier.EndOffset - ExportMarker.Offset;
   public override IEnumerable<GreenNode> GetChildren()
@@ -18,7 +18,7 @@ public sealed record ExportDirective(
   public static ExportDirective Parse(Parser p) =>
     new(
       p.ExpectSyntax(SyntaxKind.ExportMarkerToken),
-  Identifier.Parse(p),
+      Identifier.Parse(p),
       p.ExpectSyntax(SyntaxKind.TerminatorToken)
     );
 }

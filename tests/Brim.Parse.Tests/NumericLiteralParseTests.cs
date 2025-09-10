@@ -1,4 +1,4 @@
-using Brim.Parse;
+using Brim.Parse.Collections;
 using Brim.Parse.Green;
 using Brim.Parse.Producers;
 
@@ -12,7 +12,7 @@ public class NumericLiteralParseTests
     DiagnosticList diags = DiagnosticList.Create();
     RawProducer raw = new(st, diags);
     SignificantProducer<RawProducer> sig = new(raw);
-    LookAheadWindow<SignificantToken, SignificantProducer<RawProducer>> la = new(sig, 4);
+    RingBuffer<SignificantToken, SignificantProducer<RawProducer>> la = new(sig, 4);
     Parser p = new(la, diags);
     return IntegerLiteral.Parse(p);
   }
@@ -23,7 +23,7 @@ public class NumericLiteralParseTests
     DiagnosticList diags = DiagnosticList.Create();
     RawProducer raw = new(st, diags);
     SignificantProducer<RawProducer> sig = new(raw);
-    LookAheadWindow<SignificantToken, SignificantProducer<RawProducer>> la = new(sig, 4);
+    RingBuffer<SignificantToken, SignificantProducer<RawProducer>> la = new(sig, 4);
     Parser p = new(la, diags);
     return DecimalLiteral.Parse(p);
   }

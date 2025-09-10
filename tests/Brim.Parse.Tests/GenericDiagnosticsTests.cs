@@ -2,7 +2,7 @@ namespace Brim.Parse.Tests;
 
 public class GenericDiagnosticsTests
 {
-  static Brim.Parse.Green.BrimModule Parse(string src) => Parser.ParseModule(src);
+  static Green.BrimModule Parse(string src) => Parser.ParseModule(src);
 
   [Fact(Skip = "TODO: Broken")]
   public void EmptyGenericParamListDiagnostic()

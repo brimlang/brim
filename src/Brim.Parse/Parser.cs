@@ -1,33 +1,37 @@
 using System.Runtime.CompilerServices;
+using Brim.Parse.Collections;
 using Brim.Parse.Green;
 using Brim.Parse.Producers;
 
 namespace Brim.Parse;
 
 public sealed partial class Parser(
-  in LookAheadWindow<SignificantToken, SignificantProducer<RawProducer>> look,
+  in RingBuffer<SignificantToken, SignificantProducer<RawProducer>> look,
   in DiagnosticList sink)
 {
   internal const int StallLimit = 512; // max consecutive non-advancing iterations allowed
 
-  readonly LookAheadWindow<SignificantToken, SignificantProducer<RawProducer>> _look = look;
+  readonly RingBuffer<SignificantToken, SignificantProducer<RawProducer>> _look = look;
   readonly DiagnosticList _diags = sink;
 
-  public static BrimModule ParseModule(string source)
+  /// <summary>
+  /// Parses a BrimModule from the given SourceText.
+  /// </summary>
+  /// <param name="source">The source text to parse.</param>
+  /// <returns>A parsed BrimModule instance.</returns>
+  public static BrimModule ModuleFrom(SourceText source)
   {
-    SourceText st = SourceText.From(source);
-    return ParseModule(st);
+    DiagnosticList diags = DiagnosticList.Create();
+    return new Parser(
+      new RingBuffer<SignificantToken, SignificantProducer<RawProducer>>(
+        new SignificantProducer<RawProducer>(
+          new RawProducer(source, diags)),
+        capacity: 4),
+      diags)
+    .ParseModule();
   }
 
-  public static BrimModule ParseModule(SourceText st)
-  {
-    DiagnosticList sink = DiagnosticList.Create();
-    RawProducer raw = new(st, sink);
-    SignificantProducer<RawProducer> sig = new(raw);
-    LookAheadWindow<SignificantToken, SignificantProducer<RawProducer>> la = new(sig, capacity: 4);
-    Parser p = new(la, sink);
-    return p.ParseModule();
-  }
+  internal static BrimModule ParseModule(string src) => ModuleFrom(SourceText.From(src));
 
   public SignificantToken Current => _look.Current;
 
@@ -40,16 +44,19 @@ public sealed partial class Parser(
     ParserProgress progress = new(Current);
     ExpectedSet expectedSet = default; // reused accumulator
 
-    while (!IsEob(Current))
+    while (!Tokens.IsEob(Current))
     {
       // Standalone syntax (terminators/comments) handled directly.
       if (IsStandaloneSyntax(Current.Kind))
       {
-        members.Add(new GreenToken(MapStandaloneSyntaxKind(Current.CoreToken.Kind), Current));
+        members.Add(
+            new GreenToken(
+              MapStandaloneSyntaxKind(Current.CoreToken.Kind),
+              Current));
 
         Advance();
-        progress = progress.Update(Current);
 
+        progress = progress.Update(Current);
         if (progress.StallCount > StallLimit)
         {
           _diags.Add(Diagnostic.Unexpected(Current.CoreToken, []));
@@ -100,8 +107,6 @@ public sealed partial class Parser(
       Diagnostics = _diags.GetSortedDiagnostics()
     };
   }
-
-  static bool IsEob(TokenView tok) => tok.Kind == RawKind.Eob;
 
   internal bool MatchRaw(RawKind kind, int offset = 0) =>
     kind == RawKind.Any || PeekKind(offset) == kind;
@@ -159,6 +164,11 @@ public sealed partial class Parser(
     return new GreenToken(syntaxKind, fabricated);
   }
 
+  internal void AddDiagEmptyGeneric(GreenToken open) => _diags.Add(Diagnostic.EmptyGenericArgList(open.Token));
+  internal void AddDiagUnexpectedGenericBody() => _diags.Add(Diagnostic.UnexpectedGenericBody(Current.CoreToken));
+
+  static bool IsStandaloneSyntax(RawKind kind) => kind is RawKind.Terminator or RawKind.CommentTrivia;
+
   void Advance() => _look.Advance();
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -189,19 +199,12 @@ public sealed partial class Parser(
     return st.CoreToken.Kind;
   }
 
-  static bool IsStandaloneSyntax(RawKind kind) => kind is RawKind.Terminator or RawKind.CommentTrivia;
-
   RawToken GetErrorToken() => new(
     RawKind.Error,
     Current.CoreToken.Offset,
     Length: 0,
     Current.CoreToken.Line,
     Current.CoreToken.Column);
-
-  internal void AddDiagEmptyGeneric(GreenToken open) =>
-    _diags.Add(Diagnostic.EmptyGenericArgList(open.Token));
-  internal void AddDiagUnexpectedGenericBody() =>
-    _diags.Add(Diagnostic.UnexpectedGenericBody(Current.CoreToken));
 
   /// <summary>
   /// Tracks parser forward progress: last offset and number of consecutive non-advancing iterations.

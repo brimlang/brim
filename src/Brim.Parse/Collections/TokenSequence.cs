@@ -1,4 +1,4 @@
-namespace Brim.Parse;
+namespace Brim.Parse.Collections;
 
 /// <summary>
 /// Fixed-size (≤4) token sequence used for prediction lookahead (explicit length, trailing Any).

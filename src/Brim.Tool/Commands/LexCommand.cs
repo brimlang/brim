@@ -1,5 +1,6 @@
 using System.CommandLine;
 using Brim.Parse;
+using Brim.Parse.Collections;
 using Brim.Parse.Producers;
 using Spectre.Console;
 
