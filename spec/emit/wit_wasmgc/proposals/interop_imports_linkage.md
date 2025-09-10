@@ -39,6 +39,7 @@ status: draft
 
 - Brim `str` → WIT `string` → WasmGC `(ref null (array i8))`.
 - Brim `res[T]` → WIT `result<T>` → core integer tag + payload.
+- Brim `T!` → WIT `result<T>` → core integer tag + payload.
 - Services → WIT `resource` (constructors, methods, destructors).
 - External calls → **world imports**; internal Brim helpers compile in.
 
@@ -55,7 +56,7 @@ stdio = [wasi:io/stdio]
 greet = (name :str) res[unit] {
   msg = text::concat("hi, ", name, "\n")
   stdio::print(msg)
-  res:ok(())
+  !{()}
 }
 ```
 

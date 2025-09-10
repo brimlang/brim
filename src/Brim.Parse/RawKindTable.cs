@@ -11,7 +11,11 @@ namespace Brim.Parse;
 /// <param name="Kind">The corresponding raw kind.</param>
 public readonly record struct RawKindSequenceEntry(
   CharSequence Seq,
-  RawKind Kind);
+  RawKind Kind)
+{
+  public static implicit operator RawKindSequenceEntry((string seq, RawKind kind) tuple) =>
+    new(CharSequence.From(tuple.seq), tuple.kind);
+}
 
 /// <summary>
 /// An entry in the raw kind table.
@@ -43,26 +47,42 @@ public static class RawKindTable
   static RawKindTable()
   {
     _lookup['@'] = new(RawKind.Atmark,
-        [new("@{", RawKind.AtmarkLBrace),
-        new("@}", RawKind.AtmarkRBrace),
-        new("@>", RawKind.AtmarkGreater)]);
+      [
+        ("@{", RawKind.AtmarkLBrace),
+        ("@}", RawKind.AtmarkRBrace),
+        ("@>", RawKind.AtmarkGreater)
+      ]);
     _lookup[':'] = new(RawKind.Colon,
-        [new(":*", RawKind.ColonStar),
-        new(":=", RawKind.ColonEqual),
-        new("::", RawKind.ColonColon)]);
+      [
+        (":*", RawKind.ColonStar),
+        (":=", RawKind.ColonEqual),
+        ("::", RawKind.ColonColon)
+      ]);
+    _lookup['!'] = new(RawKind.Bang,
+      [
+        ("!!{", RawKind.BangBangLBrace),
+        ("!{", RawKind.BangLBrace),
+        ("!=", RawKind.BangEqual)
+      ]);
     _lookup['<'] = new(RawKind.Less,
-        [new("<<", RawKind.LessLess),
-        new("<@", RawKind.LessAt)]);
-    _lookup['='] = new(RawKind.Equal, [new("=>", RawKind.EqualGreater)]);
-    _lookup['*'] = new(RawKind.Star, [new("*{", RawKind.StarLBrace)]);
-    _lookup['~'] = new(RawKind.Tilde, [new("~=", RawKind.TildeEqual)]);
-    _lookup['|'] = new(RawKind.Pipe, [new("|{", RawKind.PipeLBrace)]);
-    _lookup['#'] = new(RawKind.Hash, [new("#(", RawKind.HashLParen)]);
-    _lookup['%'] = new(RawKind.Percent, [new("%{", RawKind.PercentLBrace)]);
-    _lookup['['] = new(RawKind.LBracket, [new("[[", RawKind.LBracketLBracket)]);
-    _lookup[']'] = new(RawKind.RBracket, [new("]]", RawKind.RBracketRBracket)]);
-    _lookup['?'] = new(RawKind.Question, [new("?(", RawKind.QuestionLParen)]);
-    _lookup['.'] = new(RawKind.Stop, [new(".{", RawKind.StopLBrace)]);
+      [
+        ("<<", RawKind.LessLess),
+        ("<@", RawKind.LessAt)
+      ]);
+    _lookup['?'] = new(RawKind.Question,
+      [
+        ("?(", RawKind.QuestionLParen),
+        ("?{", RawKind.QuestionLBrace)
+      ]);
+    _lookup['='] = new(RawKind.Equal, [("=>", RawKind.EqualGreater)]);
+    _lookup['*'] = new(RawKind.Star, [("*{", RawKind.StarLBrace)]);
+    _lookup['~'] = new(RawKind.Tilde, [("~=", RawKind.TildeEqual)]);
+    _lookup['|'] = new(RawKind.Pipe, [("|{", RawKind.PipeLBrace)]);
+    _lookup['#'] = new(RawKind.Hash, [("#(", RawKind.HashLParen)]);
+    _lookup['%'] = new(RawKind.Percent, [("%{", RawKind.PercentLBrace)]);
+    _lookup['['] = new(RawKind.LBracket, [("[[", RawKind.LBracketLBracket)]);
+    _lookup[']'] = new(RawKind.RBracket, [("]]", RawKind.RBracketRBracket)]);
+    _lookup['.'] = new(RawKind.Stop, [(".{", RawKind.StopLBrace)]);
     _lookup['-'] = new(RawKind.Minus, []);
     _lookup['&'] = new(RawKind.Ampersand, []);
     _lookup['('] = new(RawKind.LParen, []);

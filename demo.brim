@@ -7,25 +7,29 @@
 
 fs = [[std::fs]]
 
+foo :Perms? := ?{}
+
 User = %{ id :str, age :i32 }
 Reply[T] = |{ Good :T, Error :str }
 -- flag width u8
 Perms = &u8{ read, write, exec }
 
-mk = (id :str, age :i32) User {
-  User%{ id = id, age = age }
+mk = (id :str, age :i32) User? {
+  age =>
+    a ??(a > 17) => User%{ id = id, age = age }
+    _ => ?{}
 }
 
 pair = (u :User, p :Perms) #(User, Perms) {
   #(u, p)
 }
 
-emit = `() Reply[i32] { Reply:Good(42) }
+emit = `() Reply[i32] { Reply|Good{42} }
 
 handle = (r :Reply[i32]) i32 {
   r =>
-  | Reply:Good(v)  | { v }
-  | Reply:Error(e) | { -1 }
+    Reply:Good(v)  => { v }
+    Reply:Error(e) => { -1 }
 }
 
 mask = Perms&{ read, exec }

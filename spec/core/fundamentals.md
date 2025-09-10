@@ -157,14 +157,10 @@ acc := 0u8
 - Lists     `*[T]`
 - Functions `(p :Type, ...) Ret`
 
-### Preamble Defined (global types)
+Canonical option/result types:
 
-Predefined aggregate types available without import.
-
-Generic unions:
-
-- `opt[T]` — union (`has`, `nil`)
-- `res[T]` — union (`ok`, `err`)
+- `T?` — option type: `?{}` (nil), `?{x}` (has)
+- `T!` — result type: `!{x}` (ok), `!!{e}` (err)
 
 Single structural error type:
 - `error` — `{ module: str, domain: str, code: u32 }`

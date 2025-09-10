@@ -56,7 +56,7 @@ Validate + write final component.wasm
 
 - `str` ⇄ `string` ⇄ `(ref null (array i8))` (UTF-8 bytes)
 - `list<T>` ⇄ `list<T>` ⇄ `(ref null (array T))`
-- `res[T]` ⇄ `result<T>` ⇄ `(i32 tag, payload?)`
+- `T!` ⇄ `result<T>` ⇄ `(i32 tag, payload?)`
 - **Resources (services):** methods take `self` as `borrow<Resource>` by default; destructors are part of the component ABI, not a textual WIT function.
 - No linear-memory pointer/length pairs anywhere in Brim’s target set.
 

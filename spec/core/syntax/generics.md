@@ -13,7 +13,7 @@ version: 0.1.0
 Defines canonical syntax & minimal semantics for parametric polymorphism.
 
 ## Scope
-Applies to: functions, struct types, union types, services, protocols, builtin parametric types (`opt[T]`, `res[T]`, `*[T]`).
+Applies to: functions, struct types, union types, services, protocols, builtin parametric types (`T?`, `T!`, `*[T]`).
 Excludes: higher-kinded types, value generics, variadics, partial application.
 
 ## Parameter Lists
@@ -51,7 +51,7 @@ all_equal[T :Eq] = (xs :*[T]) bool { ... }
 ## Services & Protocols
 Protocols:
 ```brim
-Iterable[T] = .{ next :() opt[T] }
+Iterable[T] = .{ next :() T? }
 Show[T]     = .{ show :(T) str }
 ```
 Services with implements list (unified colon form):
@@ -70,10 +70,12 @@ Store[K :Eq, V] = ^|s| :Flush { ... }
 
 ## Builtin Parametric Types
 Remain unchanged syntactically (except list sigil swap):
-- `opt[T]`
-- `res[T]`
-- `*[T]`
+- `T?` (option type)
+- `T!` (result type)
+- `*[T]` (list type)
 Constraints do not attach inside these forms; they attach where parameters are introduced.
+
+*Note: The previous `opt[T]` and `res[T]` types are replaced by `T?` and `T!` as per the Option/Result & Return Lifting spec.*
 
 ## Instantiation & Inference
 Call sites and type uses rely on inference; no explicit type argument application syntax in core:
