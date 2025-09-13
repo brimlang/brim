@@ -31,24 +31,19 @@ internal static class GenericParameterListParser
 
     bool empty = p.MatchRaw(RawKind.RBracket);
     ImmutableArray<GenericParameter>.Builder items = ImmutableArray.CreateBuilder<GenericParameter>();
-    ImmutableArray<GreenToken>.Builder seps = ImmutableArray.CreateBuilder<GreenToken>();
     if (!empty)
     {
       while (true)
       {
-        int before = p.Current.CoreToken.Offset;
         GreenToken paramIdTok = p.ExpectSyntax(SyntaxKind.IdentifierToken);
         ConstraintList? constraints = ParseConstraints(p);
-        items.Add(new GenericParameter(paramIdTok, constraints));
+        GreenToken? trailing = null;
         if (p.MatchRaw(RawKind.Comma))
-        {
-          GreenToken commaTok = p.ExpectSyntax(SyntaxKind.CommaToken);
-          seps.Add(commaTok);
-          if (p.MatchRaw(RawKind.RBracket) || p.MatchRaw(RawKind.Eob))
-            break; // trailing comma
-          continue;
-        }
-        break;
+          trailing = p.ExpectSyntax(SyntaxKind.CommaToken);
+        items.Add(new GenericParameter(paramIdTok, constraints, trailing));
+        if (trailing is null) break; // no comma => end
+        if (p.MatchRaw(RawKind.RBracket) || p.MatchRaw(RawKind.Eob)) break; // trailing comma
+        continue;
       }
     }
 
@@ -56,8 +51,7 @@ internal static class GenericParameterListParser
     if (empty)
       p.AddDiagEmptyGeneric(open);
 
-    StructuralArray<GreenToken> sepArr = [.. seps];
-    return new GenericParameterList(open, items.ToImmutable(), sepArr, close);
+    return new GenericParameterList(open, items.ToImmutable(), close);
   }
 
   static ConstraintList? ParseConstraints(Parser p)

@@ -51,13 +51,13 @@ public static class GreenNodeFormatter
         _ = sb.Append(" from=").Append(Escape(id.ModuleHeader.GetText(source)));
         break;
       case StructDeclaration sd:
-        _ = sb.Append(" name=").Append(Escape(sd.Name.Identifier.GetText(source))).Append($" fields={sd.Fields.Count} seps={sd.FieldSeparators.Count}");
+        _ = sb.Append(" name=").Append(Escape(sd.Name.Identifier.GetText(source))).Append($" fields={sd.Fields.Count}");
         break;
       case UnionDeclaration ud:
-        _ = sb.Append(" name=").Append(Escape(ud.Name.Identifier.GetText(source))).Append($" variants={ud.Variants.Count} seps={ud.VariantSeparators.Count}");
+        _ = sb.Append(" name=").Append(Escape(ud.Name.Identifier.GetText(source))).Append($" variants={ud.Variants.Count}");
         break;
       case FlagsDeclaration fd:
-        _ = sb.Append(" name=").Append(Escape(fd.Name.Identifier.GetText(source))).Append($" flags={fd.Members.Count} seps={fd.MemberSeparators.Count}");
+        _ = sb.Append(" name=").Append(Escape(fd.Name.Identifier.GetText(source))).Append($" flags={fd.Members.Count}");
         break;
       default:
         break;

@@ -50,4 +50,6 @@ public enum SyntaxKind
   GenericType,
   NamedTupleDeclaration,
   DeclarationName,
+  GenericArgument,
+  NamedTupleElement,
 }

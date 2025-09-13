@@ -23,8 +23,7 @@ GreenNode(SyntaxKind.GenericType, Name.Offset)
     GreenToken open = p.ExpectSyntax(SyntaxKind.GenericOpenToken);
     bool empty = p.MatchRaw(RawKind.RBracket);
 
-    ImmutableArray<GreenNode>.Builder builder = ImmutableArray.CreateBuilder<GreenNode>();
-    ImmutableArray<GreenToken>.Builder seps = ImmutableArray.CreateBuilder<GreenToken>();
+    ImmutableArray<GenericArgument>.Builder builder = ImmutableArray.CreateBuilder<GenericArgument>();
     if (!empty)
     {
       while (true)
@@ -36,16 +35,13 @@ GreenNode(SyntaxKind.GenericType, Name.Offset)
           // nested generic
           typeNode = ParseAfterName(p, headTok);
         }
-        builder.Add(typeNode);
+        GreenToken? trailing = null;
         if (p.MatchRaw(RawKind.Comma))
-        {
-          GreenToken commaTok = p.ExpectSyntax(SyntaxKind.CommaToken);
-          seps.Add(commaTok);
-          if (p.MatchRaw(RawKind.RBracket) || p.MatchRaw(RawKind.Eob))
-            break; // trailing comma
-          continue;
-        }
-        break;
+          trailing = p.ExpectSyntax(SyntaxKind.CommaToken);
+        builder.Add(new GenericArgument(typeNode, trailing));
+        if (trailing is null) break; // no comma => end
+        if (p.MatchRaw(RawKind.RBracket) || p.MatchRaw(RawKind.Eob)) break; // trailing comma on last
+        continue;
       }
     }
 
@@ -53,8 +49,7 @@ GreenNode(SyntaxKind.GenericType, Name.Offset)
     if (empty)
       p.AddDiagEmptyGeneric(open);
 
-    StructuralArray<GreenNode> arr = builder.ToImmutable();
-    StructuralArray<GreenToken> sepArr = [.. seps];
-    return new GenericArgumentList(open, arr, sepArr, close);
+    StructuralArray<GenericArgument> arr = [.. builder];
+    return new GenericArgumentList(open, arr, close);
   }
 }

@@ -1,11 +1,22 @@
 namespace Brim.Parse.Green;
 
+public sealed record NamedTupleElement(
+  GreenNode TypeNode,
+  GreenToken? TrailingComma) : GreenNode(SyntaxKind.NamedTupleElement, TypeNode.Offset)
+{
+  public override int FullWidth => (TrailingComma?.EndOffset ?? TypeNode.EndOffset) - TypeNode.Offset;
+  public override IEnumerable<GreenNode> GetChildren()
+  {
+    yield return TypeNode;
+    if (TrailingComma is not null) yield return TrailingComma;
+  }
+}
+
 public sealed record NamedTupleDeclaration(
   DeclarationName Name,
   GreenToken Colon,
   GreenToken OpenToken, // #{ token
-  StructuralArray<GreenNode> ElementTypes,
-  StructuralArray<GreenToken> ElementSeparators,
+  StructuralArray<NamedTupleElement> Elements,
   GreenToken CloseBrace,
   GreenToken Terminator)
   : GreenNode(SyntaxKind.NamedTupleDeclaration, Name.Offset)
@@ -16,12 +27,7 @@ public sealed record NamedTupleDeclaration(
     yield return Name;
     yield return Colon;
     yield return OpenToken;
-    for (int i = 0; i < ElementTypes.Count; i++)
-    {
-      yield return ElementTypes[i];
-      if (i < ElementSeparators.Count)
-        yield return ElementSeparators[i];
-    }
+    foreach (NamedTupleElement e in Elements) yield return e;
     yield return CloseBrace;
     yield return Terminator;
   }
@@ -34,41 +40,38 @@ public sealed record NamedTupleDeclaration(
     GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
     GreenToken open = p.ExpectSyntax(SyntaxKind.NamedTupleToken); // #{
 
-    ImmutableArray<GreenNode>.Builder elems = ImmutableArray.CreateBuilder<GreenNode>();
-    ImmutableArray<GreenToken>.Builder seps = ImmutableArray.CreateBuilder<GreenToken>();
+    ImmutableArray<NamedTupleElement>.Builder elems = ImmutableArray.CreateBuilder<NamedTupleElement>();
 
     if (!p.MatchRaw(RawKind.RBrace) && !p.MatchRaw(RawKind.Eob))
     {
       while (true)
       {
-        int before = p.Current.CoreToken.Offset;
         GreenToken typeNameTok = p.ExpectSyntax(SyntaxKind.IdentifierToken);
         GreenNode ty = typeNameTok;
         if (p.MatchRaw(RawKind.LBracket) && !p.MatchRaw(RawKind.LBracketLBracket))
         {
           ty = GenericType.ParseAfterName(p, typeNameTok);
         }
-        elems.Add(ty);
+        GreenToken? trailing = null;
         if (p.MatchRaw(RawKind.Comma))
         {
-          GreenToken commaTok = p.ExpectSyntax(SyntaxKind.CommaToken);
-          seps.Add(commaTok);
-          if (p.MatchRaw(RawKind.RBrace) || p.MatchRaw(RawKind.Eob))
-            break; // trailing comma
-          continue;
+          trailing = p.ExpectSyntax(SyntaxKind.CommaToken);
         }
-        break;
+        elems.Add(new NamedTupleElement(ty, trailing));
+        if (trailing is null) break; // no comma -> end
+        if (p.MatchRaw(RawKind.RBrace) || p.MatchRaw(RawKind.Eob)) break; // trailing comma
+        continue; // expect another element
       }
     }
 
     if (elems.Count == 0)
       p.AddDiagEmptyNamedTupleElementList();
 
-    StructuralArray<GreenNode> arr = [.. elems];
-    StructuralArray<GreenToken> sepArr = [.. seps];
+    StructuralArray<NamedTupleElement> arr = [.. elems];
     GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBraceToken);
     GreenToken term = p.ExpectSyntax(SyntaxKind.TerminatorToken);
 
-    return new NamedTupleDeclaration(name, colon, open, arr, sepArr, close, term);
+    return new NamedTupleDeclaration(name, colon, open, arr, close, term);
   }
 }
+

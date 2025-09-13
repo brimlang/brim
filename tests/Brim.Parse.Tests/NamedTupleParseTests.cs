@@ -12,7 +12,7 @@ public class NamedTupleParseTests
     var m = Parse("[[m]];\nPair[T,U] : #{T, U};");
     var nt = m.Members.OfType<NamedTupleDeclaration>().FirstOrDefault();
     Assert.NotNull(nt);
-    Assert.Equal(2, nt!.ElementTypes.Count);
+    Assert.Equal(2, nt!.Elements.Count);
   }
 
   [Fact]

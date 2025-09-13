@@ -5,7 +5,6 @@ public sealed record StructDeclaration(
   GreenToken Colon,
   GreenToken StructOpen,
   StructuralArray<FieldDeclaration> Fields,
-  StructuralArray<GreenToken> FieldSeparators,
   GreenToken Close,
   GreenToken Terminator) :
 GreenNode(SyntaxKind.StructDeclaration, Name.Offset),
@@ -17,12 +16,7 @@ IParsable<StructDeclaration>
     yield return Name;
     yield return Colon;
     yield return StructOpen;
-    for (int i = 0; i < Fields.Count; i++)
-    {
-      yield return Fields[i];
-      if (i < FieldSeparators.Count)
-        yield return FieldSeparators[i];
-    }
+    foreach (FieldDeclaration f in Fields) yield return f;
     yield return Close;
     yield return Terminator;
   }
@@ -35,29 +29,20 @@ IParsable<StructDeclaration>
     GreenToken open = p.ExpectSyntax(SyntaxKind.StructToken);
 
     ImmutableArray<FieldDeclaration>.Builder fields = ImmutableArray.CreateBuilder<FieldDeclaration>();
-    ImmutableArray<GreenToken>.Builder seps = ImmutableArray.CreateBuilder<GreenToken>();
 
     if (!p.MatchRaw(RawKind.RBrace) && !p.MatchRaw(RawKind.Eob))
     {
       while (true)
       {
-        int before = p.Current.CoreToken.Offset;
-        fields.Add(FieldDeclaration.Parse(p));
-        if (p.MatchRaw(RawKind.Comma))
-        {
-          // consume comma and decide if trailing
-          GreenToken commaTok = p.ExpectSyntax(SyntaxKind.CommaToken);
-          seps.Add(commaTok);
-          if (p.MatchRaw(RawKind.RBrace) || p.MatchRaw(RawKind.Eob))
-            break; // trailing comma
-          continue; // expect another field
-        }
-        break;
+        FieldDeclaration field = FieldDeclaration.Parse(p);
+        fields.Add(field);
+        if (field.TrailingComma is null) break; // no comma means end
+        if (p.MatchRaw(RawKind.RBrace) || p.MatchRaw(RawKind.Eob)) break; // trailing comma
+        continue; // expect another field
       }
     }
 
     StructuralArray<FieldDeclaration> fieldArray = [.. fields];
-    StructuralArray<GreenToken> sepArray = [.. seps];
 
     GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBraceToken);
     GreenToken term = p.ExpectSyntax(SyntaxKind.TerminatorToken);
@@ -67,7 +52,6 @@ IParsable<StructDeclaration>
         colon,
         open,
         fieldArray,
-        sepArray,
         close,
         term);
   }
