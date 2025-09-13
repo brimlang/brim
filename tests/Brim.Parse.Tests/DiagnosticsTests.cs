@@ -16,7 +16,7 @@ public class DiagnosticsTests
   public void MissingTokenEmitsDiagnostic()
   {
     // An import like: [[path]] without terminator maybe? Use struct decl missing close brace.
-    var m2 = Parse("foo = %{\n");
+    var m2 = Parse("foo : %{\n");
     Assert.Contains(m2.Diagnostics, static d => d.Code == DiagCode.MissingToken);
   }
 

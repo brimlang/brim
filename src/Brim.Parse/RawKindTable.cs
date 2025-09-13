@@ -78,7 +78,7 @@ public static class RawKindTable
     _lookup['*'] = new(RawKind.Star, [("*{", RawKind.StarLBrace)]);
     _lookup['~'] = new(RawKind.Tilde, [("~=", RawKind.TildeEqual)]);
     _lookup['|'] = new(RawKind.Pipe, [("|{", RawKind.PipeLBrace)]);
-    _lookup['#'] = new(RawKind.Hash, [("#(", RawKind.HashLParen)]);
+    _lookup['#'] = new(RawKind.Hash, [("#{", RawKind.HashLBrace), ("#(", RawKind.HashLParen)]);
     _lookup['%'] = new(RawKind.Percent, [("%{", RawKind.PercentLBrace)]);
     _lookup['['] = new(RawKind.LBracket, [("[[", RawKind.LBracketLBracket)]);
     _lookup[']'] = new(RawKind.RBracket, [("]]", RawKind.RBracketRBracket)]);

@@ -35,7 +35,7 @@ public enum RawKind : short
   Atmark, AtmarkLBrace, AtmarkRBrace, AtmarkGreater, // @ @{ @} @>
   Colon, ColonStar, ColonEqual, ColonColon, // : :* := ::
   Pipe, PipeLBrace, // | |{
-  Hash, HashLParen, // # #(
+  Hash, HashLParen, HashLBrace, // # #( #{
   Ampersand, // &
   Percent, PercentLBrace, // % %{
   Stop, StopLBrace, // . .{

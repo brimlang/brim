@@ -7,7 +7,7 @@ public class GenericUseSiteDiagnosticsTests
   [Fact]
   public void EmptyGenericArgumentListDiagnostic()
   {
-    var m = Parse("[[m]];\nBox[T] = %{ bad:Foo[] };");
+    var m = Parse("[[m]];\nBox[T] : %{ bad:Foo[] };");
     Assert.Contains(m.Diagnostics, static d => d.Code == DiagCode.EmptyGenericArgList);
   }
 

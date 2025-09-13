@@ -9,7 +9,7 @@ public class FlagsParseTests
   [Fact]
   public void FlagsDeclarationParses()
   {
-    ReadOnlySpan<char> c = "[[m]];\nPerms = &u8{ read, write, exec };";
+    ReadOnlySpan<char> c = "[[m]];\nPerms : &u8{ read, write, exec };";
     var m = Parse(c.ToString());
     FlagsDeclaration? fd = m.Members.OfType<FlagsDeclaration>().FirstOrDefault();
     Assert.NotNull(fd);

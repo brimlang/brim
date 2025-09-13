@@ -61,22 +61,26 @@ public static class GenericDeclaration
     }
 
     GenericParameterList gpl = new(open, parms.ToImmutable(), close);
-    GreenToken eq = p.ExpectSyntax(SyntaxKind.EqualToken);
+    GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
 
     if (p.MatchRaw(RawKind.PercentLBrace))
     {
-      return ParseGenericStructBody(p, name, gpl, eq);
+      return ParseGenericStructBody(p, name, gpl, colon);
     }
     if (p.MatchRaw(RawKind.PipeLBrace))
     {
-      return ParseGenericUnionBody(p, name, gpl, eq);
+      return ParseGenericUnionBody(p, name, gpl, colon);
+    }
+    if (p.MatchRaw(RawKind.HashLBrace))
+    {
+      return ParseGenericNamedTupleBody(p, name, gpl, colon);
     }
 
     p.AddDiagUnexpectedGenericBody();
     return new GreenToken(SyntaxKind.ErrorToken, p.Current);
   }
 
-  static StructDeclaration ParseGenericStructBody(Parser p, Identifier name, GenericParameterList gpl, GreenToken eq)
+  static StructDeclaration ParseGenericStructBody(Parser p, Identifier name, GenericParameterList gpl, GreenToken colon)
   {
     GreenToken openStruct = p.ExpectSyntax(SyntaxKind.StructToken);
     ImmutableArray<FieldDeclaration>.Builder fields = ImmutableArray.CreateBuilder<FieldDeclaration>();
@@ -96,10 +100,10 @@ public static class GenericDeclaration
     GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBraceToken);
     GreenToken term = p.ExpectSyntax(SyntaxKind.TerminatorToken);
 
-    return new StructDeclaration(name, gpl, eq, openStruct, arr, close, term);
+    return new StructDeclaration(name, gpl, colon, openStruct, arr, close, term);
   }
 
-  static UnionDeclaration ParseGenericUnionBody(Parser p, Identifier name, GenericParameterList gpl, GreenToken eq)
+  static UnionDeclaration ParseGenericUnionBody(Parser p, Identifier name, GenericParameterList gpl, GreenToken colon)
   {
     GreenToken openUnion = p.ExpectSyntax(SyntaxKind.UnionToken); // PipeLBrace
     ImmutableArray<UnionVariantDeclaration>.Builder vars = ImmutableArray.CreateBuilder<UnionVariantDeclaration>();
@@ -118,6 +122,38 @@ public static class GenericDeclaration
     StructuralArray<UnionVariantDeclaration> arr = [.. vars];
     GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBraceToken);
     GreenToken term = p.ExpectSyntax(SyntaxKind.TerminatorToken);
-    return new UnionDeclaration(name, gpl, eq, openUnion, arr, close, term);
+    return new UnionDeclaration(name, gpl, colon, openUnion, arr, close, term);
+  }
+
+  static NamedTupleDeclaration ParseGenericNamedTupleBody(Parser p, Identifier name, GenericParameterList gpl, GreenToken colon)
+  {
+    GreenToken open = p.ExpectSyntax(SyntaxKind.NamedTupleToken);
+    ImmutableArray<GreenNode>.Builder elems = ImmutableArray.CreateBuilder<GreenNode>();
+    bool first = true;
+    while (!p.MatchRaw(RawKind.RBrace) && !p.MatchRaw(RawKind.Eob))
+    {
+      int before = p.Current.CoreToken.Offset;
+      if (!first)
+      {
+        if (p.MatchRaw(RawKind.Comma)) _ = p.ExpectRaw(RawKind.Comma); else break;
+      }
+      Identifier typeName = Identifier.Parse(p);
+      GreenNode ty = typeName;
+      if (p.MatchRaw(RawKind.LBracket) && !p.MatchRaw(RawKind.LBracketLBracket))
+      {
+        ty = GenericType.ParseAfterName(p, typeName);
+      }
+      elems.Add(ty);
+      first = false;
+      if (p.Current.CoreToken.Offset == before) break;
+    }
+    if (elems.Count == 0)
+    {
+      p.AddDiagEmptyNamedTupleElementList();
+    }
+    StructuralArray<GreenNode> arr = [.. elems];
+    GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBraceToken);
+    GreenToken term = p.ExpectSyntax(SyntaxKind.TerminatorToken);
+    return new NamedTupleDeclaration(name, gpl, colon, open, arr, close, term);
   }
 }

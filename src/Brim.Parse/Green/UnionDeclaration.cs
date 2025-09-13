@@ -33,7 +33,7 @@ IParsable<UnionVariantDeclaration>
 public sealed record UnionDeclaration(
   Identifier Identifier,
   GenericParameterList? GenericParams,
-  GreenToken Equal,
+  GreenToken Colon,
   GreenToken UnionOpen,
   StructuralArray<UnionVariantDeclaration> Variants,
   GreenToken Close,
@@ -46,7 +46,7 @@ public sealed record UnionDeclaration(
     if (GenericParams is not null)
       yield return GenericParams;
 
-    yield return Equal;
+    yield return Colon;
     yield return UnionOpen;
 
     foreach (UnionVariantDeclaration v in Variants)
@@ -59,7 +59,7 @@ public sealed record UnionDeclaration(
   public static UnionDeclaration Parse(Parser p)
   {
     Identifier id = Identifier.Parse(p);
-    GreenToken eq = p.ExpectSyntax(SyntaxKind.EqualToken);
+    GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
     GreenToken open = p.ExpectSyntax(SyntaxKind.UnionToken);
     ImmutableArray<UnionVariantDeclaration>.Builder vars = ImmutableArray.CreateBuilder<UnionVariantDeclaration>();
     while (!p.MatchRaw(RawKind.RBrace) && !p.MatchRaw(RawKind.Eob))
@@ -79,6 +79,6 @@ public sealed record UnionDeclaration(
     StructuralArray<UnionVariantDeclaration> arr = [.. vars];
     GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBraceToken);
     GreenToken term = p.ExpectSyntax(SyntaxKind.TerminatorToken);
-    return new(id, null, eq, open, arr, close, term);
+    return new(id, null, colon, open, arr, close, term);
   }
 }

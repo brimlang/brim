@@ -23,6 +23,7 @@ public enum SyntaxKind
   GenericCloseToken,
   TerminatorToken,
   EobToken,
+  NamedTupleToken,
 
   // Nodes
   Module,
@@ -44,4 +45,5 @@ public enum SyntaxKind
   UnionVariantDeclaration,
   FlagMemberDeclaration,
   GenericType,
+  NamedTupleDeclaration,
 }

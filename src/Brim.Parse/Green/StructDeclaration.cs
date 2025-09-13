@@ -3,7 +3,7 @@ namespace Brim.Parse.Green;
 public sealed record StructDeclaration(
   Identifier Identifier,
   GenericParameterList? GenericParams,
-  GreenToken Equal,
+  GreenToken Colon,
   GreenToken StructOpen,
   StructuralArray<FieldDeclaration> Fields,
   GreenToken Close,
@@ -16,7 +16,7 @@ IParsable<StructDeclaration>
   {
     yield return Identifier;
     if (GenericParams is not null) yield return GenericParams;
-    yield return Equal;
+    yield return Colon;
     yield return StructOpen;
     foreach (FieldDeclaration field in Fields) yield return field;
     yield return Close;
@@ -44,12 +44,12 @@ IParsable<StructDeclaration>
     return new GenericParameterList(open, items.ToImmutable(), close);
   }
 
-  // EBNF: StructDecl ::= Identifier GenericParams? '=' StructToken FieldDecl*("," FieldDecl)* '}' Terminator
+  // EBNF: StructDecl ::= Identifier GenericParams? ':' StructToken FieldDecl*("," FieldDecl)* '}' Terminator
   public static StructDeclaration Parse(Parser p)
   {
     Identifier id = Identifier.Parse(p);
     GenericParameterList? gp = TryParseGenericParams(p);
-    GreenToken eq = p.ExpectSyntax(SyntaxKind.EqualToken);
+    GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
     GreenToken open = p.ExpectSyntax(SyntaxKind.StructToken);
 
     ImmutableArray<FieldDeclaration>.Builder fields = ImmutableArray.CreateBuilder<FieldDeclaration>();
@@ -74,7 +74,7 @@ IParsable<StructDeclaration>
     return new(
         id,
         gp,
-        eq,
+        colon,
         open,
         fieldArray,
         close,

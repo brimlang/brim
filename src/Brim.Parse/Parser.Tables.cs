@@ -9,13 +9,14 @@ public sealed partial class Parser
   internal static readonly Prediction[] ModuleMemberPredictions =
   [
     new(ExportDirective.Parse, RawKind.LessLess),
-    new(ImportDeclaration.Parse, (RawKind.Identifier, RawKind.Equal, RawKind.LBracketLBracket)),
-    new(GenericDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.Comma)),
+    new(ImportDeclaration.Parse, (RawKind.Identifier, RawKind.Equal, RawKind.LBracketLBracket)), // unchanged import syntax
+    new(GenericDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.Comma)), // generic head (unchanged)
     new(GenericDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.Identifier)),
     new(GenericDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.RBracket)),
-    new(StructDeclaration.Parse, (RawKind.Identifier, RawKind.Equal, RawKind.PercentLBrace)),
-    new(UnionDeclaration.Parse, (RawKind.Identifier, RawKind.Equal, RawKind.PipeLBrace)),
-    new(FlagsDeclaration.Parse, (RawKind.Identifier, RawKind.Equal, RawKind.Ampersand)),
+    new(StructDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.PercentLBrace)), // Struct: Name : %{ ... }
+    new(UnionDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.PipeLBrace)), // Union: Name : |{ ... }
+    new(FlagsDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.Ampersand)), // Flags: Name : &u8{ ... } (underlying read inside)
+    new(NamedTupleDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.HashLBrace)), // Named tuple: Name : #{ T, U }
     new(GenericDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.RBracket)), // empty generic param list
   ];
 
@@ -43,8 +44,10 @@ public sealed partial class Parser
     SyntaxKind.EobToken => RawKind.Eob,
     SyntaxKind.ColonToken => RawKind.Colon,
     SyntaxKind.ErrorToken => RawKind.Error,
+    SyntaxKind.NamedTupleToken => RawKind.HashLBrace,
     _ => RawKind.Error
   };
+
 
   static SyntaxKind MapStandaloneSyntaxKind(RawKind kind) => kind switch
   {

@@ -9,7 +9,7 @@ public class GenericUseSiteTests
   [Fact]
   public void StructFieldWithGenericArgumentListParses()
   {
-    var m = Parse("[[m]];\nBox[T] = %{ inner:Wrapper[T] };");
+    var m = Parse("[[m]];\nBox[T] : %{ inner:Wrapper[T] };");
     var sd = m.Members.OfType<StructDeclaration>().First();
     var field = sd.Fields[0];
     _ = Assert.IsType<GenericType>(field.TypeAnnotation);
@@ -20,7 +20,7 @@ public class GenericUseSiteTests
   [Fact]
   public void UnionVariantWithGenericArgumentListParses()
   {
-    var m = Parse("[[m]];\nResult[T] = |{ Ok:Ok[T], Err:Err };");
+    var m = Parse("[[m]];\nResult[T] : |{ Ok:Ok[T], Err:Err };");
     var ud = m.Members.OfType<UnionDeclaration>().First();
     var ok = ud.Variants[0];
     _ = Assert.IsType<GenericType>(ok.Type);
