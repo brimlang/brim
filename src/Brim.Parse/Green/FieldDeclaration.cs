@@ -1,7 +1,7 @@
 namespace Brim.Parse.Green;
 
 public sealed record FieldDeclaration(
-  Identifier Identifier,
+  GreenToken Identifier,
   GreenToken Colon,
   GreenNode TypeAnnotation) :
 GreenNode(SyntaxKind.FieldDeclaration, Identifier.Offset),
@@ -17,17 +17,17 @@ IParsable<FieldDeclaration>
 
   public static FieldDeclaration Parse(Parser p)
   {
-    Identifier name = Identifier.Parse(p);
+    GreenToken nameTok = p.ExpectSyntax(SyntaxKind.IdentifierToken);
     GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
-    Identifier typeName = Identifier.Parse(p);
+    GreenToken typeNameTok = p.ExpectSyntax(SyntaxKind.IdentifierToken);
 
-    GreenNode type = typeName;
+    GreenNode type = typeNameTok;
     if (p.MatchRaw(RawKind.LBracket) && !p.MatchRaw(RawKind.LBracketLBracket))
     {
-      type = GenericType.ParseAfterName(p, typeName);
+      type = GenericType.ParseAfterName(p, typeNameTok);
     }
 
-    return new FieldDeclaration(name, colon, type);
+    return new FieldDeclaration(nameTok, colon, type);
   }
 }
 

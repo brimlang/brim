@@ -13,8 +13,8 @@ public class GenericParseTests
     Assert.DoesNotContain(m.Diagnostics, static d => d.Code == DiagCode.UnexpectedToken);
     StructDeclaration? sd = m.Members.OfType<StructDeclaration>().FirstOrDefault();
     Assert.NotNull(sd);
-    Assert.NotNull(sd!.GenericParams);
-    Assert.Equal(2, sd.GenericParams!.Parameters.Length);
+    Assert.NotNull(sd!.Name.GenericParams);
+    Assert.Equal(2, sd.Name.GenericParams!.Parameters.Length);
   }
 
   [Fact(Skip = "TODO: Broken")]

@@ -13,7 +13,7 @@ public class FlagsParseTests
     var m = Parse(c.ToString());
     FlagsDeclaration? fd = m.Members.OfType<FlagsDeclaration>().FirstOrDefault();
     Assert.NotNull(fd);
-    Assert.Equal("Perms", fd!.Identifier.GetText(c));
+    Assert.Equal("Perms", fd!.Name.Identifier.GetText(c));
     Assert.Equal(3, fd.Members.Count);
     Assert.Equal("u8", fd.UnderlyingType.GetText(c));
   }

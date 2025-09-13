@@ -1,20 +1,18 @@
 namespace Brim.Parse.Green;
 
 public sealed record NamedTupleDeclaration(
-  Identifier Identifier,
-  GenericParameterList? GenericParams,
+  DeclarationName Name,
   GreenToken Colon,
   GreenToken OpenToken, // #{ token
   StructuralArray<GreenNode> ElementTypes,
   GreenToken CloseBrace,
   GreenToken Terminator)
-  : GreenNode(SyntaxKind.NamedTupleDeclaration, Identifier.Offset)
+  : GreenNode(SyntaxKind.NamedTupleDeclaration, Name.Offset)
 {
-  public override int FullWidth => Terminator.EndOffset - Identifier.Offset;
+  public override int FullWidth => Terminator.EndOffset - Name.Offset;
   public override IEnumerable<GreenNode> GetChildren()
   {
-    yield return Identifier;
-    if (GenericParams is not null) yield return GenericParams;
+    yield return Name;
     yield return Colon;
     yield return OpenToken;
     foreach (GreenNode t in ElementTypes) yield return t;
@@ -22,70 +20,11 @@ public sealed record NamedTupleDeclaration(
     yield return Terminator;
   }
 
-  static GenericParameterList? TryParseGenericParams(Parser p)
-  {
-    if (!p.MatchRaw(RawKind.LBracket)) return null;
-    GreenToken open = p.ExpectSyntax(SyntaxKind.GenericOpenToken);
-    ImmutableArray<GenericParameter>.Builder items = ImmutableArray.CreateBuilder<GenericParameter>();
-    bool first = true;
-    bool empty = false;
-    if (p.MatchRaw(RawKind.RBracket))
-    {
-      empty = true; // record emptiness for diag
-    }
-    else
-    {
-      while (!p.MatchRaw(RawKind.RBracket) && !p.MatchRaw(RawKind.Eob))
-      {
-        int before = p.Current.CoreToken.Offset;
-        if (!first)
-        {
-          if (p.MatchRaw(RawKind.Comma)) _ = p.ExpectRaw(RawKind.Comma); else break;
-        }
-        Identifier paramName = Identifier.Parse(p);
-        ConstraintList? constraints = null;
-        if (p.MatchRaw(RawKind.Colon))
-        {
-          GreenToken colonTok = p.ExpectSyntax(SyntaxKind.ColonToken);
-          ImmutableArray<GreenNode>.Builder refs = ImmutableArray.CreateBuilder<GreenNode>();
-          bool firstRef = true;
-          while (!p.MatchRaw(RawKind.RBracket) && !p.MatchRaw(RawKind.Eob))
-          {
-            int beforeRef = p.Current.CoreToken.Offset;
-            if (!firstRef)
-            {
-              if (p.MatchRaw(RawKind.Plus)) _ = p.ExpectRaw(RawKind.Plus); else break;
-            }
-            Identifier typeName = Identifier.Parse(p);
-            GreenNode refNode = typeName;
-            if (p.MatchRaw(RawKind.LBracket) && !p.MatchRaw(RawKind.LBracketLBracket))
-            {
-              refNode = GenericType.ParseAfterName(p, typeName);
-            }
-            refs.Add(refNode);
-            firstRef = false;
-            if (p.Current.CoreToken.Offset == beforeRef) break;
-          }
-          StructuralArray<GreenNode> arr = [.. refs];
-            if (arr.Count == 0) p.AddDiagInvalidGenericConstraint();
-          constraints = new ConstraintList(colonTok, arr);
-        }
-        items.Add(new GenericParameter(paramName, constraints));
-        first = false;
-        if (p.Current.CoreToken.Offset == before) break; // no progress
-      }
-    }
-    GreenToken close = p.ExpectSyntax(SyntaxKind.GenericCloseToken);
-    if (empty) p.AddDiagEmptyGeneric(open);
-    return new GenericParameterList(open, items.ToImmutable(), close);
-  }
-
   // EBNF: NamedTupleDecl ::= Identifier GenericParams? ':' NamedTupleToken TypeRef (',' TypeRef)* '}' Terminator
   // No zero-tuples: must contain at least one TypeRef.
   public static NamedTupleDeclaration Parse(Parser p)
   {
-    Identifier id = Identifier.Parse(p);
-    GenericParameterList? gp = TryParseGenericParams(p);
+    DeclarationName name = DeclarationName.Parse(p);
     GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
     GreenToken open = p.ExpectSyntax(SyntaxKind.NamedTupleToken); // #{
 
@@ -102,11 +41,11 @@ public sealed record NamedTupleDeclaration(
           if (p.MatchRaw(RawKind.Comma)) _ = p.ExpectRaw(RawKind.Comma); else break;
         }
         // For now TypeRef ::= Identifier GenericArgList?
-        Identifier typeName = Identifier.Parse(p);
-        GreenNode ty = typeName;
+        GreenToken typeNameTok = p.ExpectSyntax(SyntaxKind.IdentifierToken);
+        GreenNode ty = typeNameTok;
         if (p.MatchRaw(RawKind.LBracket) && !p.MatchRaw(RawKind.LBracketLBracket))
         {
-          ty = GenericType.ParseAfterName(p, typeName);
+          ty = GenericType.ParseAfterName(p, typeNameTok);
         }
         elems.Add(ty);
         first = false;
@@ -124,6 +63,6 @@ public sealed record NamedTupleDeclaration(
     GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBraceToken);
     GreenToken term = p.ExpectSyntax(SyntaxKind.TerminatorToken);
 
-    return new NamedTupleDeclaration(id, gp, colon, open, arr, close, term);
+    return new NamedTupleDeclaration(name, colon, open, arr, close, term);
   }
 }

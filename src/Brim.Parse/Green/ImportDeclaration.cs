@@ -1,7 +1,7 @@
 namespace Brim.Parse.Green;
 
 public sealed record ImportDeclaration(
-  Identifier Identifier,
+  GreenToken Identifier,
   GreenToken Equal,
   ModuleHeader ModuleHeader,
   GreenToken Terminator) :
@@ -19,7 +19,7 @@ IParsable<ImportDeclaration>
 
   // EBNF: ImportDecl ::= Identifier '=' ModuleHeader Terminator
   public static ImportDeclaration Parse(Parser p) => new(
-    Identifier.Parse(p),
+    p.ExpectSyntax(SyntaxKind.IdentifierToken),
     p.ExpectSyntax(SyntaxKind.EqualToken),
     ModuleHeader.Parse(p),
     p.ExpectSyntax(SyntaxKind.TerminatorToken)

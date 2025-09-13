@@ -48,4 +48,5 @@ public enum SyntaxKind
   FlagMemberDeclaration,
   GenericType,
   NamedTupleDeclaration,
+  DeclarationName,
 }

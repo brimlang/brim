@@ -1,7 +1,7 @@
 namespace Brim.Parse.Green;
 
 public sealed record GenericType(
-  Identifier Name,
+  GreenToken Name,
   GenericArgumentList Arguments) :
 GreenNode(SyntaxKind.GenericType, Name.Offset)
 {
@@ -12,7 +12,7 @@ GreenNode(SyntaxKind.GenericType, Name.Offset)
     yield return Arguments;
   }
 
-  public static GenericType ParseAfterName(Parser p, Identifier name)
+  public static GenericType ParseAfterName(Parser p, GreenToken name)
   {
     GenericArgumentList args = ParseArgList(p);
     return new GenericType(name, args);
@@ -26,12 +26,12 @@ GreenNode(SyntaxKind.GenericType, Name.Offset)
     ImmutableArray<GreenNode>.Builder builder = ImmutableArray.CreateBuilder<GreenNode>();
     while (!empty && !p.MatchRaw(RawKind.RBracket) && !p.MatchRaw(RawKind.Eob))
     {
-      Identifier head = Identifier.Parse(p);
-      GreenNode typeNode = head;
-      if (p.MatchRaw(RawKind.LBracket) && !p.MatchRaw(RawKind.LBracketLBracket))
+      GreenToken headTok = p.ExpectSyntax(SyntaxKind.IdentifierToken);
+      GreenNode typeNode = headTok;
+      if (p.MatchRaw(RawKind.LBracket))
       {
         // nested generic
-        typeNode = ParseAfterName(p, head);
+        typeNode = ParseAfterName(p, headTok);
       }
 
       builder.Add(typeNode);

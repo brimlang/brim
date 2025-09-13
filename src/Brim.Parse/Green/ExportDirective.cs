@@ -2,7 +2,7 @@ namespace Brim.Parse.Green;
 
 public sealed record ExportDirective(
   GreenToken ExportMarker,
-  Identifier Identifier,
+  GreenToken Identifier,
   GreenToken Terminator) :
 GreenNode(SyntaxKind.ExportDirective, ExportMarker.Offset),
 IParsable<ExportDirective>
@@ -18,7 +18,7 @@ IParsable<ExportDirective>
   public static ExportDirective Parse(Parser p) =>
     new(
       p.ExpectSyntax(SyntaxKind.ExportMarkerToken),
-      Identifier.Parse(p),
+      p.ExpectSyntax(SyntaxKind.IdentifierToken),
       p.ExpectSyntax(SyntaxKind.TerminatorToken)
     );
 }

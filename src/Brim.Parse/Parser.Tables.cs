@@ -10,15 +10,12 @@ public sealed partial class Parser
   [
     new(ExportDirective.Parse, RawKind.LessLess),
     new(ImportDeclaration.Parse, (RawKind.Identifier, RawKind.Equal, RawKind.LBracketLBracket)),
-    new(GenericDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.Comma)),
-    new(GenericDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.Identifier)),
-    new(GenericDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.Colon)),
-    new(GenericDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.RBracket)),
+    new(GenericDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.Any)),
     new(StructDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.PercentLBrace)), // Struct: Name : %{ ... }
     new(UnionDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.PipeLBrace)), // Union: Name : |{ ... }
     new(FlagsDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.Ampersand)), // Flags: Name : &u8{ ... } (underlying read inside)
     new(NamedTupleDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.HashLBrace)), // Named tuple: Name : #{ T, U }
-    new(GenericDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.RBracket)), // empty generic param list
+    new(GenericDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.RBracket)), // still capture empty list // empty generic param list
   ];
 
   internal static PredictionTable ModuleMembersTable => PredictionTable.Build(ModuleMemberPredictions);

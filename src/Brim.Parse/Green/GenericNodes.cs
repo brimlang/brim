@@ -16,7 +16,7 @@ public sealed record GenericParameterList(
 }
 
 public sealed record GenericParameter(
-  Identifier Name,
+  GreenToken Name,
   ConstraintList? Constraints) : GreenNode(SyntaxKind.GenericParameter, Name.Offset)
 {
   public override int FullWidth => (Constraints is null ? Name.EndOffset : Constraints.EndOffset) - Name.Offset;
@@ -31,7 +31,7 @@ public sealed record ConstraintList(
   GreenToken Colon,
   StructuralArray<GreenNode> Constraints) : GreenNode(SyntaxKind.ConstraintList, Colon.Offset)
 {
-  public override int FullWidth => Constraints.Count == 0 ? Colon.FullWidth : Constraints[Constraints.Count - 1].EndOffset - Colon.Offset;
+  public override int FullWidth => Constraints.Count == 0 ? Colon.FullWidth : Constraints[^1].EndOffset - Colon.Offset;
   public override IEnumerable<GreenNode> GetChildren()
   {
     yield return Colon;
