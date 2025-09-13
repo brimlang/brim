@@ -3,7 +3,7 @@ id: core.fundamentals
 title: Fundamentals
 layer: core
 authors: ['trippwill']
-updated: 2025-09-08
+updated: 2025-09-13
 status: accepted
 version: 0.1.0
 ---
@@ -13,8 +13,8 @@ version: 0.1.0
 Brim is an experimental language with a minimal core and an explicit surface.
 
 Brim has a mascot: A platypus named Hinky. Hinky embodies
-the aesthetic of Brim: a unique, somewhat quirky, but
-highly-adapted animal. Hinky likes to wear a brimmed hat.
+the aesthetic of Brim: a quirky, highly-adapted animal.
+Hinky likes to wear a brimmed hat.
 
 ## Language Design Guidelines
 
@@ -68,7 +68,7 @@ limit := 0
 - **Header:** `[[pkg::ns::leaf]]` on line 1. Required.
 - **Exports:** `<< Symbol` per line exports the symbol’s entire surface.
   - Only const bound symbols may be exported.
-  - There are no implicit exports, nor wildcard exports.
+  - There are no implicit exports, and no wildcard exports.
 - **Imports:** `alias = [[pkg::ns::path]]` (const binding) anywhere at top level.
   - Re-export is not allowed.
 - **State:** top‑level `:=` bindings with literal/aggregate initializers.
@@ -87,37 +87,69 @@ limit := 0
 
 ## Functions
 
+Examples:
 ```brim
-add = (x :i32, y :i32) i32 { x + y }
+-- Named function with explicit type (const)
+add : (i32, i32) i32 = (x, y) => x + y
+
+-- Split header then body (const)
+sum : (list[i32]) i32
+sum = (xs) => {
+  xs =>
+    (h, ..t) => h + sum(t)
+    ()       => 0
+}
+
+-- Split header then var body (allows rebinding)
+now : () i64
+now := () => host_clock.now()
+now := () => 1_700_000_000i64  -- test override
+
+-- Shorthand header with parameter names & types (const only)
+inc : (x : i32) i32 = { x + 1 }
+
+-- Generic function
+map[T, U] : ((T) U, list[T]) list[U] = (f, xs) => {
+  xs =>
+    (h, ..t) => list{ f(h) } ++ map(f, t)
+    ()       => list{}
+}
 ```
 
-- Functions are first-class values.
-- Functions can only const bind with `=`. Return type follows `)` with one space: `(p :T) Ret`.
-- Functions may nest inside other functions.
+Rules:
+- Function type shape: `(Type, ...) Ret` (types only).
+- Function value: `(name, ...) => expr` or block.
+- Named binding: `name : (Type, ...) Ret = (params) => expr` (const) or `:=` (var).
+- Split header form: declare `name : (Type, ...) Ret` then later `name = (params) => ...` or `name := (params) => ...`.
+- Only const-bound functions may be exported.
+- Parameters are only named in the value, not the type shape (except shorthand header form which binds names directly).
 
 ## Match
 
 ```brim
-r := res[i32]|ok{42}
+r : Reply[i32] = Reply|Good{42}
 
 r =>
-|ok(v) ?(v > 0) => v
-|ok(_)          => 0
-|err(e)         => { log(e); -1 }
+  Good(v) v > 0 => v
+  Good(_)       => 0
+  Error(e)      => { log(e); -1 }
 ```
 
-- Introducer: `expr =>`
-- **Arm:** `pattern ?(guard)? => expr`
-- Matches are exhaustive with optional final `_`.
+Match syntax:
+- Introducer: `expr =>` followed by one or more arms.
+- Arm: `Pattern [ guard-expr ] => Expr` (guard is any boolean expression placed after the pattern and before `=>`).
+- Patterns are type-directed (no tuple/union sigil repetition, no guard sigil `?(...)`).
+- Exhaustive with optional final `_` wildcard.
 
 ## Loops
 
 ```brim
-acc := 0u8
+acc := 0i32
 @{
-  acc += 1
-  ?(acc > 10) <@ acc -- break returning acc
-  @> -- continue
+  acc := acc + 1
+  acc =>
+    a a > 10 => { <@ a }  -- break returning acc
+    _        => { @> }     -- continue
 @}
 
 - Block: `@{ ... @}`
@@ -146,24 +178,28 @@ acc := 0u8
 
 ## Core Types
 
-- `bool`
+Primitive & built-in:
+- `void` — empty (no inhabitants)
+- `unit` — single value
+- `bool` — `true`, `false`
 - `i8, i16, i32, i64`, `u8, u16, u32, u64`
 - `rune` — Unicode scalar
 - `str` — UTF‑8 string
-- Tuples    `#(T1, T2, …)`
-- Structs   `%{ field: Type, ... }`
-- Unions    `|{ Variant: Type?, ... }`
-- Flags     `&uN{ a, b, c }`
-- Lists     `*[T]`
-- Functions `(p :Type, ...) Ret`
+- `list[T]` — homogeneous sequence
+- Option `T?` / Result `T!`
+- `error` — `%{ module: str, domain: str, code: u32 }`
 
-Canonical option/result types:
+Nominal aggregates (declared elsewhere):
+- Named tuples: `Type : #{T1, T2, ...}`
+- Structs: `Type : %{ field: Type, ... }`
+- Unions:  `Type : |{ Variant: Type?, ... }`
+- Flags:   `Type : &uN{ a, b, c }`
+- Functions: `Type : (Type, ...) Ret`
 
-- `T?` — option type: `?{}` (nil), `?{x}` (has)
-- `T!` — result type: `!{x}` (ok), `!!{e}` (err)
-
-Single structural error type:
-- `error` — `{ module: str, domain: str, code: u32 }`
+Option / Result constructors:
+- `?{}` (nil), `?{x}` (has)
+- `!{x}` (ok), `!!{e}` (err) where `e : error`
+Postfix propagation: `expr?` / `expr!` in matching return contexts.
 
 Core types do not carry methods; helpers live in the standard library.
 

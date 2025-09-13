@@ -3,17 +3,17 @@ id: core.generics
 title: Generics
 layer: core
 authors: ['trippwill']
-updated: 2025-09-08
+updated: 2025-09-13
 status: accepted
 version: 0.1.0
 ---
 
-# Generics (C0)
+# Generics
 
 Defines canonical syntax & minimal semantics for parametric polymorphism.
 
 ## Scope
-Applies to: functions, struct types, union types, services, protocols, builtin parametric types (`T?`, `T!`, `*[T]`).
+Applies to: functions, struct types, union types, services, protocols, builtin parametric types (`T?`, `T!`, `list[T]`).
 Excludes: higher-kinded types, value generics, variadics, partial application.
 
 ## Parameter Lists
@@ -44,35 +44,35 @@ All listed protocols must be satisfied (conjunction).
 
 Examples:
 ```brim
-Cache[K :Eq + Hash, V] = %{ entries: *[(K, V)] }
-all_equal[T :Eq] = (xs :*[T]) bool { ... }
+Pair[T, U] : #{T, U}
+Cache[K :Eq + Hash, V] : %{ entries : list[Pair[K, V]] }
+all_equal[T :Eq] : (xs : list[T]) bool = { ... }
 ```
 
 ## Services & Protocols
 Protocols:
 ```brim
-Iterable[T] = .{ next :() T? }
-Show[T]     = .{ show :(T) str }
+Iterable[T] : .{ next : () T? }
+Show[T]     : .{ show : (T) str }
 ```
 Services with implements list (unified colon form):
 ```brim
-Logger = ^|log| :Fmt + Flush {
-  target := "stderr"
-  ^(to :str) { log.target := to }
-  to_string = () str { log.target }
-  ~() unit { }
+Logger : ^log{ target : str } : Fmt + Flush = {
+  ^(to : str) = { log.target = to }
+  to_string : () str = () => log.target
+  ~() unit = { }
 }
 ```
 Generic + constraints on service parameters:
 ```brim
-Store[K :Eq, V] = ^|s| :Flush { ... }
+Store[K :Eq, V] : ^s{ /* state */ } : Flush = { /* body */ }
 ```
 
 ## Builtin Parametric Types
-Remain unchanged syntactically (except list sigil swap):
+Remain unchanged syntactically:
 - `T?` (option type)
 - `T!` (result type)
-- `*[T]` (list type)
+- `list[T]` (list type)
 Constraints do not attach inside these forms; they attach where parameters are introduced.
 
 *Note: The previous `opt[T]` and `res[T]` types are replaced by `T?` and `T!` as per the Option/Result & Return Lifting spec.*
@@ -86,17 +86,22 @@ Call sites and type uses rely on inference; no explicit type argument applicatio
 
 Example:
 ```brim
-map[T, U] = (f :(T) U, xs :*[T]) *[U] { ... }
-res = map((x :i32) i64 { x + 1 }, *{1,2,3})
+map[T, U] : ((T) U, list[T]) list[U] = (f, xs) => {
+  xs =>
+    (h, ..t) => list{ f(h) } ++ map(f, t)
+    ()       => list{}
+}
+res = map((x : i32) i64 { x + 1 }, list{1,2,3})
 -- infers T=i32, U=i64
 ```
 
 ## Patterns
 Patterns never restate generic arguments:
 ```brim
-Reply[T] = |{ Good: T, Error: str }
+Reply[T] : |{ Good : T, Error : str }
 val : Reply[i32] = Reply|Good{42}
-val => |Good(v) => v
+val =>
+  Good(v) => v
 ```
 
 ## Diagnostics (Seed)
@@ -113,6 +118,3 @@ val => |Good(v) => v
 - Variance annotations
 - Higher-kinded parameters
 - Partial specialization
-
-## Rationale
-Removes the legacy `:*` marker; colon-driven constraint form unifies all generic parameter contexts. Star sigil reserved solely for homogeneous lists; `.` adopted for protocol declarations, sharpening semantic taxonomy.

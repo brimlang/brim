@@ -3,8 +3,9 @@ id: core.option-result
 layer: core
 title: Option/Result & Return Lifting
 authors: ['trippwill', 'gpt-5-thinking']
-updated: 2025-09-10
+updated: 2025-09-13
 status: accepted
+version: 0.1.0
 ---
 # Option/Result & Return Lifting
 
@@ -17,23 +18,11 @@ Introduce symbolic encodings for **option** and **result** and define **type-dir
 - **Propagation (expr):** `e?` (propagate nil), `e!` (propagate err) to the nearest matching context.
 - **Return lifting:** In bodies returning `T?`/`T!`, a tail `T` auto-lifts to `?{…}` / `!{…}`; an existing `T?`/`T!` passes through.
 
-This spec replaces the "pre-amble" built-ins opt[T] and res[T], and makes `T?` and `T!` core types
-instead of instances of the union aggregate.
-
 ## Specification (Normative)
 
 ### 1. Types
 
 - If `T` is a type, then `T?` and `T!` are types.
-
-#### 1.1 Unit type alias
-
-- The **unit type** is spelled `unit` and **canonically** as `()`.
-- In **type space**, these are interchangeable:
-  - `() ≡ unit`
-  - `()? ≡ unit?`
-  - `()! ≡ unit!`
-- No whitespace is permitted between `()` and the postfix `?`/`!` in type positions.
 
 ### 2. Constructors (Expressions)
 
@@ -93,17 +82,19 @@ y =>
 
 ### 4. Canonical Function Declarations & Return Lifting
 
-Canonical form:
+Canonical nominal/value split applies:
 
 ```brim
-name = (params) ReturnType { body }
+name : (ParamTypes...) ReturnType = (params) => { body }
+-- or shorthand header with parameter names & types (const only):
+name : (x : T, y : U) ReturnType = { body }
 ```
 
-Rules when `ReturnType` is `T?` or `T!`:
+Rules when `ReturnType` is `T?` or `T!` (unchanged semantically):
 
-- If the **tail expression** of `body` has type `T`, implicitly return `?{tail}` / `!{tail}`.
+- If the tail expression of a function body has type `T`, implicitly lift to `?{tail}` / `!{tail}`.
 - If the tail already has type `T?` / `T!`, return it unchanged (no double wrapping).
-- Propagation (`e?` / `e!`) inside the body targets this nearest `T?` / `T!` context.
+- Propagation (`e?` / `e!`) inside the body targets the nearest enclosing function whose declared return type is an option/result of the matching kind.
 
 ### 5. Patterns
 
@@ -129,15 +120,14 @@ f =>
 
 Patterns are allowed in `match` arms and destructuring binds.
 
-### 6. Control Flow & Truthiness
+### 6. Truthiness
 
-- `if`, `while`, and other conditionals do **not** accept `T?`/`T!` directly. Users must match or test explicitly.
+- Conditionals do **not** accept `T?`/`T!` directly. Users must match or test explicitly.
 
 ### 7. Lexical & Formatting
 
 - `!{` and `!!{` begin constructors with no whitespace allowed between `!` and `{`.
 - Same for `?{`.
-- In **type space**, `()!` and `()?` are exactly `unit!` and `unit?`; no whitespace is permitted between `)` and the postfix `!`/`?`.
 - Postfix propagation tokens are single glyphs placed **immediately** after the operand: `expr?`, `expr!`.
 
 ## Examples (Normative)
@@ -145,47 +135,43 @@ Patterns are allowed in `match` arms and destructuring binds.
 ### Canonical functions
 
 ```brim
-a = () i32? { 56 }                      -- lifts to ?{56}
+a : () i32? = () => 56                 -- lifts to ?{56}
 
-b = () i32? { ?{} }                     -- nil
+b : () i32? = () => ?{}                -- nil
 
-c = () str!  { "hello" }               -- lifts to !{"hello"}
+c : () str!  = () => "hello"          -- lifts to !{"hello"}
 
-d = () str!  { !!{err("domain", 45)} } -- explicit error
+d : () str!  = () => !!{err("domain", 45)}  -- explicit error
 
-try_do = () ()! { () }                -- lifts to !{()} (i.e., ok(()))
+try_do : () unit! = () => unit{}             -- lifts to !{()}
 ```
 
 ### Propagation in a fallible function
 
 ```brim
-make_user = (s: text) user! {
-  id   := parse_id(s)!;          -- propagate err if parse_id fails
-  name := parse_name(s)?;        -- if nil here, function must map to an error or return nil in an option context
-  -- mapping nil → error explicitly:
+make_user : (text) user! = (s) => {
+  id   := parse_id(s)!            -- propagate err if parse_id fails
+  name := parse_name(s)?          -- propagate nil if option context; here we map nil to error
   name =>
-  n => { make_user_core(id, n)! }
-  ?  => { !!{error("missing-name")} }
+    n   => { make_user_core(id, n)! }
+    ?() => { !!{error("missing-name")} }
 }
 ```
 
 ### Patterns
 
 ```brim
-match maybe_port {                  -- : i32?
-  p => { use_port(p) }
-  ?  => { use_default() }
-}
+maybe_port =>                       -- : i32?
+  p    => { use_port(p) }
+  ?()  => { use_default() }
 
-match outcome {                     -- : str!
+outcome =>                          -- : str!
   v      => { log(v) }
   !!(e)  => { handle(e) }
-}
 
-match ping() {                      -- : ()!
+ping() =>                           -- : ()!
   !()    => { ok_path() }           -- matches ok(()) (unit success)
   !!(e)  => { err_path(e) }
-}
 ```
 
 ## Notes (Non‑Normative)
@@ -197,14 +183,11 @@ match ping() {                      -- : ()!
 - Using `?`/`!` on non‑option/non‑result: “propagation requires `U?`/`U!`; got `{τ}`”.
 - Tail mismatch: “tail produces `{U?}` but function returns `{T?}`; map or match to `{T?}`”.
 - Untyped nil: “`?{}` requires an expected type `T?` or a type ascription”.
-- Misuse of `!()` in **expression** context: “`!()` is not a constructor; did you mean to return `()` in a `()!` context (will lift to ok(())) or write `!{()}`?”
 + Using `!` outside a function returning `T!`: “`!` requires enclosing `T!` return. Help: Wrap the value in `!{...}` or change the function return type to `T!`.”
 + Using `?` outside a function returning `T?`: “`?` requires enclosing `T?` return. Help: Wrap the value in `?{...}` or change the function return type to `T?`.”
-
 - Using `?`/`!` on non‑option/non‑result: “propagation requires `U?`/`U!`; got `{τ}`”.
 - Tail mismatch: “tail produces `{U?}` but function returns `{T?}`; map or match to `{T?}`”.
 - Untyped nil: “`?{}` requires an expected type `T?` or a type ascription”.
-- Misuse of `!()` in **expression** context: “`!()` is not a constructor; did you mean to return `()` in a `()!` context (will lift to ok(())) or write `!{()}`?”
 
 ## Interactions
 
