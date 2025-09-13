@@ -85,6 +85,27 @@ limit := 0
 - `name := expr` → var; rebinding must use `:=`; using `=` is error.
 - `name ~= expr` → bound service; destructor runs at scope end.
 
+## Expressions
+
+An expression produces a value. Anywhere the language expects an expression you may write either:
+
+- A simple expression (single value form)
+- A block expression `{ ... }`
+
+Simple expression forms (value-producing):
+- Identifier
+- Literal (integer, decimal, string, rune)
+- Function (lambda) value: `(params) => expr` or `(params) => { ... }`
+- Call: `expr(args)` (callee and each argument are expressions)
+- Constructors:
+  - Option / Result: `?{}`, `?{x}`, `!{x}`, `!!{e}`
+  - Aggregates: `Type%{ field = expr, ... }`, `Type|Variant{expr?}`, `Type#{ e1, e2, ... }`, `list{ e1, e2, ... }`
+- Propagation: `expr?`, `expr!`
+- Match: `scrutinee => arm+` (see Match section below for arm form)
+- Block: `{ ... }` (listed separately below as the compound form)
+
+Block expressions evaluate their statements left-to-right and yield the value of their final expression.
+
 ## Functions
 
 Examples:
@@ -111,14 +132,14 @@ inc : (x : i32) i32 = { x + 1 }
 -- Generic function
 map[T, U] : ((T) U, list[T]) list[U] = (f, xs) => {
   xs =>
-    (h, ..t) => list{ f(h) } ++ map(f, t)
+    (h, ..t) => std::list:concat(list{ f(h) }, map(f, t))
     ()       => list{}
 }
 ```
 
 Rules:
 - Function type shape: `(Type, ...) Ret` (types only).
-- Function value: `(name, ...) => expr` or block.
+- Function value: `(name, ...) => expr`.
 - Named binding: `name : (Type, ...) Ret = (params) => expr` (const) or `:=` (var).
 - Split header form: declare `name : (Type, ...) Ret` then later `name = (params) => ...` or `name := (params) => ...`.
 - Only const-bound functions may be exported.
@@ -140,25 +161,6 @@ Match syntax:
 - Arm: `Pattern [ guard-expr ] => Expr` (guard is any boolean expression placed after the pattern and before `=>`).
 - Patterns are type-directed (no tuple/union sigil repetition, no guard sigil `?(...)`).
 - Exhaustive with optional final `_` wildcard.
-
-## Loops
-
-```brim
-acc := 0i32
-@{
-  acc := acc + 1
-  acc =>
-    a a > 10 => { <@ a }  -- break returning acc
-    _        => { @> }     -- continue
-@}
-
-- Block: `@{ ... @}`
-- Break: `<@ expr`
-- Continue: `@>`
-```
-
-- Loops are expressions that evaluate to the last evaluated expression or the value of a break.
-- Only one type of loop: infinite with internal control.
 
 ## Statement Separator
 - `\n` and `;` are **statement separators**.

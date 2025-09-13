@@ -170,19 +170,21 @@ run = () res[unit] {
   tx, rx = std::chan::bounded[str](128)
 
   prod = std::task::spawn(() unit {
-    @ {
-      line = next_line()?                   // opt unwrap sugar
-      std::task::await(tx.send(line))!      // res unwrap sugar
-      @>
+    produce = ( ) unit => {
+      line = next_line()?                   -- opt unwrap sugar
+      std::task::await(tx.send(line))!      -- res unwrap sugar
+      produce()                             -- tail recursion until next_line()? returns nil
     }
+    produce()
   })
 
   cons = std::task::spawn(() unit {
-    @ {
-      m = std::task::await(rx.recv())?      // nil → break
+    consume = () unit => {
+      m = std::task::await(rx.recv())?      -- nil short-circuits via propagation
       handle_message(m)
-      @>
+      consume()
     }
+    consume()
   })
 
   std::task::await(prod)
@@ -196,18 +198,18 @@ run = () res[unit] {
 merge = (a :Receiver[str], b :Receiver[str]) Fut[list[str]] {
   acc := []
   std::task::spawn(() list[str] {
-    @ {
+    loop = () list[str] => {
       std::task::select(
         case a.recv() =>
-        | opt:has(v) |> { acc := acc + [v] }
-        | opt:nil    |> <@ acc,
+        | opt:has(v) |> { acc := acc + [v]; loop() }
+        | opt:nil    |> acc,
 
         case b.recv() =>
-        | opt:has(w) |> { acc := acc + [w] }
-        | opt:nil    |> <@ acc
+        | opt:has(w) |> { acc := acc + [w]; loop() }
+        | opt:nil    |> acc
       )
-      @>
     }
+    loop()
   })
 }
 ```

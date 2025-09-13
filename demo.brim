@@ -28,12 +28,10 @@ emit = `() Reply[i32] { Reply|Good{42} }
 
 handle : (r :Reply[i32]) i32 = {
   acc := 0u8
-  br := @{
-    acc => {
-      a a < 10 => { acc := acc + 1 }
-      _ => <@ 200
-    }; @>
-  }
+  incr = (n) u8 => n =>
+    a a < 10 => incr(a + 1u8)
+    _        => 200u8
+  br := incr(acc)
 
   r => {
     Good(v)  => { v }
@@ -43,8 +41,4 @@ handle : (r :Reply[i32]) i32 = {
 
 mask = Perms&{ read, exec }
 
--- this is a parse error
-@{
-  @>
-  <@ 7
-@}
+-- (former loop parse error example removed)

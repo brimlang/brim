@@ -74,9 +74,6 @@ Status: draft (informative). Canonical meaning is defined only in accepted core 
 
 ## Control Flow
 - Match introducer: `expr => { ... }` (braces optional for single arm sets) — Cat: control — Canonical?: Y
-- Loop block: `@{ ... @}` — Cat: control — Canonical?: Y
-- Break: `<@ expr` — Cat: control — Canonical?: Y
-- Continue: `@>` — Cat: control — Canonical?: Y
 
 ## Patterns (Type-Directed)
 - Wildcard: `_` — Cat: pattern — Canonical?: Y

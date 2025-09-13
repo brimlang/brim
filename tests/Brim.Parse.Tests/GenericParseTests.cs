@@ -20,7 +20,7 @@ public class GenericParseTests
   [Fact(Skip = "TODO: Broken")]
   public void StructWithEmptyGenericListAllowsMissingAndEmitsMissingTokenDiag()
   {
-    var m2 = Parse("[[m]];\nFoo[] = %{ x:Foo };");
+    var m2 = Parse("[[m]];\nFoo[] : %{ x:Foo };");
     Assert.Contains(m2.Diagnostics, static d => d.Code == DiagCode.EmptyGenericParamList);
   }
 }

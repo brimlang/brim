@@ -25,14 +25,14 @@ public enum RawKind : short
   Backslash, // \
 
   // Possible compound glyph runs
-  Less, LessLess, LessAt, // < << <@
+  Less, LessLess, // < <<
   Equal, EqualGreater, // = =>
   Minus, CommentTrivia, // - --
   Star, StarLBrace, // * *{
   Tilde, TildeEqual, // ~ ~=
   LBracket, LBracketLBracket, // [ [[
   RBracket, RBracketRBracket, // ] ]]
-  Atmark, AtmarkLBrace, AtmarkRBrace, AtmarkGreater, // @ @{ @} @>
+  Atmark, // @
   Colon, ColonStar, ColonEqual, ColonColon, // : :* := ::
   Pipe, PipeLBrace, // | |{
   Hash, HashLParen, HashLBrace, // # #( #{

@@ -15,7 +15,7 @@ public class GenericDiagnosticsTests
   public void UnexpectedGenericBodyDiagnostic()
   {
     // Use a body opener not yet supported after generic head, e.g. '&{' (Ampersand then '{' maybe not combined; falls back to unexpected)
-    var m2 = Parse("[[m]];\nFoo[T] : @{}\n");
+    var m2 = Parse("[[m]];\nFoo[T] : &{}\n");
     Assert.Contains(m2.Diagnostics, static d => d.Code == DiagCode.UnexpectedGenericBody);
   }
 }

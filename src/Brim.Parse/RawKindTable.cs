@@ -46,12 +46,7 @@ public static class RawKindTable
 
   static RawKindTable()
   {
-    _lookup['@'] = new(RawKind.Atmark,
-      [
-        ("@{", RawKind.AtmarkLBrace),
-        ("@}", RawKind.AtmarkRBrace),
-        ("@>", RawKind.AtmarkGreater)
-      ]);
+    _lookup['@'] = new(RawKind.Atmark, []);
     _lookup[':'] = new(RawKind.Colon,
       [
         (":*", RawKind.ColonStar),
@@ -66,8 +61,7 @@ public static class RawKindTable
       ]);
     _lookup['<'] = new(RawKind.Less,
       [
-        ("<<", RawKind.LessLess),
-        ("<@", RawKind.LessAt)
+        ("<<", RawKind.LessLess)
       ]);
     _lookup['?'] = new(RawKind.Question,
       [
