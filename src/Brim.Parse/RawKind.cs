@@ -23,6 +23,7 @@ public enum RawKind : short
   Greater, // >
   Slash, // /
   Backslash, // \
+  Atmark, // @
 
   // Possible compound glyph runs
   Less, LessLess, // < <<
@@ -32,7 +33,6 @@ public enum RawKind : short
   Tilde, TildeEqual, // ~ ~=
   LBracket, LBracketLBracket, // [ [[
   RBracket, RBracketRBracket, // ] ]]
-  Atmark, // @
   Colon, ColonStar, ColonEqual, ColonColon, // : :* := ::
   Pipe, PipeLBrace, // | |{
   Hash, HashLParen, HashLBrace, // # #( #{

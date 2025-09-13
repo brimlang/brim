@@ -129,7 +129,7 @@ public class RawProducerTests
   [Fact]
   public void RawKindTableEntriesAreSorted()
   {
-    foreach (RawKindTableEntry entry in RawKindTable.AsSpan())
+    foreach (RawKindTable.Entry entry in RawKindTable.AsSpan())
     {
       var arr = entry.Sequences.IsDefault ? [] : entry.Sequences;
       for (int i = 1; i < arr.Length; i++)
