@@ -5,6 +5,7 @@ public sealed record NamedTupleDeclaration(
   GreenToken Colon,
   GreenToken OpenToken, // #{ token
   StructuralArray<GreenNode> ElementTypes,
+  StructuralArray<GreenToken> ElementSeparators,
   GreenToken CloseBrace,
   GreenToken Terminator)
   : GreenNode(SyntaxKind.NamedTupleDeclaration, Name.Offset)
@@ -15,12 +16,17 @@ public sealed record NamedTupleDeclaration(
     yield return Name;
     yield return Colon;
     yield return OpenToken;
-    foreach (GreenNode t in ElementTypes) yield return t;
+    for (int i = 0; i < ElementTypes.Count; i++)
+    {
+      yield return ElementTypes[i];
+      if (i < ElementSeparators.Count)
+        yield return ElementSeparators[i];
+    }
     yield return CloseBrace;
     yield return Terminator;
   }
 
-  // EBNF: NamedTupleDecl ::= Identifier GenericParams? ':' NamedTupleToken TypeRef (',' TypeRef)* '}' Terminator
+  // EBNF (updated): NamedTupleDecl ::= Identifier GenericParams? ':' NamedTupleToken TypeRef (',' TypeRef)* (',')? '}' Terminator
   // No zero-tuples: must contain at least one TypeRef.
   public static NamedTupleDeclaration Parse(Parser p)
   {
@@ -29,18 +35,13 @@ public sealed record NamedTupleDeclaration(
     GreenToken open = p.ExpectSyntax(SyntaxKind.NamedTupleToken); // #{
 
     ImmutableArray<GreenNode>.Builder elems = ImmutableArray.CreateBuilder<GreenNode>();
+    ImmutableArray<GreenToken>.Builder seps = ImmutableArray.CreateBuilder<GreenToken>();
 
     if (!p.MatchRaw(RawKind.RBrace) && !p.MatchRaw(RawKind.Eob))
     {
-      bool first = true;
-      while (!p.MatchRaw(RawKind.RBrace) && !p.MatchRaw(RawKind.Eob))
+      while (true)
       {
         int before = p.Current.CoreToken.Offset;
-        if (!first)
-        {
-          if (p.MatchRaw(RawKind.Comma)) _ = p.ExpectRaw(RawKind.Comma); else break;
-        }
-        // For now TypeRef ::= Identifier GenericArgList?
         GreenToken typeNameTok = p.ExpectSyntax(SyntaxKind.IdentifierToken);
         GreenNode ty = typeNameTok;
         if (p.MatchRaw(RawKind.LBracket) && !p.MatchRaw(RawKind.LBracketLBracket))
@@ -48,21 +49,26 @@ public sealed record NamedTupleDeclaration(
           ty = GenericType.ParseAfterName(p, typeNameTok);
         }
         elems.Add(ty);
-        first = false;
-        if (p.Current.CoreToken.Offset == before) break; // safety
+        if (p.MatchRaw(RawKind.Comma))
+        {
+          GreenToken commaTok = p.ExpectSyntax(SyntaxKind.CommaToken);
+          seps.Add(commaTok);
+          if (p.MatchRaw(RawKind.RBrace) || p.MatchRaw(RawKind.Eob))
+            break; // trailing comma
+          continue;
+        }
+        break;
       }
     }
 
-    // Enforce non-empty named tuple list. If empty fabricate a missing element by emitting unexpected diagnostic.
     if (elems.Count == 0)
-    {
       p.AddDiagEmptyNamedTupleElementList();
-    }
 
     StructuralArray<GreenNode> arr = [.. elems];
+    StructuralArray<GreenToken> sepArr = [.. seps];
     GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBraceToken);
     GreenToken term = p.ExpectSyntax(SyntaxKind.TerminatorToken);
 
-    return new NamedTupleDeclaration(name, colon, open, arr, close, term);
+    return new NamedTupleDeclaration(name, colon, open, arr, sepArr, close, term);
   }
 }

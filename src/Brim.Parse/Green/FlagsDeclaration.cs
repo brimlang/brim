@@ -24,6 +24,7 @@ public sealed record FlagsDeclaration(
   GreenToken UnderlyingType,
   GreenToken OpenBrace,
   StructuralArray<FlagMemberDeclaration> Members,
+  StructuralArray<GreenToken> MemberSeparators,
   GreenToken CloseBrace,
   GreenToken Terminator) :
 GreenNode(SyntaxKind.FlagsDeclaration, Name.Offset),
@@ -37,12 +38,17 @@ IParsable<FlagsDeclaration>
     yield return Ampersand;
     yield return UnderlyingType;
     yield return OpenBrace;
-    foreach (FlagMemberDeclaration m in Members) yield return m;
+    for (int i = 0; i < Members.Count; i++)
+    {
+      yield return Members[i];
+      if (i < MemberSeparators.Count)
+        yield return MemberSeparators[i];
+    }
     yield return CloseBrace;
     yield return Terminator;
   }
 
-  // EBNF: FlagsDecl ::= Identifier ':' '&' Identifier '{' Identifier (',' Identifier)* '}' Terminator
+  // EBNF (updated): FlagsDecl ::= Identifier ':' '&' Identifier '{' Identifier (',' Identifier)* (',')? '}' Terminator
   public static FlagsDeclaration Parse(Parser p)
   {
     DeclarationName name = DeclarationName.Parse(p);
@@ -52,20 +58,29 @@ IParsable<FlagsDeclaration>
     GreenToken open = p.ExpectSyntax(SyntaxKind.OpenBraceToken);
 
     ImmutableArray<FlagMemberDeclaration>.Builder members = ImmutableArray.CreateBuilder<FlagMemberDeclaration>();
-    while (!p.MatchRaw(RawKind.RBrace) && !p.MatchRaw(RawKind.Eob))
+    ImmutableArray<GreenToken>.Builder seps = ImmutableArray.CreateBuilder<GreenToken>();
+
+    if (!p.MatchRaw(RawKind.RBrace) && !p.MatchRaw(RawKind.Eob))
     {
-      int before = p.Current.CoreToken.Offset;
-      members.Add(FlagMemberDeclaration.Parse(p));
-      if (p.MatchRaw(RawKind.Comma)) _ = p.ExpectRaw(RawKind.Comma);
-      if (p.Current.CoreToken.Offset == before)
+      while (true)
       {
-        break; // no progress
+        int before = p.Current.CoreToken.Offset;
+        members.Add(FlagMemberDeclaration.Parse(p));
+        if (p.MatchRaw(RawKind.Comma))
+        {
+          GreenToken commaTok = p.ExpectSyntax(SyntaxKind.CommaToken);
+          seps.Add(commaTok);
+          if (p.MatchRaw(RawKind.RBrace) || p.MatchRaw(RawKind.Eob)) break; // trailing comma
+          continue;
+        }
+        break;
       }
     }
 
     StructuralArray<FlagMemberDeclaration> arr = [.. members];
+    StructuralArray<GreenToken> sepArr = [.. seps];
     GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBraceToken);
     GreenToken term = p.ExpectSyntax(SyntaxKind.TerminatorToken);
-    return new FlagsDeclaration(name, colon, amp, underlying, open, arr, close, term);
+    return new FlagsDeclaration(name, colon, amp, underlying, open, arr, sepArr, close, term);
   }
 }

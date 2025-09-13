@@ -12,6 +12,8 @@ version: 0.1.0
 
 Defines the canonical declaration, construction, and pattern forms for aggregates. All aggregates are nominal.
 
+Comma policy: Every comma-delimited list in aggregate declarations, constructions, and patterns permits at most one optional trailing comma (before the closing delimiter). Empty lists contain no comma. All commas are preserved as tokens.
+
 Principle: Construction (term formation) for every aggregate uses the aggregate’s sigil or type head immediately followed by `{ ... }`. Patterns are type-directed and use parentheses.
 
 ## Named Tuples — positional aggregates

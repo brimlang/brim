@@ -41,6 +41,7 @@ public sealed partial class Parser
     SyntaxKind.CloseBraceToken => RawKind.RBrace,
     SyntaxKind.EobToken => RawKind.Eob,
     SyntaxKind.ColonToken => RawKind.Colon,
+    SyntaxKind.CommaToken => RawKind.Comma,
     SyntaxKind.ErrorToken => RawKind.Error,
     SyntaxKind.NamedTupleToken => RawKind.HashLBrace,
     _ => RawKind.Error

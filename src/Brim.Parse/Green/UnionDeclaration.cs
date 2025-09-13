@@ -35,6 +35,7 @@ public sealed record UnionDeclaration(
   GreenToken Colon,
   GreenToken UnionOpen,
   StructuralArray<UnionVariantDeclaration> Variants,
+  StructuralArray<GreenToken> VariantSeparators,
   GreenToken Close,
   GreenToken Terminator) : GreenNode(SyntaxKind.UnionDeclaration, Name.Offset)
 {
@@ -44,10 +45,12 @@ public sealed record UnionDeclaration(
     yield return Name;
     yield return Colon;
     yield return UnionOpen;
-
-    foreach (UnionVariantDeclaration v in Variants)
-      yield return v;
-
+    for (int i = 0; i < Variants.Count; i++)
+    {
+      yield return Variants[i];
+      if (i < VariantSeparators.Count)
+        yield return VariantSeparators[i];
+    }
     yield return Close;
     yield return Terminator;
   }
@@ -58,23 +61,30 @@ public sealed record UnionDeclaration(
     GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
     GreenToken open = p.ExpectSyntax(SyntaxKind.UnionToken);
     ImmutableArray<UnionVariantDeclaration>.Builder vars = ImmutableArray.CreateBuilder<UnionVariantDeclaration>();
-    while (!p.MatchRaw(RawKind.RBrace) && !p.MatchRaw(RawKind.Eob))
-    {
-      int before = p.Current.CoreToken.Offset;
-      vars.Add(UnionVariantDeclaration.Parse(p));
-      if (p.MatchRaw(RawKind.Comma))
-        _ = p.ExpectRaw(RawKind.Comma);
+    ImmutableArray<GreenToken>.Builder seps = ImmutableArray.CreateBuilder<GreenToken>();
 
-      if (p.Current.CoreToken.Offset == before)
+    if (!p.MatchRaw(RawKind.RBrace) && !p.MatchRaw(RawKind.Eob))
+    {
+      while (true)
       {
-        // No progress; break to avoid infinite loop.
+        int before = p.Current.CoreToken.Offset;
+        vars.Add(UnionVariantDeclaration.Parse(p));
+        if (p.MatchRaw(RawKind.Comma))
+        {
+          GreenToken commaTok = p.ExpectSyntax(SyntaxKind.CommaToken);
+          seps.Add(commaTok);
+          if (p.MatchRaw(RawKind.RBrace) || p.MatchRaw(RawKind.Eob))
+            break; // trailing comma
+          continue;
+        }
         break;
       }
     }
 
     StructuralArray<UnionVariantDeclaration> arr = [.. vars];
+    StructuralArray<GreenToken> sepArr = [.. seps];
     GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBraceToken);
     GreenToken term = p.ExpectSyntax(SyntaxKind.TerminatorToken);
-    return new(name, colon, open, arr, close, term);
+    return new(name, colon, open, arr, sepArr, close, term);
   }
 }

@@ -26,12 +26,13 @@ Map[K :Eq + Hash, V]
 ```
 Grammar (informal):
 ```
-GenericParams  ::= '[' GenericParam (',' GenericParam)* ']'
+GenericParams  ::= '[' (GenericParam (',' GenericParam)* (',')?)? ']'
 GenericParam   ::= Ident (':' ConstraintList)?
 ConstraintList ::= ProtocolRef ('+' ProtocolRef)*
 ```
 Rules:
-- No trailing comma.
+- Single optional trailing comma permitted.
+- Empty list `[]` has no comma.
 - Duplicate parameter name → EGEN001.
 - Duplicate protocol in a list → EGEN002.
 - Unknown protocol → EGEN003.

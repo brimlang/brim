@@ -19,6 +19,7 @@ public enum SyntaxKind
   CloseBraceToken,
   ExportMarkerToken,
   ColonToken,
+  CommaToken,
   GenericOpenToken,
   GenericCloseToken,
   TerminatorToken,

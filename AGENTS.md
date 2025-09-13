@@ -22,4 +22,5 @@
 18. Do not introduce semantic layer yet; future pass will add warnings (e.g., unused imports) — leave placeholders minimal.
 19. Backlog reference: see backlog in prior AGENTS.md history (retain until separately documented); do not duplicate here.
 20. If ambiguity: choose simpler design, document briefly, add/adjust tests, update this file ONLY if rule materially changes.
+21. Commas: All comma-delimited lists across syntax forms preserve each comma token in the tree and permit at most one optional trailing comma before the closing delimiter. Empty lists never contain a comma.
 

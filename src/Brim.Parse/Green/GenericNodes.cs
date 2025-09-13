@@ -3,6 +3,7 @@ namespace Brim.Parse.Green;
 public sealed record GenericParameterList(
   GreenToken Open,
   ImmutableArray<GenericParameter> Parameters,
+  StructuralArray<GreenToken> ParameterSeparators,
   GreenToken Close)
 : GreenNode(SyntaxKind.GenericParameterList, Open.Offset)
 {
@@ -10,7 +11,12 @@ public sealed record GenericParameterList(
   public override IEnumerable<GreenNode> GetChildren()
   {
     yield return Open;
-    foreach (GenericParameter p in Parameters) yield return p;
+    for (int i = 0; i < Parameters.Length; i++)
+    {
+      yield return Parameters[i];
+      if (i < ParameterSeparators.Count)
+        yield return ParameterSeparators[i];
+    }
     yield return Close;
   }
 }
@@ -42,6 +48,7 @@ public sealed record ConstraintList(
 public sealed record GenericArgumentList(
   GreenToken Open,
   StructuralArray<GreenNode> Arguments,
+  StructuralArray<GreenToken> ArgumentSeparators,
   GreenToken Close)
 : GreenNode(SyntaxKind.GenericArgumentList, Open.Offset)
 {
@@ -49,7 +56,12 @@ public sealed record GenericArgumentList(
   public override IEnumerable<GreenNode> GetChildren()
   {
     yield return Open;
-    foreach (GreenNode a in Arguments) yield return a;
+    for (int i = 0; i < Arguments.Count; i++)
+    {
+      yield return Arguments[i];
+      if (i < ArgumentSeparators.Count)
+        yield return ArgumentSeparators[i];
+    }
     yield return Close;
   }
 }

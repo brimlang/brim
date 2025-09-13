@@ -6,6 +6,8 @@ A concise reference to **C0** (core) syntax only. No sugar (S0), no interop, no 
 
 ## Core Laws
 
+- Commas: All comma-separated lists allow at most one optional trailing comma; empty lists contain none; all commas are preserved.
+
 
 - **Bindings:** const `=`, var `:=`, service `~=` (service destructor runs at scope exit).
 - **Data vs behavior:** Structs carry data; services carry behavior. Only services satisfy protocols.
