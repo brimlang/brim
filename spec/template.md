@@ -18,9 +18,12 @@ version: 0.0.0 # optional; include when status is accepted
 - authors: List of authors
 - updated: Date of last update
 - status: Status of the spec - draft, proposed, accepted, deprecated
-- version: release version when this spec was accepted
+- version: release version when this spec was accepted - only valid for `accepted` specs
 
 ## Specification Guidelines
+
+> Pre-release Note: During the pre-release phase, specs record only the current canonical state. Do not add migration notes, deprecation guidance, or legacy syntax. When behavior changes, replace the content outright. Historical context may be kept separately outside the spec tree if needed.
+
 
 - Only documents with status `accepted` are considered authoritative with regard to syntax. For other statuses, the
 document is informative only, and will be aligned with the canonical spec upon acceptance.

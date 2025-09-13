@@ -1,4 +1,7 @@
 # AGENTS.md (Concise Ops & Style Reference)
+
+> Pre-release Policy: Brim is in its initial pre-release phase. All language, toolchain, and library surfaces are subject to change without deprecation cycles or migration shims. Specs and this file always describe the current state; do not preserve legacy syntax or behaviors. Remove outdated guidance instead of marking it deprecated. Once a formal 1.0 stabilization plan begins, an explicit compatibility policy will be added here.
+
 1. Setup: `mise trust && mise install` (installs dotnet 9 + tasks).
 2. Build: `mise run build` (or `dotnet build`); AOT: `mise run aot:linux-x64:publish`.
 3. Lint (verify): `mise run lint`; Auto-format: `mise run format` (CI fails on unformatted code).

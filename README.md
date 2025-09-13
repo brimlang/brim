@@ -1,4 +1,7 @@
 # brim
+
+> Pre-release: The Brim language and toolchain are in an early, unstable phase. Breaking changes may land at any time without deprecation. Specs in `spec/` describe only the current accepted state; historical/migration notes are intentionally omitted until stabilization.
+
 ## Layout
 
 - `Brim.Parse` — lex/parse & concrete surface concerns
