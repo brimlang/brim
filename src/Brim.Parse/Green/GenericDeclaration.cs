@@ -1,19 +1,5 @@
 namespace Brim.Parse.Green;
 
-public sealed record GenericHead(
-  Identifier Name,
-  GenericParameterList Parameters,
-  GreenToken Equal)
-: GreenNode(SyntaxKind.GenericParameterList, Name.Offset) // reuse kind for now
-{
-  public override int FullWidth => Equal.EndOffset - Name.Offset;
-  public override IEnumerable<GreenNode> GetChildren()
-  {
-    yield return Name;
-    yield return Parameters;
-    yield return Equal;
-  }
-}
 
 public static class GenericDeclaration
 {
@@ -21,7 +7,7 @@ public static class GenericDeclaration
   {
     Identifier name = Identifier.Parse(p);
     GreenToken open = p.ExpectSyntax(SyntaxKind.GenericOpenToken);
-    ImmutableArray<Identifier>.Builder parms = ImmutableArray.CreateBuilder<Identifier>();
+    ImmutableArray<GenericParameter>.Builder parms = ImmutableArray.CreateBuilder<GenericParameter>();
     bool first = true;
     bool empty = false;
     if (p.MatchRaw(RawKind.RBracket))
@@ -44,7 +30,40 @@ public static class GenericDeclaration
           else break;
         }
 
-        parms.Add(Identifier.Parse(p));
+        Identifier paramName = Identifier.Parse(p);
+        ConstraintList? constraints = null;
+        if (p.MatchRaw(RawKind.Colon))
+        {
+          GreenToken colonTok = p.ExpectSyntax(SyntaxKind.ColonToken);
+          // Parse one or more ProtoRefs separated by '+'; for now ProtoRef ::= Identifier GenericArgList?
+          ImmutableArray<GreenNode>.Builder refs = ImmutableArray.CreateBuilder<GreenNode>();
+          bool firstRef = true;
+          while (!p.MatchRaw(RawKind.RBracket) && !p.MatchRaw(RawKind.Eob))
+          {
+            int beforeRef = p.Current.CoreToken.Offset;
+            if (!firstRef)
+            {
+              if (p.MatchRaw(RawKind.Plus)) _ = p.ExpectRaw(RawKind.Plus); else break;
+            }
+            Identifier typeName = Identifier.Parse(p);
+            GreenNode refNode = typeName;
+            if (p.MatchRaw(RawKind.LBracket) && !p.MatchRaw(RawKind.LBracketLBracket))
+            {
+              refNode = GenericType.ParseAfterName(p, typeName);
+            }
+            refs.Add(refNode);
+            firstRef = false;
+            if (p.Current.CoreToken.Offset == beforeRef) break;
+          }
+          StructuralArray<GreenNode> arr = [.. refs];
+          if (arr.Count == 0)
+          {
+            // No constraint after ':' => diagnostic best-effort.
+            p.AddDiagInvalidGenericConstraint();
+          }
+          constraints = new ConstraintList(colonTok, arr);
+        }
+        parms.Add(new GenericParameter(paramName, constraints));
         first = false;
         if (p.Current.CoreToken.Offset == before)
         {

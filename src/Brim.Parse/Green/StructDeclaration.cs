@@ -28,7 +28,7 @@ IParsable<StructDeclaration>
     if (!p.MatchRaw(RawKind.LBracket)) return null; // must not be module path
     GreenToken open = p.ExpectSyntax(SyntaxKind.GenericOpenToken);
 
-    ImmutableArray<Identifier>.Builder items = ImmutableArray.CreateBuilder<Identifier>();
+    ImmutableArray<GenericParameter>.Builder items = ImmutableArray.CreateBuilder<GenericParameter>();
     bool first = true;
     while (!p.MatchRaw(RawKind.RBracket) && !p.MatchRaw(RawKind.Eob))
     {
@@ -36,10 +36,38 @@ IParsable<StructDeclaration>
       {
         if (p.MatchRaw(RawKind.Comma)) _ = p.ExpectRaw(RawKind.Comma); else break;
       }
-      items.Add(Identifier.Parse(p));
+      Identifier paramName = Identifier.Parse(p);
+      ConstraintList? constraints = null;
+      if (p.MatchRaw(RawKind.Colon))
+      {
+        GreenToken colonTok = p.ExpectSyntax(SyntaxKind.ColonToken);
+        ImmutableArray<GreenNode>.Builder refs = ImmutableArray.CreateBuilder<GreenNode>();
+        bool firstRef = true;
+        while (!p.MatchRaw(RawKind.RBracket) && !p.MatchRaw(RawKind.Eob))
+        {
+          int beforeRef = p.Current.CoreToken.Offset;
+          if (!firstRef)
+          {
+            if (p.MatchRaw(RawKind.Plus)) _ = p.ExpectRaw(RawKind.Plus); else break;
+          }
+          Identifier typeName = Identifier.Parse(p);
+          GreenNode refNode = typeName;
+          if (p.MatchRaw(RawKind.LBracket) && !p.MatchRaw(RawKind.LBracketLBracket))
+          {
+            refNode = GenericType.ParseAfterName(p, typeName);
+          }
+          refs.Add(refNode);
+          firstRef = false;
+          if (p.Current.CoreToken.Offset == beforeRef) break;
+        }
+        StructuralArray<GreenNode> arr = [.. refs];
+        if (arr.Count == 0) p.AddDiagInvalidGenericConstraint();
+        constraints = new ConstraintList(colonTok, arr);
+      }
+      items.Add(new GenericParameter(paramName, constraints));
       first = false;
     }
-
+ 
     GreenToken close = p.ExpectSyntax(SyntaxKind.GenericCloseToken);
     return new GenericParameterList(open, items.ToImmutable(), close);
   }

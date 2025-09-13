@@ -12,6 +12,7 @@ public sealed partial class Parser
     new(ImportDeclaration.Parse, (RawKind.Identifier, RawKind.Equal, RawKind.LBracketLBracket)), // unchanged import syntax
     new(GenericDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.Comma)), // generic head (unchanged)
     new(GenericDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.Identifier)),
+    new(GenericDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.Colon)), // generic param with constraint
     new(GenericDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.RBracket)),
     new(StructDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.PercentLBrace)), // Struct: Name : %{ ... }
     new(UnionDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.PipeLBrace)), // Union: Name : |{ ... }

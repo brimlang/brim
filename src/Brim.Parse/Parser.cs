@@ -167,6 +167,7 @@ public sealed partial class Parser(
   internal void AddDiagEmptyGeneric(GreenToken open) => _diags.Add(Diagnostic.EmptyGenericArgList(open.Token));
   internal void AddDiagUnexpectedGenericBody() => _diags.Add(Diagnostic.UnexpectedGenericBody(Current.CoreToken));
   internal void AddDiagEmptyNamedTupleElementList() => _diags.Add(Diagnostic.Unexpected(Current.CoreToken, new RawKind[] { RawKind.Identifier }));
+  internal void AddDiagInvalidGenericConstraint() => _diags.Add(Diagnostic.InvalidGenericConstraint(Current.CoreToken));
 
   static bool IsStandaloneSyntax(RawKind kind) => kind is RawKind.Terminator or RawKind.CommentTrivia;
 

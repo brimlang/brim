@@ -2,7 +2,7 @@ namespace Brim.Parse.Green;
 
 public sealed record GenericParameterList(
   GreenToken Open,
-  ImmutableArray<Identifier> Parameters,
+  ImmutableArray<GenericParameter> Parameters,
   GreenToken Close)
 : GreenNode(SyntaxKind.GenericParameterList, Open.Offset)
 {
@@ -10,8 +10,32 @@ public sealed record GenericParameterList(
   public override IEnumerable<GreenNode> GetChildren()
   {
     yield return Open;
-    foreach (Identifier p in Parameters) yield return p;
+    foreach (GenericParameter p in Parameters) yield return p;
     yield return Close;
+  }
+}
+
+public sealed record GenericParameter(
+  Identifier Name,
+  ConstraintList? Constraints) : GreenNode(SyntaxKind.GenericParameter, Name.Offset)
+{
+  public override int FullWidth => (Constraints is null ? Name.EndOffset : Constraints.EndOffset) - Name.Offset;
+  public override IEnumerable<GreenNode> GetChildren()
+  {
+    yield return Name;
+    if (Constraints is not null) yield return Constraints;
+  }
+}
+
+public sealed record ConstraintList(
+  GreenToken Colon,
+  StructuralArray<GreenNode> Constraints) : GreenNode(SyntaxKind.ConstraintList, Colon.Offset)
+{
+  public override int FullWidth => Constraints.Count == 0 ? Colon.FullWidth : Constraints[Constraints.Count - 1].EndOffset - Colon.Offset;
+  public override IEnumerable<GreenNode> GetChildren()
+  {
+    yield return Colon;
+    foreach (GreenNode c in Constraints) yield return c;
   }
 }
 

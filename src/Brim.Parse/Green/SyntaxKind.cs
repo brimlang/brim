@@ -36,6 +36,8 @@ public enum SyntaxKind
   ParameterList,
   GenericParameterList,
   GenericArgumentList,
+  GenericParameter,
+  ConstraintList,
   FieldList,
   Block,
   ModuleHeader,
