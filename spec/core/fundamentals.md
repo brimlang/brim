@@ -112,20 +112,7 @@ See core Functions spec: `spec/core/syntax/functions.md`.
 
 ## Match
 
-```brim
-r : Reply[i32] = Reply|{ Good = 42 }
-
-r =>
-  Good(v) v > 0 => v
-  Good(_)       => 0
-  Error(e)      => { log(e); -1 }
-```
-
-Match syntax:
-- Introducer: `expr =>` followed by one or more arms.
-- Arm: `Pattern [ guard-expr ] => Expr` (guard is any boolean expression placed after the pattern and before `=>`).
-- Patterns are type-directed (no tuple/union sigil repetition, no guard sigil `?(...)`).
-- Exhaustive with optional final `_` wildcard.
+See core Match spec: `spec/core/syntax/match.md`.
 
 ## Statement Separator
 - `\n` and `;` are **statement separators**.
@@ -170,6 +157,10 @@ Postfix propagation: `expr?` / `expr!` in matching return contexts.
 
 Core types do not carry methods; helpers live in the standard library.
 
-## See also:
-- Aggregate construction & pattern forms: see `spec/core/syntax/aggregates.md` (Aggregate Types).
-- Service declarations & protocols: see `spec/core/syntax/services.md` (Services, Protocols, and Constraints).
+## Spec Map
+- Expressions: `spec/core/syntax/expressions.md` — simple forms, constructors, grammar.
+- Functions: `spec/core/syntax/functions.md` — types, values, named functions.
+- Aggregate Types: `spec/core/syntax/aggregates.md` — structs, unions, named tuples, flags, lists.
+- Generics: `spec/core/syntax/generics.md` — parameters, constraints, use sites.
+- Option/Result & Propagation: `spec/core/syntax/option_result.md` — `T?`/`T!`, constructors, postfix.
+- Services & Protocols: `spec/core/syntax/services.md` — protocols and service declarations.
