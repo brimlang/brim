@@ -92,8 +92,8 @@ map[T, U] : ((T) U, list[T]) list[U] = (f, xs) => {
     (h, ..t) => list{ f(h) } ++ map(f, t)
     ()       => list{}
 }
-res = map((x : i32) i64 { x + 1 }, list{1,2,3})
--- infers T=i32, U=i64
+res = map((x : i32) => x + 1, list{1,2,3})
+-- infers T=i32, U=i32
 ```
 
 ## Patterns
