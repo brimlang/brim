@@ -87,24 +87,8 @@ limit := 0
 
 ## Expressions
 
-An expression produces a value. Anywhere the language expects an expression you may write either:
-
-- A simple expression (single value form)
-- A block expression `{ ... }`
-
-Simple expression forms (value-producing):
-- Identifier
-- Literal (integer, decimal, string, rune)
-- Function (lambda) value: `(params) => expr` or `(params) => { ... }`
-- Call: `expr(args)` (callee and each argument are expressions)
-- Constructors:
-  - Option / Result: `?{}`, `?{x}`, `!{x}`, `!!{e}`
-  - Aggregates: `Type%{ field = expr, ... }`, `Type|{ Variant }` or `Type|{ Variant = Expr }`, `Type#{ e1, e2, ... }`, `list{ e1, e2, ... }`
-- Propagation: `expr?`, `expr!`
-- Match: `scrutinee => arm+` (see Match section below for arm form)
-- Block: `{ ... }` (listed separately below as the compound form)
-
-Block expressions evaluate their statements left-to-right and yield the value of their final expression.
+Expressions produce values. Use a simple expression or a block `{ ... }`.
+See canonical surface and grammar: `spec/core/syntax/expressions.md`.
 
 ## Functions
 
@@ -156,6 +140,32 @@ Option / Result constructors:
 Postfix propagation: `expr?` / `expr!` in matching return contexts.
 
 Core types do not carry methods; helpers live in the standard library.
+
+## Basics Primer
+
+```brim
+[[acme::demo]]
+<< Main
+
+fs = [[std::fs]]         -- import alias
+
+limit := 10              -- var binding (rebinding with :=)
+answer = 42i32           -- const binding
+
+Point : %{ x : i32, y : i32 }
+Reply[T] : |{ Good : T, Error : str }
+
+inc : (i32) i32 = (x) => x + 1
+
+main : () i32 = {
+  pt = Point%{ x = 1, y = 2 }           -- struct ctor
+  ok : Reply[i32] = Reply|{ Good = 5 }  -- union ctor
+  ok =>
+    Good(v) => inc(v)
+}
+```
+
+Links: modules/imports above use Fundamentals; constructors/patterns link to Aggregates; functions link to Functions; expressions and match link to their respective specs in Spec Map.
 
 ## Spec Map
 - Expressions: `spec/core/syntax/expressions.md` — simple forms, constructors, grammar.
