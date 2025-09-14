@@ -52,7 +52,4 @@ public enum SyntaxKind
   DeclarationName,
   GenericArgument,
   NamedTupleElement,
-  // Expressions (seed)
-  UnionConstructorExpr,
-  UnionConstructorEntry,
 }
