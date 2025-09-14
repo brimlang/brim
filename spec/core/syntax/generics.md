@@ -45,9 +45,9 @@ All listed protocols must be satisfied (conjunction).
 
 Examples:
 ```brim
-Pair[T, U] : #{T, U}
-Cache[K :Eq + Hash, V] : %{ entries : list[Pair[K, V]] }
-all_equal[T :Eq] : (xs : list[T]) bool = { ... }
+Pair[T, U] := #{T, U}
+Cache[K :Eq + Hash, V] := %{ entries :list[Pair[K, V]] }
+all_equal[T :Eq] :(xs :list[T]) bool = { ... }
 ```
 
 ## Services & Protocols
@@ -58,7 +58,7 @@ Show[T]     : .{ show : (T) str }
 ```
 Services with implements list (unified colon form):
 ```brim
-Logger : ^log{ target : str } : Fmt + Flush = {
+Logger :^log{ target :str } :Fmt + Flush = {
   ^(to : str) = { log.target = to }
   to_string : () str = () => log.target
   ~() unit = { }
@@ -66,7 +66,7 @@ Logger : ^log{ target : str } : Fmt + Flush = {
 ```
 Generic + constraints on service parameters:
 ```brim
-Store[K :Eq, V] : ^s{ /* state */ } : Flush = { /* body */ }
+Store[K :Eq, V] :^s{ /* state */ } :Flush = { /* body */ }
 ```
 
 ## Builtin Parametric Types
@@ -87,20 +87,20 @@ Call sites and type uses rely on inference; no explicit type argument applicatio
 
 Example:
 ```brim
-map[T, U] : ((T) U, list[T]) list[U] = (f, xs) => {
+map[T, U] :((T) U, list[T]) list[U] = (f, xs) {
   xs =>
     (h, ..t) => list{ f(h) } ++ map(f, t)
     ()       => list{}
 }
-res = map((x : i32) => x + 1, list{1,2,3})
+res = map((x) { x + 1 }, list{1,2,3})
 -- infers T=i32, U=i32
 ```
 
 ## Patterns
 Patterns never restate generic arguments:
 ```brim
-Reply[T] : |{ Good : T, Error : str }
-val : Reply[i32] = Reply|{ Good = 42 }
+Reply[T] := |{ Good : T, Error : str }
+val :Reply[i32] = Reply|{ Good = 42 }
 val =>
   Good(v) => v
 ```

@@ -37,8 +37,9 @@ What a new brimmian should know immediately.
 
 1. New declared symbols are always first on the line.
 2. Symbols are bound when declared:
+  - type with `:=` (TypeExpr on RHS; nominal if a shape literal)
   - const with `=`
-  - var with `:=`
+  - var with `.=`
   - service with `~=`
 3. Value semantics (immutable-by-copy):
   - values copy
@@ -58,19 +59,19 @@ What a new brimmian should know immediately.
 [[acme::demo]]
 << Main
 
-fs = [[std::fs]]         -- import alias
+io ::= std::io           -- import alias (module bind)
 
-limit := 10              -- var binding (rebinding with :=)
-answer = 42i32           -- const binding
+limit :i32 .= 10        -- var binding (rebinding with .=)
+answer :i32 = 42i32     -- const binding
 
-Point : %{ x : i32, y : i32 }
-Reply[T] : |{ Good : T, Error : str }
+Point := %{ x :i32, y :i32 }
+Reply[T] := |{ Good :T, Error :str }
 
-inc : (i32) i32 = (x) => x + 1
+inc :(i32) i32 = (x) { x + 1 }
 
-main : () i32 = {
+main :() i32 = {
   pt = Point%{ x = 1, y = 2 }           -- struct ctor
-  ok : Reply[i32] = Reply|{ Good = 5 }  -- union ctor
+  ok :Reply[i32] = Reply|{ Good = 5 }  -- union ctor
   ok =>
     Good(v) => inc(v)
 }
@@ -84,17 +85,17 @@ They are the compilation unit.
 ```brim
 [[acme::io::temp]]
 << TempFile
-fs = [[std::fs]]
+io ::= std::io
 limit := 0
 ```
 
-- **Header:** `[[pkg::ns::leaf]]` on line 1. Required.
-- **Exports:** `<< Symbol` per line exports the symbol’s entire surface.
+-- **Header:** `[[pkg::ns::leaf]]` on line 1. Required.
+-- **Exports:** `<< Symbol` per line exports the symbol’s entire surface.
   - Only const bound symbols may be exported.
   - There are no implicit exports, and no wildcard exports.
-- **Imports:** `alias = [[pkg::ns::path]]` (const binding) anywhere at top level.
+-- **Imports:** `alias ::= pkg::ns::path` (module binding) anywhere at top level. Imports are required to use module members in term space; direct path calls like `pkg::ns:func()` are disallowed in core. Per‑item aliases use ordinary const binds: `write = io:write`.
   - Re-export is not allowed.
-- **State:** top‑level `:=` bindings with literal/aggregate initializers.
+- **State:** top‑level `.=` bindings with literal/aggregate initializers.
 - **Shadowing**: const bound symbols cannot be shadowed.
   - var bound symbols may be shadowed in nested scopes.
 
@@ -104,8 +105,9 @@ limit := 0
 
 ## Binding rules
 
+- `Name[T?] := TypeExpr` → type binding (nominal if RHS is a shape literal; alias otherwise).
 - `name = expr` → const; rebinding with `=` is error.
-- `name := expr` → var; rebinding must use `:=`; using `=` is error.
+- `name .= expr` → var; rebinding must use `.=`; using `=` is error.
 - `name ~= expr` → bound service; destructor runs at scope end.
 
 ## Statement Separator
@@ -121,7 +123,7 @@ limit := 0
 
 Primitive & built-in:
 - `void` — empty (no inhabitants)
-- `unit` — single value
+- `unit` — single value (literal in term space: `unit{}`)
 - `bool` — `true`, `false`
 - `i8, i16, i32, i64`, `u8, u16, u32, u64`
 - `rune` — Unicode scalar
@@ -131,10 +133,10 @@ Primitive & built-in:
 - `error` — `%{ module: str, domain: str, code: u32 }`
 
 Nominal aggregates (declared elsewhere):
-- Named tuples: `Type : #{T1, T2, ...}`
-- Structs: `Type : %{ field: Type, ... }`
-- Unions:  `Type : |{ Variant: Type?, ... }`
-- Flags:   `Type : &uN{ a, b, c }`
+- Named tuples: `Type := #{T1, T2, ...}`
+- Structs: `Type := %{ field: Type, ... }`
+- Unions:  `Type := |{ Variant: Type?, ... }`
+- Flags:   `Type := &uN{ a, b, c }`
 - Functions: `Type : (Type, ...) Ret`
 
 Option / Result constructors:
@@ -150,6 +152,26 @@ Runes:
 - **Exactly one scalar** allowed per literal; multiple scalars = compile error.
 
 > Core types do not carry methods; helpers live in the standard library.
+
+## Patterns Primer
+
+- Unit pattern is `()`.
+- Result carrying unit matches with `!()` for the ok case.
+- Flags patterns:
+- - Exact set: `(read, write)`; empty: `()`
+- - Require/forbid: `(+read, -exec)` (others unconstrained)
+
+## Casts & Assertions (Compile‑Time)
+
+- Use `expr :> Type` for explicit, compile‑time checked conversions.
+- If the conversion cannot be proven viable (per the type system’s rules for coercion/narrowing/widening), a diagnostic is emitted. There are no runtime casts in core.
+- Expression‑level ascription `:Type` is allowed to assert/check the type without conversion. To avoid ambiguity with member access `expr:member`, ascribe either with a parenthesized operand `(expr) : Type`, or with a type head that cannot be a member (e.g., `list[...]`).
+
+## Member Access & Ascription
+
+- Member access uses a colon in expression space: `expr:member(args?)`.
+- Paths use double colon: `pkg::ns::Name`.
+- Type ascription is only allowed in binding headers as `Ident :Type` (one space before colon, none after). General `expr : Type` is not part of core.
 
 ## Spec Map
 

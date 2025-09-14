@@ -35,7 +35,7 @@ Structured tail recursion via an explicit step function returning an Option for 
 
 Signature (illustrative):
 ```
-tail_rec[T] : (state : T, step : (T) T?) T
+tail_rec[T] :(state :T, step :(T) T?) T
 ```
 Semantics:
 - Invoke `step(state)`; if `?{}` (nil) => yield `state` as final; if `?{next}` => continue with `next`.
@@ -43,13 +43,13 @@ Semantics:
 
 Example (integer increment until threshold):
 ```
-res = tail_rec(0i32, (n) => n < 10i32 => ?{ n + 1i32 } | ?{})
+res = tail_rec(0i32, (n) { n < 10i32 => ?{ n + 1i32 } | ?{} })
 ```
 
 ### 2. iterate
 Generate a list by repeated stepping with bounded count or predicate.
 ```
-iterate[T] : (seed : T, step : (T) T, count : i32) list[T]
+iterate[T] :(seed :T, step :(T) T, count :i32) list[T]
 ```
 - Produces `count` states: `[seed, step(seed), step(step(seed)), ...]`.
 - Variant with predicate could stop when predicate fails (not both forms initially to keep surface minimal).
@@ -57,35 +57,35 @@ iterate[T] : (seed : T, step : (T) T, count : i32) list[T]
 ### 3. unfold
 Dual of fold: build a list from a seed until the function signals completion.
 ```
-unfold[S, T] : (seed : S, next : (S) (S, T)?) list[T]
+unfold[S, T] :(seed :S, next :(S) (S, T)?) list[T]
 ```
 - `next(seed)` returns `?{ (s', value) }` to continue, or `?{}` to stop.
 
 ### 4. fold
 Left fold over a list.
 ```
-fold[T, U] : (xs : list[T], acc : U, f : (U, T) U) U
+fold[T, U] :(xs :list[T], acc :U, f :(U, T) U) U
 ```
 - Standard catamorphism; tail-recursive.
 
 ### 5. fold_while
 Fold with early termination.
 ```
-fold_while[T, U] : (xs : list[T], acc : U, f : (U, T) (U?)) U
+fold_while[T, U] :(xs :list[T], acc :U, f :(U, T) (U?)) U
 ```
 - `f` returns `?{}` to stop (yield current acc), or `?{nextAcc}` to continue.
 
 ### 6. find
 Return first element matching predicate.
 ```
-find[T] : (xs : list[T], pred : (T) bool) T?
+find[T] :(xs :list[T], pred :(T) bool) T?
 ```
 
 ### 7. any / all
 Boolean summary predicates (can short-circuit via fold_while).
 ```
-any[T] : (xs : list[T], pred : (T) bool) bool
-all[T] : (xs : list[T], pred : (T) bool) bool
+any[T] :(xs :list[T], pred :(T) bool) bool
+all[T] :(xs :list[T], pred :(T) bool) bool
 ```
 
 ### 8. map
@@ -98,7 +98,7 @@ map[T, U] : ((T) U, list[T]) list[U]
 ### 9. range
 Finite integer range construction.
 ```
-range : (start : i32, end_exclusive : i32, step : i32) list[i32]
+range :(start :i32, end_exclusive :i32, step :i32) list[i32]
 ```
 - Preconditions: `step != 0`; sign of `step` must move toward end; violations produce `error` in a future Result-returning variant.
 
@@ -114,16 +114,16 @@ Original (conceptual) loop counting to sum squares (now removed):
 ```
 Rewrite using unfold + fold:
 ```
-squares = unfold((0i32, 0i32), (state) => {
+squares = unfold((0i32, 0i32), (state) {
   (i, acc) = state
   i >= n => ?{}
   ?{ ((i + 1i32, acc + i * i), acc + i * i) }
 })
-result = fold(squares, 0i32, (a, v) => a + v)
+result = fold(squares, 0i32, (a, v) { a + v })
 ```
 Simpler with tail_rec:
 ```
-result = tail_rec((0i32, 0i32), (state) => {
+result = tail_rec((0i32, 0i32), (state) {
   (i, acc) = state
   i >= n => ?{}
   ?{ (i + 1i32, acc + i * i) }

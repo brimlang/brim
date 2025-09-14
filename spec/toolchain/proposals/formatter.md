@@ -10,4 +10,3 @@ status: draft
 ## Colon spacing (uniform)
 
 - One space before, none after: `(x :i32)`, `Logger = ^|r| :* Read + Write`, `val :#(i32, i32)`.
-

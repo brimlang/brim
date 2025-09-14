@@ -166,11 +166,11 @@ handle = (rx :Receiver[str]) res[unit] {
 
 ### Producer/consumer with backpressure
 ```brim
-run = () res[unit] {
+run :() res[unit] {
   tx, rx = std::chan::bounded[str](128)
 
-  prod = std::task::spawn(() unit {
-    produce = ( ) unit => {
+  prod = std::task::spawn(() {
+    produce :() unit = () {
       line = next_line()?                   -- opt unwrap sugar
       std::task::await(tx.send(line))!      -- res unwrap sugar
       produce()                             -- tail recursion until next_line()? returns nil
@@ -178,8 +178,8 @@ run = () res[unit] {
     produce()
   })
 
-  cons = std::task::spawn(() unit {
-    consume = () unit => {
+  cons = std::task::spawn(() {
+    consume :() unit = () {
       m = std::task::await(rx.recv())?      -- nil short-circuits via propagation
       handle_message(m)
       consume()
@@ -195,10 +195,10 @@ run = () res[unit] {
 
 ### Fan-in with `select`
 ```brim
-merge = (a :Receiver[str], b :Receiver[str]) Fut[list[str]] {
+merge :(a :Receiver[str], b :Receiver[str]) Fut[list[str]] {
   acc := []
-  std::task::spawn(() list[str] {
-    loop = () list[str] => {
+  std::task::spawn(() {
+    loop :() list[str] = () {
       std::task::select(
         case a.recv() =>
         | opt:has(v) |> { acc := acc + [v]; loop() }
@@ -243,4 +243,3 @@ merge = (a :Receiver[str], b :Receiver[str]) Fut[list[str]] {
 - Prefer **data‑first** for transform functions (good with `/>`).
 - Prefer **data‑last** for sinks/consumers (reads well with `</`).
 - Keep error/option returns in `res`/`opt` to compose with `!`/`?` easily.
-

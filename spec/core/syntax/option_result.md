@@ -27,9 +27,9 @@ Introduce symbolic encodings for **option** and **result** and define **type-dir
 ### 2. Constructors (Expressions)
 
 - `?{}` constructs the **nil** value of some `T?` (requires an expected type `T?`).
-- `?{x}` constructs **has(x)** of type `T?` when `x : T`.
-- `!{x}` constructs **ok(x)** of type `T!` when `x : T`.
-- `!!{e}` constructs **err(e)** of type `T!` when `e : error`.
+- `?{x}` constructs **has(x)** of type `T?` when `x :T`.
+- `!{x}` constructs **ok(x)** of type `T!` when `x :T`.
+- `!!{e}` constructs **err(e)** of type `T!` when `e :error`.
 
 These forms are primary expressions and may appear anywhere an expression is allowed.
 
@@ -54,7 +54,7 @@ These forms are primary expressions and may appear anywhere an expression is all
 Explicit desugaring for propagation:
 
 ```brim
-x!         // where x : T!
+x!         // where x :T!
 ```
 
 ⇢
@@ -65,7 +65,7 @@ x =>
 ```
 
 ```brim
-y?         // where y : T?
+y?         // where y :T?
 ```
 
 ⇢
@@ -75,8 +75,8 @@ y =>
 ?()    => { return ?{} }
 ```
 
-- If `e : U?`, then `e?` evaluates `e`; if `nil`, returns  from the nearest context expecting a `T?`; otherwise yields the inner `U`.
-- If `e : U!`, then `e!` evaluates `e`; if `err`, **returns that error** from the nearest context expecting a `T!`; otherwise yields the inner `U`.
+- If `e :U?`, then `e?` evaluates `e`; if `nil`, returns  from the nearest context expecting a `T?`; otherwise yields the inner `U`.
+- If `e :U!`, then `e!` evaluates `e`; if `err`, **returns that error** from the nearest context expecting a `T!`; otherwise yields the inner `U`.
 - It is an error to apply `?`/`!` to a non‑option/non‑result expression.
 - Propagation is permitted anywhere an expected `T?`/`T!` type exists (e.g., function bodies, initializers, return-position expressions).
 
@@ -87,7 +87,7 @@ Canonical nominal/value split applies:
 ```brim
 name : (ParamTypes...) ReturnType = (params) => { body }
 -- or shorthand header with parameter names & types (const only):
-name : (x : T, y : U) ReturnType = { body }
+name :(x :T, y :U) ReturnType = { body }
 ```
 
 Rules when `ReturnType` is `T?` or `T!` (unchanged semantically):
@@ -161,11 +161,11 @@ make_user : (text) user! = (s) => {
 ### Patterns
 
 ```brim
-maybe_port =>                       -- : i32?
+maybe_port =>                       -- :i32?
   p    => { use_port(p) }
   ?()  => { use_default() }
 
-outcome =>                          -- : str!
+outcome =>                          -- :str!
   v      => { log(v) }
   !!(e)  => { handle(e) }
 
@@ -191,6 +191,5 @@ ping() =>                           -- : ()!
 
 ## Interactions
 
-- **Error type:** `error` is a nominal type defined elsewhere. `!!{e}` requires `e : error`.
+- **Error type:** `error` is a nominal type defined elsewhere. `!!{e}` requires `e :error`.
 - **Emit/ABI:** Lowering to WIT/wasm‑GC follows canonical option/result encodings (see emitter spec).
-

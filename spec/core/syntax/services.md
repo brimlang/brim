@@ -14,27 +14,31 @@ version: 0.1.0
 
 Unified nominal form aligns services with other aggregates and protocols.
 
-- **Declaration:** `ServiceName : ^recv{ state_field : Type, ... } : Proto (+Proto)* = { members }`
+- **Declaration:** `ServiceName :^recv{ state_field :Type, ... } :Proto (+Proto)* = { members }`
   - `^recv{ ... }` declares a service with receiver identifier `recv` and named private state fields.
   - After the service type shape, a colon introduces implemented protocols: `:Proto + Other`.
   - Body block provides constructors, methods, destructor.
 
 ### Members
 - **Constructors:** `^() = { ... }` or `^(params) = { ... }` returning implicit service instance.
-- **Methods:** `name : (ParamTypes...) Ret = (params) => expr` (or block). Shorthand single-expression arrow form allowed.
+- **Methods:**
+  - Binding form: `name :(ParamTypes...) Ret = (params) { ... }`
+  - Combined header (ergonomic, const‑only): `name :(ParamTypes...) Ret { ... }`
 - **Destructor:** `~() unit = { ... }` (runs on `~=` scope exit, reverse lexical order of binding sites).
 
 State fields are immutable unless explicitly reassigned within methods via the receiver (e.g., `recv.field = ...`). Direct bare field references outside `recv.` are disallowed.
 
 ```brim
-Fmt : .{ to_string : () str }
+io ::= std::io     -- import required for term-space access
 
-Logger : ^log{ target : str, hits : i32 } : Fmt + Flush = {
+Fmt :.{ to_string :() str }
+
+Logger :^log{ target :str, hits :i32 } :Fmt + Flush = {
   ^(to : str) = { log.target = to; log.hits = log.hits + 1 }
 
-  write : (str) unit = (s) => { std::io::write(log.target, s) }
-  flush : () unit = () => { std::io::flush(log.target) }
-  to_string : () str = () => log.target
+  write :(str) unit { io:write(log.target, s) }
+  flush :() unit { io:flush(log.target) }
+  to_string :() str { log.target }
   ~() unit = { }
 }
 ```
@@ -45,7 +49,7 @@ Logger : ^log{ target : str, hits : i32 } : Fmt + Flush = {
 - The leading `.` denotes behavioral shape (protocol).
 
 ```brim
-Fmt : .{ to_string : () str }
+Fmt :.{ to_string :() str }
 ```
 
 ## Generic constraints
@@ -53,9 +57,9 @@ Fmt : .{ to_string : () str }
 - **Form:** `T :Proto (+ Proto)*` (any generic parameter may carry zero or more protocol constraints).
 
 ```brim
-map[T :Iterable, U :Eq] : ((T) U, list[T]) list[T] = (f, xs) => { ... }
+map[T :Iterable, U :Eq] :((T) U, list[T]) list[T] = (f, xs) { ... }
 
-Box[T :Show] : %{ value : T }
+Box[T :Show] := %{ value : T }
 ```
 
 
@@ -64,15 +68,14 @@ Box[T :Show] : %{ value : T }
 ```brim
 Fmt : .{ to_string : () str }
 
-Logger : ^log{ target : str } : Fmt = {
-  ^(to : str) = { log.target = to }
-  to_string : () str = () => log.target
+Logger :^log{ target :str } :Fmt = {
+  ^(to :str) = { log.target = to }
+  to_string :() str { log.target }
   ~() unit = { }
 }
 
-main : () str = {
+main :() str = {
   logger ~= Logger("stdout")
-  logger.to_string()
+  logger:to_string()
 }
 ```
-
