@@ -9,7 +9,7 @@ public class GenericParseTests
   [Fact]
   public void StructWithGenericParamsParses()
   {
-    var m = Parse("[[m]];\nMyStruct[T,U] : %{ a:T, b:U };");
+    var m = Parse("[[m]];\nMyStruct[T,U] := %{ a:T, b:U };");
     Assert.DoesNotContain(m.Diagnostics, static d => d.Code == DiagCode.UnexpectedToken);
     StructDeclaration? sd = m.Members.OfType<StructDeclaration>().FirstOrDefault();
     Assert.NotNull(sd);
@@ -20,7 +20,7 @@ public class GenericParseTests
   [Fact(Skip = "TODO: Broken")]
   public void StructWithEmptyGenericListAllowsMissingAndEmitsMissingTokenDiag()
   {
-    var m2 = Parse("[[m]];\nFoo[] : %{ x:Foo };");
+    var m2 = Parse("[[m]];\nFoo[] := %{ x:Foo };");
     Assert.Contains(m2.Diagnostics, static d => d.Code == DiagCode.EmptyGenericParamList);
   }
 }

@@ -5,18 +5,18 @@
 << Perms
 << handle
 
-fs = [[std::fs]]
+io ::= std::io
 
-User     : %{ id :str, age :i32 }
-Reply[T] : |{ Good :T, Error :str }
+User     := %{ id :str, age :i32 }
+Reply[T] := |{ Good :T, Error :str }
 -- flag width u8
-Perms    : &u8{ read, write, exec }
-Pair     : #{User, Perms}
+Perms    := &u8{ read, write, exec }
+Pair     := #{User, Perms}
 
 mk :(str, i32) User?
 mk := (id, age) age =>
-  a {a > 17 && id == 4} => User%{ id = id, age = age }
-  _                     => ?{}
+  a ?? (a > 17 && id == 4) => User%{ id = id, age = age }
+  _                         => ?{}
 
 
 mk2 :(User, Perms) Pair = (u, p) {
@@ -26,12 +26,12 @@ mk2 :(User, Perms) Pair = (u, p) {
 -- contains a lex error
 emit = `() Reply[i32] { Reply|Good{42} }
 
-handle : (r :Reply[i32]) i32 = {
-  acc := 0u8
+handle :(r :Reply[i32]) i32 = {
+  acc :u8 .= 0u8
   incr = (n) u8 => n =>
-    a a < 10 => incr(a + 1u8)
-    _        => 200u8
-  br := incr(acc)
+    a ?? a < 10 => incr(a + 1u8)
+    _           => 200u8
+  br :u8 .= incr(acc)
 
   r => {
     Good(v)  => { v }

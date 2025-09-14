@@ -77,10 +77,12 @@ public class RawProducerTests
   [Fact]
   public void TokenizesMultiCharSymbolsGreedily()
   {
-    var toks = Lex("=> *{ ~=");
+    var toks = Lex("=> *{ ~= .= ??");
     Assert.Contains(toks, static t => t.Kind == RawKind.EqualGreater);
     Assert.Contains(toks, static t => t.Kind == RawKind.StarLBrace);
     Assert.Contains(toks, static t => t.Kind == RawKind.TildeEqual);
+    Assert.Contains(toks, static t => t.Kind == RawKind.StopEqual);
+    Assert.Contains(toks, static t => t.Kind == RawKind.QuestionQuestion);
   }
 
   [Fact]

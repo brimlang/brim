@@ -48,7 +48,7 @@ public static class GreenNodeFormatter
         break;
       case ImportDeclaration id:
         _ = sb.Append(" name=").Append(Escape(id.Identifier.GetText(source)));
-        _ = sb.Append(" from=").Append(Escape(id.ModuleHeader.GetText(source)));
+        _ = sb.Append(" from=").Append(Escape(id.Path.GetText(source)));
         break;
       case StructDeclaration sd:
         _ = sb.Append(" name=").Append(Escape(sd.Name.Identifier.GetText(source))).Append($" fields={sd.Fields.Count}");

@@ -9,7 +9,7 @@ public class NamedTupleParseTests
   [Fact]
   public void NamedTupleBasicParses()
   {
-    var m = Parse("[[m]];\nPair[T,U] : #{T, U};");
+    var m = Parse("[[m]];\nPair[T,U] := #{T, U};");
     var nt = m.Members.OfType<NamedTupleDeclaration>().FirstOrDefault();
     Assert.NotNull(nt);
     Assert.Equal(2, nt!.Elements.Count);
@@ -18,7 +18,7 @@ public class NamedTupleParseTests
   [Fact]
   public void NamedTupleEmptyEmitsUnexpected()
   {
-    var m = Parse("[[m]];\nZeroBad : #{};");
+    var m = Parse("[[m]];\nZeroBad := #{};");
     Assert.Contains(m.Diagnostics, d => d.Code == DiagCode.UnexpectedToken);
   }
 }

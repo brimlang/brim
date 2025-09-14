@@ -8,7 +8,7 @@ public static class GenericDeclaration
     GreenToken idTok = p.ExpectSyntax(SyntaxKind.IdentifierToken);
     GenericParameterList? gpl = GenericParameterListParser.TryParse(p);
     DeclarationName dname = new(idTok, gpl);
-    GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
+    GreenToken colon = p.ExpectSyntax(SyntaxKind.TypeBindToken);
 
     if (p.MatchRaw(RawKind.PercentLBrace))
       return ParseGenericStructBody(p, dname, colon);
@@ -51,11 +51,12 @@ public static class GenericDeclaration
     {
       while (true)
       {
+        int before = p.Current.CoreToken.Offset;
         UnionVariantDeclaration variant = UnionVariantDeclaration.Parse(p);
         vars.Add(variant);
-        if (variant.TrailingComma is null) break;
-        if (p.MatchRaw(RawKind.RBrace) || p.MatchRaw(RawKind.Eob)) break; // trailing
-        continue;
+        if (variant.TrailingComma is null) break; // no comma => end
+        if (p.MatchRaw(RawKind.RBrace) || p.MatchRaw(RawKind.Eob)) break; // trailing comma on last
+        if (p.Current.CoreToken.Offset == before) break; // stall guard
       }
     }
 

@@ -23,7 +23,7 @@ GreenNode(SyntaxKind.FlagMemberDeclaration, Identifier.Offset)
 
 public sealed record FlagsDeclaration(
   DeclarationName Name,
-  GreenToken Colon,
+  GreenToken TypeBind,
   GreenToken Ampersand,
   GreenToken UnderlyingType,
   GreenToken OpenBrace,
@@ -37,7 +37,7 @@ IParsable<FlagsDeclaration>
   public override IEnumerable<GreenNode> GetChildren()
   {
     yield return Name;
-    yield return Colon;
+    yield return TypeBind;
     yield return Ampersand;
     yield return UnderlyingType;
     yield return OpenBrace;
@@ -46,11 +46,11 @@ IParsable<FlagsDeclaration>
     yield return Terminator;
   }
 
-  // EBNF (updated): FlagsDecl ::= Identifier ':' '&' Identifier '{' Identifier (',' Identifier)* (',')? '}' Terminator
+  // EBNF (updated): FlagsDecl ::= Identifier ':=' '&' Identifier '{' Identifier (',' Identifier)* (',')? '}' Terminator
   public static FlagsDeclaration Parse(Parser p)
   {
     DeclarationName name = DeclarationName.Parse(p);
-    GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
+    GreenToken colon = p.ExpectSyntax(SyntaxKind.TypeBindToken);
     GreenToken amp = p.ExpectSyntax(SyntaxKind.AmpersandToken);
     GreenToken underlying = p.ExpectSyntax(SyntaxKind.IdentifierToken);
     GreenToken open = p.ExpectSyntax(SyntaxKind.OpenBraceToken);

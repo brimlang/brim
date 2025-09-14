@@ -36,7 +36,7 @@ IParsable<UnionVariantDeclaration>
 
 public sealed record UnionDeclaration(
   DeclarationName Name,
-  GreenToken Colon,
+  GreenToken TypeBind,
   GreenToken UnionOpen,
   StructuralArray<UnionVariantDeclaration> Variants,
   GreenToken Close,
@@ -46,7 +46,7 @@ public sealed record UnionDeclaration(
   public override IEnumerable<GreenNode> GetChildren()
   {
     yield return Name;
-    yield return Colon;
+    yield return TypeBind;
     yield return UnionOpen;
     foreach (UnionVariantDeclaration v in Variants) yield return v;
     yield return Close;
@@ -56,7 +56,7 @@ public sealed record UnionDeclaration(
   public static UnionDeclaration Parse(Parser p)
   {
     DeclarationName name = DeclarationName.Parse(p);
-    GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
+    GreenToken colon = p.ExpectSyntax(SyntaxKind.TypeBindToken);
     GreenToken open = p.ExpectSyntax(SyntaxKind.UnionToken);
     ImmutableArray<UnionVariantDeclaration>.Builder vars = ImmutableArray.CreateBuilder<UnionVariantDeclaration>();
 
@@ -64,11 +64,12 @@ public sealed record UnionDeclaration(
     {
       while (true)
       {
+        int before = p.Current.CoreToken.Offset;
         UnionVariantDeclaration variant = UnionVariantDeclaration.Parse(p);
         vars.Add(variant);
         if (variant.TrailingComma is null) break; // no comma => end
         if (p.MatchRaw(RawKind.RBrace) || p.MatchRaw(RawKind.Eob)) break; // trailing comma on last
-        continue; // another variant expected
+        if (p.Current.CoreToken.Offset == before) break; // stall guard
       }
     }
 

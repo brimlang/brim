@@ -34,12 +34,13 @@ public enum RawKind : short
   LBracket, LBracketLBracket, // [ [[
   RBracket, RBracketRBracket, // ] ]]
   Colon, ColonStar, ColonEqual, ColonColon, // : :* := ::
+  ColonColonEqual, // ::= (module bind)
   Pipe, PipeLBrace, // | |{
   Hash, HashLParen, HashLBrace, // # #( #{
   Ampersand, // &
   Percent, PercentLBrace, // % %{
-  Stop, StopLBrace, // . .{
-  Question, QuestionLParen, QuestionLBrace, // ? ?( ?{
+  Stop, StopLBrace, StopEqual, // . .{ .=
+  Question, QuestionLParen, QuestionLBrace, QuestionQuestion, // ? ?( ?{ ??
   Bang, BangEqual, BangLBrace, BangBangLBrace,  // ! != !{ !!{
 
   // Literals
@@ -53,4 +54,3 @@ public enum RawKind : short
   // Synthesized end-of-file (always emitted exactly once by new producers)
   Eob = short.MaxValue,
 }
-

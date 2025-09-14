@@ -9,7 +9,7 @@ public class TrailingCommaTests
   [Fact]
   public void Struct_Allows_Trailing_Comma()
   {
-    var m = Parse("[[m]];\nS : %{ a:A, b:B, };\n");
+    var m = Parse("[[m]];\nS := %{ a:A, b:B, };\n");
     var sd = m.Members.OfType<StructDeclaration>().First();
     Assert.Equal(2, sd.Fields.Count);
     Assert.NotNull(sd.Fields[0].TrailingComma);
@@ -19,7 +19,7 @@ public class TrailingCommaTests
   [Fact]
   public void Union_Allows_Trailing_Comma()
   {
-    var m = Parse("[[m]];\nU : |{ A:A, B:B, };\n");
+    var m = Parse("[[m]];\nU := |{ A:A, B:B, };\n");
     var ud = m.Members.OfType<UnionDeclaration>().First();
     Assert.Equal(2, ud.Variants.Count);
     Assert.NotNull(ud.Variants[0].TrailingComma);
@@ -29,7 +29,7 @@ public class TrailingCommaTests
   [Fact]
   public void Flags_Allows_Trailing_Comma()
   {
-    var m = Parse("[[m]];\nF : & prim { ONE, TWO, };\n");
+    var m = Parse("[[m]];\nF := & prim { ONE, TWO, };\n");
     var fd = m.Members.OfType<FlagsDeclaration>().First();
     Assert.Equal(2, fd.Members.Count);
     Assert.NotNull(fd.Members[0].TrailingComma);
@@ -39,7 +39,7 @@ public class TrailingCommaTests
   [Fact]
   public void NamedTuple_Allows_Trailing_Comma()
   {
-    var m = Parse("[[m]];\nPair : #{ A, B, };\n");
+    var m = Parse("[[m]];\nPair := #{ A, B, };\n");
     var nt = m.Members.OfType<NamedTupleDeclaration>().First();
     Assert.Equal(2, nt.Elements.Count);
     Assert.NotNull(nt.Elements[0].TrailingComma);
@@ -49,7 +49,7 @@ public class TrailingCommaTests
   [Fact]
   public void GenericParams_Allows_Trailing_Comma()
   {
-    var m = Parse("[[m]];\nBox[T,U,] : %{ inner: T };\n");
+    var m = Parse("[[m]];\nBox[T,U,] := %{ inner: T };\n");
     var sd = m.Members.OfType<StructDeclaration>().First();
     var gp = sd.Name.GenericParams!;
     Assert.Equal(2, gp.Parameters.Length);
@@ -60,7 +60,7 @@ public class TrailingCommaTests
   [Fact]
   public void GenericArgs_Allows_Trailing_Comma()
   {
-    var m = Parse("[[m]];\nWrap : %{ field: Outer[Inner,] };\n");
+    var m = Parse("[[m]];\nWrap := %{ field: Outer[Inner,] };\n");
     var sd = m.Members.OfType<StructDeclaration>().First();
     var field = sd.Fields[0];
     var gt = Assert.IsType<GenericType>(field.TypeAnnotation);

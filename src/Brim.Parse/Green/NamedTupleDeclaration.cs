@@ -14,7 +14,7 @@ public sealed record NamedTupleElement(
 
 public sealed record NamedTupleDeclaration(
   DeclarationName Name,
-  GreenToken Colon,
+  GreenToken TypeBind,
   GreenToken OpenToken, // #{ token
   StructuralArray<NamedTupleElement> Elements,
   GreenToken CloseBrace,
@@ -25,19 +25,19 @@ public sealed record NamedTupleDeclaration(
   public override IEnumerable<GreenNode> GetChildren()
   {
     yield return Name;
-    yield return Colon;
+    yield return TypeBind;
     yield return OpenToken;
     foreach (NamedTupleElement e in Elements) yield return e;
     yield return CloseBrace;
     yield return Terminator;
   }
 
-  // EBNF (updated): NamedTupleDecl ::= Identifier GenericParams? ':' NamedTupleToken TypeRef (',' TypeRef)* (',')? '}' Terminator
+  // EBNF (updated): NamedTupleDecl ::= Identifier GenericParams? ':=' NamedTupleToken TypeRef (',' TypeRef)* (',')? '}' Terminator
   // No zero-tuples: must contain at least one TypeRef.
   public static NamedTupleDeclaration Parse(Parser p)
   {
     DeclarationName name = DeclarationName.Parse(p);
-    GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
+    GreenToken colon = p.ExpectSyntax(SyntaxKind.TypeBindToken);
     GreenToken open = p.ExpectSyntax(SyntaxKind.NamedTupleToken); // #{
 
     ImmutableArray<NamedTupleElement>.Builder elems = ImmutableArray.CreateBuilder<NamedTupleElement>();
@@ -74,4 +74,3 @@ public sealed record NamedTupleDeclaration(
     return new NamedTupleDeclaration(name, colon, open, arr, close, term);
   }
 }
-

@@ -2,7 +2,7 @@ namespace Brim.Parse.Green;
 
 public sealed record StructDeclaration(
   DeclarationName Name,
-  GreenToken Colon,
+  GreenToken TypeBind,
   GreenToken StructOpen,
   StructuralArray<FieldDeclaration> Fields,
   GreenToken Close,
@@ -14,7 +14,7 @@ IParsable<StructDeclaration>
   public override IEnumerable<GreenNode> GetChildren()
   {
     yield return Name;
-    yield return Colon;
+    yield return TypeBind;
     yield return StructOpen;
     foreach (FieldDeclaration f in Fields) yield return f;
     yield return Close;
@@ -25,7 +25,7 @@ IParsable<StructDeclaration>
   public static StructDeclaration Parse(Parser p)
   {
     DeclarationName name = DeclarationName.Parse(p);
-    GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
+    GreenToken colon = p.ExpectSyntax(SyntaxKind.TypeBindToken);
     GreenToken open = p.ExpectSyntax(SyntaxKind.StructToken);
 
     ImmutableArray<FieldDeclaration>.Builder fields = ImmutableArray.CreateBuilder<FieldDeclaration>();
