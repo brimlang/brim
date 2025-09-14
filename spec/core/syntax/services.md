@@ -31,7 +31,7 @@ State fields are immutable unless explicitly reassigned within methods via the r
 ```brim
 io ::= std::io     -- import required for term-space access
 
-Fmt :.{ to_string :() str }
+Fmt := .{ to_string :() str }
 
 Logger :^log{ target :str, hits :i32 } :Fmt + Flush = {
   ^(to : str) = { log.target = to; log.hits = log.hits + 1 }
@@ -45,11 +45,11 @@ Logger :^log{ target :str, hits :i32 } :Fmt + Flush = {
 
 ## Protocols
 
-- **Declaration:** `Proto[T?] : .{ method : (ParamTypes) Ret, … }`
-- The leading `.` denotes behavioral shape (protocol).
+- **Declaration:** `Proto[T?] := .{ method :(ParamTypes) Ret, … }`
+- The leading `.` denotes behavioral shape (protocol) and appears as a type aggregate shape.
 
 ```brim
-Fmt :.{ to_string :() str }
+Fmt := .{ to_string :() str }
 ```
 
 ## Generic constraints
@@ -66,7 +66,7 @@ Box[T :Show] := %{ value : T }
 ## Examples
 
 ```brim
-Fmt : .{ to_string : () str }
+Fmt := .{ to_string : () str }
 
 Logger :^log{ target :str } :Fmt = {
   ^(to :str) = { log.target = to }

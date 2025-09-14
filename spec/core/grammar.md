@@ -113,7 +113,7 @@ TypeExpr        ::= BuiltinType
 GenericArgs     ::= '[' TypeList? ']'
 ListType        ::= 'list' '[' TypeExpr ']'
 
-AggregateShape  ::= StructShape | UnionShape | NamedTupleShape | FlagsShape
+AggregateShape  ::= StructShape | UnionShape | NamedTupleShape | FlagsShape | ProtocolShape
 StructShape     ::= '%{' FieldTypes? '}'
 FieldTypes      ::= FieldType (',' FieldType)* (',')?
 FieldType       ::= Ident ':' TypeExpr
@@ -122,6 +122,7 @@ VariantTypes    ::= VariantType (',' VariantType)* (',')?
 VariantType     ::= Ident (':' TypeExpr)?
 NamedTupleShape ::= '#{' TypeList '}'
 FlagsShape      ::= '&' Ident '{' Ident (',' Ident)* (',')? '}'
+ProtocolShape   ::= '.{' MethodSigList? '}'
 
 ConstructorExpr ::= TypeName '%{' FieldInits? '}'
                   | TypeName '|{' VariantInit '}'
@@ -158,9 +159,10 @@ SignedFlag      ::= ('+' Ident) | ('-' Ident)
 
 ## Services & Protocols
 ```ebnf
-ProtocolDecl    ::= Ident GenericParams? ':.' '{' MethodSigList? '}'
+-- Protocols are aggregate types declared via TypeDecl and ProtocolShape:
+--   Proto[T?] := .{ method :(TypeList?) TypeExpr (, ...)? }
 MethodSigList   ::= MethodSig (',' MethodSig)* (',')?
-MethodSig       ::= Ident ':(' TypeList? ')' TypeExpr
+MethodSig       ::= Ident GenericParams? ':(' TypeList? ')' TypeExpr
 
 ServiceDecl     ::= Ident GenericParams? ':^' Ident '{' FieldTypes? '}' ':' ImplementsList? '=' ServiceBody
 ImplementsList  ::= ProtocolRef ('+' ProtocolRef)*
@@ -177,4 +179,3 @@ DtorDecl        ::= '~()' TypeExpr '=' BlockExpr                  -- `unit` retu
 At statement start (immediately after `{` or any Terminator):
 - If the next significant tokens are `Identifier ':'`, parse a binding header (const/var/function/type) according to the binding operator that follows (`=`, `.=` or `:=`).
 - Otherwise, parse an expression statement. Member/field access in expression space is always `expr:member(...)`.
-

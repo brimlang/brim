@@ -99,7 +99,7 @@ Status: draft (informative). Canonical meaning is defined in accepted core specs
 | Surface | Category | Notes |
 |---|---|---|
 | `` ` `` | reserved | Macro/quoting future |
-| leading `.` id | reserved | Outside protocol decl |
+| Protocol shape `.{...}` | aggregate | Protocol type declaration via `:= .{...}` |
 | `:::` | reserved | |
 | `/>`, `</` | sugar | Pipes (S0 proposal) |
 
@@ -112,4 +112,3 @@ Status: draft (informative). Canonical meaning is defined in accepted core specs
 | `?(cond)` | control | Guard sigil wrapper |
 | `|Variant(p)` | pattern | Union pattern sigil |
 | `f = (x :T) U { ... }` | function | Old inline form |
-
