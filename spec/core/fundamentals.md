@@ -3,7 +3,7 @@ id: core.fundamentals
 title: Fundamentals
 layer: core
 authors: ['trippwill']
-updated: 2025-09-13
+updated: 2025-09-14
 status: accepted
 version: 0.1.0
 ---

@@ -3,7 +3,7 @@ id: core.expressions
 layer: core
 title: Expressions
 authors: ['trippwill', 'assistant']
-updated: 2025-09-13
+updated: 2025-09-14
 status: draft
 ---
 
