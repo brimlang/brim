@@ -52,6 +52,29 @@ What a new brimmian should know immediately.
   - All methods are exported. No private methods.
   - All state is private. No public fields.
 
+## Basics Primer
+
+```brim
+[[acme::demo]]
+<< Main
+
+fs = [[std::fs]]         -- import alias
+
+limit := 10              -- var binding (rebinding with :=)
+answer = 42i32           -- const binding
+
+Point : %{ x : i32, y : i32 }
+Reply[T] : |{ Good : T, Error : str }
+
+inc : (i32) i32 = (x) => x + 1
+
+main : () i32 = {
+  pt = Point%{ x = 1, y = 2 }           -- struct ctor
+  ok : Reply[i32] = Reply|{ Good = 5 }  -- union ctor
+  ok =>
+    Good(v) => inc(v)
+}
+```
 
 ## Modules
 
@@ -85,19 +108,6 @@ limit := 0
 - `name := expr` → var; rebinding must use `:=`; using `=` is error.
 - `name ~= expr` → bound service; destructor runs at scope end.
 
-## Expressions
-
-Expressions produce values. Use a simple expression or a block `{ ... }`.
-See canonical surface and grammar: `spec/core/syntax/expressions.md`.
-
-## Functions
-
-See core Functions spec: `spec/core/syntax/functions.md`.
-
-## Match
-
-See core Match spec: `spec/core/syntax/match.md`.
-
 ## Statement Separator
 - `\n` and `;` are **statement separators**.
 
@@ -106,13 +116,6 @@ See core Match spec: `spec/core/syntax/match.md`.
 
 ### Inline comments
 - Permitted as plain `--` after code.
-
-## Runes
-- **Literal form:** single-quoted Unicode scalar value.
-- **Escapes:**
-  - `\n`, `\t`, `\r`, `\'`, `\\`.
-  - `\u{HEX}` for Unicode code points (1–6 hex digits).
-- **Exactly one scalar** allowed per literal; multiple scalars = compile error.
 
 ## Core Types
 
@@ -139,35 +142,17 @@ Option / Result constructors:
 - `!{x}` (ok), `!!{e}` (err) where `e : error`
 Postfix propagation: `expr?` / `expr!` in matching return contexts.
 
-Core types do not carry methods; helpers live in the standard library.
+Runes:
+- **Literal form:** single-quoted Unicode scalar value.
+- **Escapes:**
+  - `\n`, `\t`, `\r`, `\'`, `\\`.
+  - `\u{HEX}` for Unicode code points (1–6 hex digits).
+- **Exactly one scalar** allowed per literal; multiple scalars = compile error.
 
-## Basics Primer
-
-```brim
-[[acme::demo]]
-<< Main
-
-fs = [[std::fs]]         -- import alias
-
-limit := 10              -- var binding (rebinding with :=)
-answer = 42i32           -- const binding
-
-Point : %{ x : i32, y : i32 }
-Reply[T] : |{ Good : T, Error : str }
-
-inc : (i32) i32 = (x) => x + 1
-
-main : () i32 = {
-  pt = Point%{ x = 1, y = 2 }           -- struct ctor
-  ok : Reply[i32] = Reply|{ Good = 5 }  -- union ctor
-  ok =>
-    Good(v) => inc(v)
-}
-```
-
-Links: modules/imports above use Fundamentals; constructors/patterns link to Aggregates; functions link to Functions; expressions and match link to their respective specs in Spec Map.
+> Core types do not carry methods; helpers live in the standard library.
 
 ## Spec Map
+
 - Expressions: `spec/core/syntax/expressions.md` — simple forms, constructors, grammar.
 - Functions: `spec/core/syntax/functions.md` — types, values, named functions.
 - Aggregate Types: `spec/core/syntax/aggregates.md` — structs, unions, named tuples, flags, lists.
