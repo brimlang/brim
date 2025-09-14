@@ -26,6 +26,8 @@ public sealed partial class Parser
   internal static RawKind MapRawKind(SyntaxKind kind) => kind switch
   {
     SyntaxKind.TerminatorToken => RawKind.Terminator,
+    SyntaxKind.QuestionToken => RawKind.Question,
+    SyntaxKind.BangToken => RawKind.Bang,
     SyntaxKind.ExportMarkerToken => RawKind.LessLess,
     SyntaxKind.ModulePathOpenToken => RawKind.LBracketLBracket,
     SyntaxKind.ModulePathCloseToken => RawKind.RBracketRBracket,

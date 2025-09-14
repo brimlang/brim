@@ -12,6 +12,8 @@ public enum SyntaxKind
   IntToken,
   DecimalToken,
   StrToken,
+  QuestionToken,
+  BangToken,
   EqualToken,
   TypeBindToken,
   StructToken,
