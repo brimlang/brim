@@ -56,6 +56,9 @@ public static class GreenNodeFormatter
       case UnionDeclaration ud:
         _ = sb.Append(" name=").Append(Escape(ud.Name.Identifier.GetText(source))).Append($" variants={ud.Variants.Count}");
         break;
+      case UnionConstructorExpr uce:
+        _ = sb.Append(" type=").Append(Escape(uce.TypeHead.GetText(source)));
+        break;
       case FlagsDeclaration fd:
         _ = sb.Append(" name=").Append(Escape(fd.Name.Identifier.GetText(source))).Append($" flags={fd.Members.Count}");
         break;
