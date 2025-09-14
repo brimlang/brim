@@ -14,10 +14,10 @@ public class ParserPredictionTests
   }
 
   [Fact]
-  public void ModuleMemberPredictions_Contain_Protocol_And_Service()
+  public void ModuleMemberPredictions_Contain_ProtocolType_And_Service()
   {
     bool proto = Parser.ModuleMemberPredictions.Any(p =>
-      p.Sequence[0] == RawKind.Identifier && p.Sequence[1] == RawKind.Colon && p.Sequence[2] == RawKind.Stop);
+      p.Sequence[0] == RawKind.Identifier && p.Sequence[1] == RawKind.ColonEqual && p.Sequence[2] == RawKind.StopLBrace);
     bool svc = Parser.ModuleMemberPredictions.Any(p =>
       p.Sequence[0] == RawKind.Identifier && p.Sequence[1] == RawKind.Colon && p.Sequence[2] == RawKind.Hat);
     Assert.True(proto);

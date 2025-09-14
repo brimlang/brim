@@ -9,10 +9,11 @@ public class ProtocolServiceHeaderTests
   [Fact]
   public void Protocol_Header_EmptyBody_Parses()
   {
-    string src = "[[m]];\nProto :. {}\n";
+    string src = "[[m]];\nProto := .{};\n";
     var m = Parse(src);
-    var decl = Assert.IsType<ProtocolDeclaration>(m.Members.First());
-    Assert.Equal("Proto", decl.Name.Identifier.GetText(src));
+    var td = Assert.IsType<TypeDeclaration>(m.Members.First());
+    var ps = Assert.IsType<ProtocolShape>(td.TypeNode);
+    Assert.Empty(ps.Methods);
   }
 
   [Fact]
@@ -28,11 +29,12 @@ public class ProtocolServiceHeaderTests
   [Fact]
   public void Protocol_With_Methods_Parses()
   {
-    string src = "[[m]];\nP :. { m1:(A) B, m2:(A,B) C, }\n";
+    string src = "[[m]];\nP := .{ m1:(A) B, m2:(A,B) C, };\n";
     var m = Parse(src);
-    var decl = Assert.IsType<ProtocolDeclaration>(m.Members.First());
-    Assert.Equal(2, decl.Methods.Count);
-    Assert.Equal("m1", decl.Methods[0].Name.GetText(src));
+    var td = Assert.IsType<TypeDeclaration>(m.Members.First());
+    var ps = Assert.IsType<ProtocolShape>(td.TypeNode);
+    Assert.Equal(2, ps.Methods.Count);
+    Assert.Equal("m1", ps.Methods[0].Name.Identifier.GetText(src));
   }
 
   [Fact]

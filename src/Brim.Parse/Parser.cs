@@ -82,6 +82,15 @@ public sealed partial class Parser(
 
       if (!matched)
       {
+        // Special-case: function header start at module level (unsupported in this phase)
+        if (MatchRaw(RawKind.Identifier) && MatchRaw(RawKind.Colon, 1) && MatchRaw(RawKind.LParen, 2))
+        {
+          _diags.Add(Diagnostic.UnsupportedModuleMember(Current.CoreToken));
+          members.Add(new GreenToken(SyntaxKind.ErrorToken, Current));
+          Advance();
+          continue;
+        }
+
         // Build expected set lazily (cheap ≤4). Reset accumulator each failure.
         expectedSet = default;
         foreach (Prediction pe in ModuleMembersTable.Entries)

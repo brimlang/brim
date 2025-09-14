@@ -10,13 +10,14 @@ public sealed partial class Parser
   [
     new(ExportDirective.Parse, RawKind.LessLess),
     new(ImportDeclaration.Parse, (RawKind.Identifier, RawKind.ColonColonEqual, RawKind.Identifier)),
-    // Protocol and Service declarations (headers only for now)
-    new(ProtocolDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.Stop)),
+    // Service declarations (header-only for now)
     new(ServiceDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.Hat)),
     // Type declarations (generic heads and specific body openers)
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.Any)),
     // Alias form: Name := TypeName (Identifier ...)
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.Identifier)),
+    // Protocol type: Name := .{ ... }
+    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.StopLBrace)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.PercentLBrace)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.PipeLBrace)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.Ampersand)),
@@ -43,6 +44,7 @@ public sealed partial class Parser
     SyntaxKind.IdentifierToken => RawKind.Identifier,
     SyntaxKind.StopToken => RawKind.Stop,
     SyntaxKind.HatToken => RawKind.Hat,
+    SyntaxKind.ProtocolToken => RawKind.StopLBrace,
     SyntaxKind.IntToken => RawKind.IntegerLiteral,
     SyntaxKind.DecimalToken => RawKind.DecimalLiteral,
     SyntaxKind.StrToken => RawKind.StringLiteral,

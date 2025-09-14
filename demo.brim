@@ -21,7 +21,7 @@ MaybeStr := str?;
 ResI32 := i32!;
 
 -- protocol with method signatures
-Proto :. { get:(Key) Value, put:(Key, Value) unit, };
+Proto := .{ get:(Key) Value, put:(Key, Value) unit, };
 
 -- service header with receiver and implements list
 Cache :^ recv {} : Proto + OtherProto[T];

@@ -66,6 +66,9 @@ public static class GreenNodeFormatter
       case NamedTupleShape nts:
         _ = sb.Append($" elems={nts.Elements.Count}");
         break;
+      case ProtocolShape ps:
+        _ = sb.Append($" methods={ps.Methods.Count}");
+        break;
       default:
         break;
     }
@@ -144,6 +147,8 @@ public static class GreenNodeFormatter
     // Declarations (types/functions + import/export) magenta
     SyntaxKind.FunctionDeclaration or
     SyntaxKind.TypeDeclaration or
+    SyntaxKind.ProtocolDeclaration or
+    SyntaxKind.ServiceDeclaration or
     SyntaxKind.FieldDeclaration or
     SyntaxKind.UnionVariantDeclaration or
     SyntaxKind.FlagMemberDeclaration or
@@ -159,10 +164,12 @@ public static class GreenNodeFormatter
     SyntaxKind.Block or SyntaxKind.ParameterList => "[purple]",
     SyntaxKind.GenericParameterList or SyntaxKind.GenericArgumentList => "[purple]",
     SyntaxKind.GenericType or
+    // Postfix types are considered type nodes (yellow)
     SyntaxKind.StructShape or
     SyntaxKind.UnionShape or
     SyntaxKind.FlagsShape or
-    SyntaxKind.NamedTupleShape => "[yellow]",
+    SyntaxKind.NamedTupleShape or
+    SyntaxKind.ProtocolShape => "[yellow]",
     _ => "[yellow]"
   };
 }

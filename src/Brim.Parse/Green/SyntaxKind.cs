@@ -31,6 +31,7 @@ public enum SyntaxKind
   TerminatorToken,
   EobToken,
   NamedTupleToken,
+  ProtocolToken,
   StopToken,
   HatToken,
 
@@ -64,6 +65,7 @@ public enum SyntaxKind
   UnionShape,
   FlagsShape,
   NamedTupleShape,
+  ProtocolShape,
   DeclarationName,
   GenericArgument,
   NamedTupleElement,

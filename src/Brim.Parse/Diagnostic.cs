@@ -12,6 +12,7 @@ public enum DiagCode
   MissingModuleHeader,
   TooManyErrors,
   InvalidGenericConstraint,
+  UnsupportedModuleMember,
 }
 
 public enum DiagPhase : byte { Lex = 0, Parse = 1, Semantic = 2 }
@@ -85,4 +86,7 @@ public readonly struct Diagnostic(
 
   public static Diagnostic InvalidGenericConstraint(in RawToken look) =>
     new(DiagCode.InvalidGenericConstraint, look.Offset, look.Length, look.Line, look.Column, (ushort)look.Kind, 0, 0, 0, 0, 0, 0, DiagPhase.Parse, DiagSeverity.Error);
+
+  public static Diagnostic UnsupportedModuleMember(in RawToken look) =>
+    new(DiagCode.UnsupportedModuleMember, look.Offset, look.Length, look.Line, look.Column, (ushort)look.Kind, 0, 0, 0, 0, 0, 0, DiagPhase.Parse, DiagSeverity.Error);
 }
