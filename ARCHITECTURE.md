@@ -33,6 +33,8 @@ SourceText
   → Lookahead window (k≤4)
   → Parser (prediction tables)
   → Immutable syntax tree (node/value structs)
+    • Module members: TypeDeclaration (Name + ':=' + TypeExpr)
+      where TypeExpr = StructShape | UnionShape | FlagsShape | NamedTupleShape | Identifier | GenericType
   → (Future) S0 sugar → C0 canonical → Emit
 ```
 

@@ -105,6 +105,7 @@ limit := 0
 
 ## Binding rules
 
+- `name ::= pkg::ns::path` → module bind (import).
 - `Name[T?] := TypeExpr` → type binding (nominal if RHS is a shape literal; alias otherwise).
 - `name = expr` → const; rebinding with `=` is error.
 - `name .= expr` → var; rebinding must use `.=`; using `=` is error.
