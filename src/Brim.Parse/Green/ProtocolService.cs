@@ -59,6 +59,7 @@ public sealed record ServiceDeclaration(
   GreenToken Receiver,
   GreenToken OpenBrace,
   GreenToken CloseBrace,
+  StructuralArray<GreenNode> Implements,
   GreenToken Terminator)
   : GreenNode(SyntaxKind.ServiceDeclaration, Name.Offset)
 {
@@ -71,10 +72,11 @@ public sealed record ServiceDeclaration(
     yield return Receiver;
     yield return OpenBrace;
     yield return CloseBrace;
+    foreach (GreenNode impl in Implements) yield return impl;
     yield return Terminator;
   }
 
-  // Minimal header-only parse: Name GP ':^' Ident '{' '}' Terminator
+  // Minimal header-only parse: Name GP ':^' Ident '{' '}' (':' ImplementsList)? Terminator
   public static ServiceDeclaration Parse(Parser p)
   {
     DeclarationName name = DeclarationName.Parse(p);
@@ -83,13 +85,37 @@ public sealed record ServiceDeclaration(
     GreenToken recv = p.ExpectSyntax(SyntaxKind.IdentifierToken);
     GreenToken open = p.ExpectSyntax(SyntaxKind.OpenBraceToken);
     GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBraceToken);
+    ImmutableArray<GreenNode>.Builder impls = ImmutableArray.CreateBuilder<GreenNode>();
+    if (p.MatchRaw(RawKind.Colon))
+    {
+      _ = p.ExpectSyntax(SyntaxKind.ColonToken);
+      // ImplementsList: ProtocolRef ('+' ProtocolRef)*
+      while (true)
+      {
+        int before = p.Current.CoreToken.Offset;
+        // ProtocolRef: Identifier GenericArgs?
+        GreenToken head = p.ExpectSyntax(SyntaxKind.IdentifierToken);
+        GreenNode tref = head;
+        if (p.MatchRaw(RawKind.LBracket) && !p.MatchRaw(RawKind.LBracketLBracket))
+          tref = GenericType.ParseAfterName(p, head);
+        impls.Add(tref);
+        if (p.MatchRaw(RawKind.Plus))
+        {
+          _ = p.ExpectRaw(RawKind.Plus);
+          continue;
+        }
+        if (p.Current.CoreToken.Offset == before) break;
+        break;
+      }
+    }
+    StructuralArray<GreenNode> implArr = [.. impls];
     GreenToken term = p.ExpectSyntax(SyntaxKind.TerminatorToken);
-    return new ServiceDeclaration(name, colon, hat, recv, open, close, term);
+    return new ServiceDeclaration(name, colon, hat, recv, open, close, implArr, term);
   }
 }
 
 public sealed record MethodSignature(
-  GreenToken Name,
+  DeclarationName Name,
   GreenToken Colon,
   GreenToken OpenParen,
   StructuralArray<GreenNode> Parameters,
@@ -112,7 +138,7 @@ public sealed record MethodSignature(
 
   public static MethodSignature Parse(Parser p)
   {
-    GreenToken name = p.ExpectSyntax(SyntaxKind.IdentifierToken);
+    DeclarationName name = DeclarationName.Parse(p);
     GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
     GreenToken open = p.ExpectSyntax(SyntaxKind.OpenParenToken);
     ImmutableArray<GreenNode>.Builder @params = ImmutableArray.CreateBuilder<GreenNode>();

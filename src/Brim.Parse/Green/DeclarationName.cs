@@ -49,7 +49,7 @@ internal static class GenericParameterListParser
 
     GreenToken close = p.ExpectSyntax(SyntaxKind.GenericCloseToken);
     if (empty)
-      p.AddDiagEmptyGeneric(open);
+      p.AddDiagEmptyGenericParam(open);
 
     return new GenericParameterList(open, items.ToImmutable(), close);
   }

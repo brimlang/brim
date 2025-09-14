@@ -13,32 +13,15 @@ Reply[T] := |{ Good :T, Error :str }
 Perms    := &u8{ read, write, exec }
 Pair     := #{User, Perms}
 
-mk :(str, i32) User?
-mk := (id, age) age =>
-  a ?? (a > 17 && id == 4) => User%{ id = id, age = age }
-  _                         => ?{}
+-- syntax-only demo (parses; not a working program)
 
+-- function types and aliases
+FuncT := (A, B) C;
+MaybeStr := str?;
+ResI32 := i32!;
 
-mk2 :(User, Perms) Pair = (u, p) {
-  Pair#{u, p}
-}
+-- protocol with method signatures
+Proto :. { get:(Key) Value, put:(Key, Value) unit, };
 
--- contains a lex error
-emit = `() Reply[i32] { Reply|Good{42} }
-
-handle :(r :Reply[i32]) i32 = {
-  acc :u8 .= 0u8
-  incr = (n) u8 => n =>
-    a ?? a < 10 => incr(a + 1u8)
-    _           => 200u8
-  br :u8 .= incr(acc)
-
-  r => {
-    Good(v)  => { v }
-    Error(e) => { -1 }
-  }
-}
-
-mask = Perms&{ read, exec }
-
--- (former loop parse error example removed)
+-- service header with receiver and implements list
+Cache :^ recv {} : Proto + OtherProto[T];
