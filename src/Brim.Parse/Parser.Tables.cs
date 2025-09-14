@@ -10,12 +10,15 @@ public sealed partial class Parser
   [
     new(ExportDirective.Parse, RawKind.LessLess),
     new(ImportDeclaration.Parse, (RawKind.Identifier, RawKind.ColonColonEqual, RawKind.Identifier)),
-    new(GenericDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.Any)),
-    new(StructDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.PercentLBrace)), // Struct: Name := %{ ... }
-    new(UnionDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.PipeLBrace)), // Union: Name := |{ ... }
-    new(FlagsDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.Ampersand)), // Flags: Name := &u8{ ... } (underlying read inside)
-    new(NamedTupleDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.HashLBrace)), // Named tuple: Name := #{ T, U }
-    new(GenericDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.RBracket)), // still capture empty list // empty generic param list
+    // Type declarations (generic heads and specific body openers)
+    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.Any)),
+    // Alias form: Name := TypeName (Identifier ...)
+    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.Identifier)),
+    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.PercentLBrace)),
+    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.PipeLBrace)),
+    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.Ampersand)),
+    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.HashLBrace)),
+    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.RBracket)), // empty generic param list
   ];
 
   internal static PredictionTable ModuleMembersTable => PredictionTable.Build(ModuleMemberPredictions);

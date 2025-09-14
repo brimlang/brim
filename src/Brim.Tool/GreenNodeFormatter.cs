@@ -36,6 +36,10 @@ public static class GreenNodeFormatter
     GreenToken? tokenForComments = null;
     switch (node)
     {
+      case TypeDeclaration td:
+        _ = sb.Append(" name=").Append(Escape(td.Name.Identifier.GetText(source)));
+        _ = sb.Append(" type=").Append(td.TypeNode.Kind.ToString());
+        break;
       case GreenToken t:
         _ = sb.Append(' ').Append(TokenSummary(t, source));
         tokenForComments = t;
@@ -50,14 +54,17 @@ public static class GreenNodeFormatter
         _ = sb.Append(" name=").Append(Escape(id.Identifier.GetText(source)));
         _ = sb.Append(" from=").Append(Escape(id.Path.GetText(source)));
         break;
-      case StructDeclaration sd:
-        _ = sb.Append(" name=").Append(Escape(sd.Name.Identifier.GetText(source))).Append($" fields={sd.Fields.Count}");
+      case StructShape ss:
+        _ = sb.Append($" fields={ss.Fields.Count}");
         break;
-      case UnionDeclaration ud:
-        _ = sb.Append(" name=").Append(Escape(ud.Name.Identifier.GetText(source))).Append($" variants={ud.Variants.Count}");
+      case UnionShape us:
+        _ = sb.Append($" variants={us.Variants.Count}");
         break;
-      case FlagsDeclaration fd:
-        _ = sb.Append(" name=").Append(Escape(fd.Name.Identifier.GetText(source))).Append($" flags={fd.Members.Count}");
+      case FlagsShape fs:
+        _ = sb.Append($" flags={fs.Members.Count}");
+        break;
+      case NamedTupleShape nts:
+        _ = sb.Append($" elems={nts.Elements.Count}");
         break;
       default:
         break;
@@ -136,9 +143,7 @@ public static class GreenNodeFormatter
 
     // Declarations (types/functions + import/export) magenta
     SyntaxKind.FunctionDeclaration or
-    SyntaxKind.StructDeclaration or
-    SyntaxKind.UnionDeclaration or
-    SyntaxKind.FlagsDeclaration or
+    SyntaxKind.TypeDeclaration or
     SyntaxKind.FieldDeclaration or
     SyntaxKind.UnionVariantDeclaration or
     SyntaxKind.FlagMemberDeclaration or
@@ -153,7 +158,11 @@ public static class GreenNodeFormatter
     SyntaxKind.FieldList => "[teal]",
     SyntaxKind.Block or SyntaxKind.ParameterList => "[purple]",
     SyntaxKind.GenericParameterList or SyntaxKind.GenericArgumentList => "[purple]",
-    SyntaxKind.GenericType => "[yellow]",
+    SyntaxKind.GenericType or
+    SyntaxKind.StructShape or
+    SyntaxKind.UnionShape or
+    SyntaxKind.FlagsShape or
+    SyntaxKind.NamedTupleShape => "[yellow]",
     _ => "[yellow]"
   };
 }

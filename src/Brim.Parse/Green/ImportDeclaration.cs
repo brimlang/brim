@@ -16,7 +16,7 @@ IParsable<ImportDeclaration>
     yield return Path;
     yield return Terminator;
   }
-  
+
   // EBNF: ImportDecl ::= Identifier '::=' ModulePath Terminator
   public static ImportDeclaration Parse(Parser p) => new(
     p.ExpectSyntax(SyntaxKind.IdentifierToken),

@@ -165,6 +165,7 @@ public sealed partial class Parser(
   }
 
   internal void AddDiagEmptyGeneric(GreenToken open) => _diags.Add(Diagnostic.EmptyGenericArgList(open.Token));
+  internal void AddDiagEmptyGenericParam(GreenToken open) => _diags.Add(Diagnostic.EmptyGenericParamList(open.Token));
   internal void AddDiagUnexpectedGenericBody() => _diags.Add(Diagnostic.UnexpectedGenericBody(Current.CoreToken));
   internal void AddDiagEmptyNamedTupleElementList() => _diags.Add(Diagnostic.Unexpected(Current.CoreToken, [RawKind.Identifier]));
   internal void AddDiagInvalidGenericConstraint() => _diags.Add(Diagnostic.InvalidGenericConstraint(Current.CoreToken));
@@ -223,4 +224,3 @@ public sealed partial class Parser(
     public ParserProgress Update(TokenView tok) => Update(tok.Offset);
   }
 }
-

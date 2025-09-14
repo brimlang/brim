@@ -30,10 +30,9 @@ public enum SyntaxKind
 
   // Nodes
   Module,
+  // Declarations
+  TypeDeclaration,
   FunctionDeclaration,
-  StructDeclaration,
-  UnionDeclaration,
-  FlagsDeclaration,
   ExportDirective,
   ImportDeclaration,
   ParameterList,
@@ -50,7 +49,11 @@ public enum SyntaxKind
   UnionVariantDeclaration,
   FlagMemberDeclaration,
   GenericType,
-  NamedTupleDeclaration,
+  // Type expression nodes
+  StructShape,
+  UnionShape,
+  FlagsShape,
+  NamedTupleShape,
   DeclarationName,
   GenericArgument,
   NamedTupleElement,
