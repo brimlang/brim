@@ -108,42 +108,7 @@ Block expressions evaluate their statements left-to-right and yield the value of
 
 ## Functions
 
-Examples:
-```brim
--- Named function with explicit type (const)
-add : (i32, i32) i32 = (x, y) => x + y
-
--- Split header then body (const)
-sum : (list[i32]) i32
-sum = (xs) => {
-  xs =>
-    (h, ..t) => h + sum(t)
-    ()       => 0
-}
-
--- Split header then var body (allows rebinding)
-now : () i64
-now := () => host_clock.now()
-now := () => 1_700_000_000i64  -- test override
-
--- Shorthand header with parameter names & types (const only)
-inc : (x : i32) i32 = { x + 1 }
-
--- Generic function
-map[T, U] : ((T) U, list[T]) list[U] = (f, xs) => {
-  xs =>
-    (h, ..t) => std::list:concat(list{ f(h) }, map(f, t))
-    ()       => list{}
-}
-```
-
-Rules:
-- Function type shape: `(Type, ...) Ret` (types only).
-- Function value: `(name, ...) => expr`.
-- Named binding: `name : (Type, ...) Ret = (params) => expr` (const) or `:=` (var).
-- Split header form: declare `name : (Type, ...) Ret` then later `name = (params) => ...` or `name := (params) => ...`.
-- Only const-bound functions may be exported.
-- Parameters are only named in the value, not the type shape (except shorthand header form which binds names directly).
+See core Functions spec: `spec/core/syntax/functions.md`.
 
 ## Match
 
