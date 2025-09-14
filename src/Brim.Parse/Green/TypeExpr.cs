@@ -25,6 +25,10 @@ public static class TypeExpr
     {
       primary = FlagsShape.Parse(p);
     }
+    else if (p.MatchRaw(RawKind.LParen))
+    {
+      primary = FunctionType.Parse(p);
+    }
     else
     {
       GreenToken head = p.ExpectSyntax(SyntaxKind.IdentifierToken);

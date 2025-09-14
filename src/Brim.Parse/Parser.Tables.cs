@@ -38,6 +38,8 @@ public sealed partial class Parser
     SyntaxKind.ModuleBindToken => RawKind.ColonColonEqual,
     SyntaxKind.GenericOpenToken => RawKind.LBracket,
     SyntaxKind.GenericCloseToken => RawKind.RBracket,
+    SyntaxKind.OpenParenToken => RawKind.LParen,
+    SyntaxKind.CloseParenToken => RawKind.RParen,
     SyntaxKind.IdentifierToken => RawKind.Identifier,
     SyntaxKind.StopToken => RawKind.Stop,
     SyntaxKind.HatToken => RawKind.Hat,

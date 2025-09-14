@@ -24,5 +24,14 @@ public class ProtocolServiceHeaderTests
     Assert.Equal("Svc", decl.Name.Identifier.GetText(src));
     Assert.Equal("recv", decl.Receiver.GetText(src));
   }
-}
 
+  [Fact]
+  public void Protocol_With_Methods_Parses()
+  {
+    string src = "[[m]];\nP :. { m1:(A) B, m2:(A,B) C, }\n";
+    var m = Parse(src);
+    var decl = Assert.IsType<ProtocolDeclaration>(m.Members.First());
+    Assert.Equal(2, decl.Methods.Count);
+    Assert.Equal("m1", decl.Methods[0].Name.GetText(src));
+  }
+}
