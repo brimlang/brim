@@ -11,10 +11,11 @@ public class FlagsParseTests
   {
     ReadOnlySpan<char> c = "[[m]];\nPerms := &u8{ read, write, exec };";
     var m = Parse(c.ToString());
-    FlagsDeclaration? fd = m.Members.OfType<FlagsDeclaration>().FirstOrDefault();
-    Assert.NotNull(fd);
-    Assert.Equal("Perms", fd!.Name.Identifier.GetText(c));
-    Assert.Equal(3, fd.Members.Count);
-    Assert.Equal("u8", fd.UnderlyingType.GetText(c));
+    var td = m.Members.OfType<TypeDeclaration>().FirstOrDefault();
+    Assert.NotNull(td);
+    Assert.Equal("Perms", td!.Name.Identifier.GetText(c));
+    var fs = Assert.IsType<FlagsShape>(td.TypeNode);
+    Assert.Equal(3, fs.Members.Count);
+    Assert.Equal("u8", fs.UnderlyingType.GetText(c));
   }
 }

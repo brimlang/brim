@@ -10,7 +10,7 @@ public class GenericConstraintTests
   public void SingleConstraintParses()
   {
     var m = Parse("[[m]];\nFoo[T:Proto] := %{ a:T };");
-    var decl = m.Members.OfType<StructDeclaration>().FirstOrDefault();
+    var decl = m.Members.OfType<TypeDeclaration>().FirstOrDefault();
     Assert.NotNull(decl);
     Assert.NotNull(decl!.Name.GenericParams);
     Assert.Single(decl.Name.GenericParams!.Parameters);
@@ -23,7 +23,7 @@ public class GenericConstraintTests
   public void MultiConstraintParses()
   {
     var m = Parse("[[m]];\nFoo[T:Proto+Other] := %{ a:T };");
-    var decl = m.Members.OfType<StructDeclaration>().FirstOrDefault();
+    var decl = m.Members.OfType<TypeDeclaration>().FirstOrDefault();
     Assert.NotNull(decl);
     var gp = decl!.Name.GenericParams!.Parameters[0];
     Assert.NotNull(gp.Constraints);

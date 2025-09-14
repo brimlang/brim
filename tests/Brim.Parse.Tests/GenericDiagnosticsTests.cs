@@ -4,7 +4,7 @@ public class GenericDiagnosticsTests
 {
   static Green.BrimModule Parse(string src) => Parser.ParseModule(src);
 
-  [Fact(Skip = "TODO: Broken")]
+  [Fact]
   public void EmptyGenericParamListDiagnostic()
   {
     var m = Parse("[[m]];\nFoo[] : %{ x:Foo };");
@@ -14,8 +14,8 @@ public class GenericDiagnosticsTests
   [Fact]
   public void UnexpectedGenericBodyDiagnostic()
   {
-    // Use a body opener not yet supported after generic head, e.g. '&{' (Ampersand then '{' maybe not combined; falls back to unexpected)
-    var m2 = Parse("[[m]];\nFoo[T] : &{}\n");
+    // '&{' invalid body start after generic head (expect & Ident '{')
+    var m2 = Parse("[[m]];\nFoo[T] := &{}\n");
     Assert.Contains(m2.Diagnostics, static d => d.Code == DiagCode.UnexpectedGenericBody);
   }
 }

@@ -11,13 +11,13 @@ public class GenericParseTests
   {
     var m = Parse("[[m]];\nMyStruct[T,U] := %{ a:T, b:U };");
     Assert.DoesNotContain(m.Diagnostics, static d => d.Code == DiagCode.UnexpectedToken);
-    StructDeclaration? sd = m.Members.OfType<StructDeclaration>().FirstOrDefault();
-    Assert.NotNull(sd);
-    Assert.NotNull(sd!.Name.GenericParams);
-    Assert.Equal(2, sd.Name.GenericParams!.Parameters.Length);
+    TypeDeclaration? td = m.Members.OfType<TypeDeclaration>().FirstOrDefault();
+    Assert.NotNull(td);
+    Assert.NotNull(td!.Name.GenericParams);
+    Assert.Equal(2, td.Name.GenericParams!.Parameters.Length);
   }
 
-  [Fact(Skip = "TODO: Broken")]
+  [Fact]
   public void StructWithEmptyGenericListAllowsMissingAndEmitsMissingTokenDiag()
   {
     var m2 = Parse("[[m]];\nFoo[] := %{ x:Foo };");
