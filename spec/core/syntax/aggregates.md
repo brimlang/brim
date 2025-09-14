@@ -75,13 +75,17 @@ show : (u : User) str = {
 ## Unions — choice aggregates
 
 - **Declaration (type):** `Name : |{ Variant : Type?, ... }`
-- **Construction (term):** `Name|Variant{expr?}`
+- **Construction (term):** `Type|{ Variant }` or `Type|{ Variant = Expr }`
 - **Pattern:** `Variant(pat?)` (no leading `|` in pattern space)
+
+Parse-time shape: Union constructor terms use the union sigil at the type head followed by a single-brace body containing exactly one variant entry. The body must contain exactly one element; multiple elements or a trailing comma are syntax errors and are rejected by the parser. The single element may be either a bare variant identifier (no payload) — `Type|{ Variant }` — or a variant with an explicit payload expression supplied via `=` — `Type|{ Variant = Expr }`.
+
+The parser enforces this shape syntactically without performing name-binding or type lookup; whether the identifier names a declared variant is validated later during semantic analysis. Enforcing the single-entry shape at parse-time avoids ambiguity with other aggregate list forms and keeps the surface compact.
 
 ```brim
 Reply[T] : |{ Good : T, Error : str }
 
-emit : () Reply[i32] = { Reply|Good{42} }
+emit : () Reply[i32] = Reply|{ Good = 42 }
 handle : (r : Reply[i32]) i32 = {
   r =>
     Good(v) v > 0 => v

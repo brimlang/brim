@@ -100,7 +100,7 @@ res = map((x : i32) i64 { x + 1 }, list{1,2,3})
 Patterns never restate generic arguments:
 ```brim
 Reply[T] : |{ Good : T, Error : str }
-val : Reply[i32] = Reply|Good{42}
+val : Reply[i32] = Reply|{ Good = 42 }
 val =>
   Good(v) => v
 ```

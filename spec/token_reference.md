@@ -32,7 +32,7 @@ Status: draft (informative). Canonical meaning is defined only in accepted core 
   - Construction: `Type%{ field = expr, ... }`
   - Pattern: `(field = pat, ...)` (order-insensitive; shorthand `(field1, field2)` binds by name)
 - Union type decl: `Type : |{ Variant: Type?, ... }` — Cat: aggregate — Canonical?: Y
-  - Construction: `Type|Variant{expr?}`
+  - Construction: `Type|{ Variant }` or `Type|{ Variant = Expr }`
   - Pattern: `Variant(p?)` (no leading sigil in pattern space)
 - Flags type decl: `Type : &uN{ a, b, ... }` — Cat: aggregate — Canonical?: Y
   - Construction: `Type&{ a, b }`

@@ -21,7 +21,7 @@
   • Members: constructors ^(forms), methods (reuse FunctionDeclaration after expression layer), destructor ~().
   • Diagnostics: missing receiver, duplicate protocols, invalid implements lists.
 • Phase 6 (Expression Layer Foundations) — TODO
-  • Minimal expression parser: identifiers, literals, aggregate constructions Type%{}, Type|Variant{}, flags Type&{}, tuple Type#{}, option/result constructors.
+  • Minimal expression parser: identifiers, literals, aggregate constructions Type%{}, Type|{ Variant }, flags Type&{}, tuple Type#{}, option/result constructors.
   • Postfix propagation operators bind tighter than application.
 • Phase 7 (Match, Patterns, Loops) — TODO
   • Pattern AST: Wildcard, Identifier, TuplePattern, VariantPattern, Option/Result Patterns, FlagPattern.

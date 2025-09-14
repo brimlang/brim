@@ -99,7 +99,7 @@ Simple expression forms (value-producing):
 - Call: `expr(args)` (callee and each argument are expressions)
 - Constructors:
   - Option / Result: `?{}`, `?{x}`, `!{x}`, `!!{e}`
-  - Aggregates: `Type%{ field = expr, ... }`, `Type|Variant{expr?}`, `Type#{ e1, e2, ... }`, `list{ e1, e2, ... }`
+  - Aggregates: `Type%{ field = expr, ... }`, `Type|{ Variant }` or `Type|{ Variant = Expr }`, `Type#{ e1, e2, ... }`, `list{ e1, e2, ... }`
 - Propagation: `expr?`, `expr!`
 - Match: `scrutinee => arm+` (see Match section below for arm form)
 - Block: `{ ... }` (listed separately below as the compound form)
@@ -148,7 +148,7 @@ Rules:
 ## Match
 
 ```brim
-r : Reply[i32] = Reply|Good{42}
+r : Reply[i32] = Reply|{ Good = 42 }
 
 r =>
   Good(v) v > 0 => v
@@ -208,4 +208,3 @@ Core types do not carry methods; helpers live in the standard library.
 ## See also:
 - Aggregate construction & pattern forms: see `spec/core/syntax/aggregates.md` (Aggregate Types).
 - Service declarations & protocols: see `spec/core/syntax/services.md` (Services, Protocols, and Constraints).
-

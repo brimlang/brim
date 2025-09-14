@@ -29,7 +29,7 @@ All current value‑producing simple expressions:
 - Call: `callee(args)` (callee and each argument are expressions)
 - Constructors:
   - Option / Result: `?{}`, `?{x}`, `!{x}`, `!!{e}`
-  - Aggregates (see Aggregate Types): `Type%{ field = expr, ... }`, `Type|Variant{expr?}`, `Type#{ e1, e2, ... }`, `list{ e1, e2, ... }`
+  - Aggregates (see Aggregate Types): `Type%{ field = expr, ... }`, `Type|{ Variant }` or `Type|{ Variant = Expr }`, `Type#{ e1, e2, ... }`, `list{ e1, e2, ... }`
 - Propagation: `expr?`, `expr!` (contextual return propagation)
 - Match: `scrutinee => arm+`
 - Block: `{ ... }` (compound form listed for completeness)
@@ -82,8 +82,8 @@ See `Aggregate Types` spec for structural details.
 ```brim
 Reply[T] : |{ Good : T, Error : str }
 
-ok  : Reply[i32] = Reply|Good{42}
-err : Reply[i32] = Reply|Error{"nope"}
+ok  : Reply[i32] = Reply|{ Good = 42 }
+err : Reply[i32] = Reply|{ Error = "nope" }
 
 point = Point%{ x = 1i32, y = 2i32 }
 nums  = list{1i32, 2i32, 3i32}
@@ -152,7 +152,7 @@ ConstructorExpr ::= OptionResultCtor
                   | ListCtor
 OptionResultCtor::= "?{" Expr? "}" | "!{" Expr "}" | "!!{" Expr "}"
 AggregateCtor   ::= TypeName "%{" FieldInits? "}" | TypeName "#{" ExprList? "}"
-UnionVariantCtor::= TypeName "|" VariantName "{" Expr? "}"
+UnionVariantCtor::= TypeName "|{" VariantName ("=" Expr)? "}"
 ListCtor        ::= "list" "{" ExprList? "}"
 FieldInits      ::= FieldInit ("," FieldInit)*
 FieldInit       ::= Identifier "=" Expr
@@ -197,4 +197,3 @@ respond : (r : Reply[i32]) i32 = (r) => {
 - Aggregate Types (`spec/core/syntax/aggregates.md`) — constructors & patterns
 - Numeric Literals (`spec/core/syntax/numeric_literals.md`)
 - Services (`spec/core/syntax/services.md`)
-
