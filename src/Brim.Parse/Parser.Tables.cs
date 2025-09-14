@@ -10,6 +10,9 @@ public sealed partial class Parser
   [
     new(ExportDirective.Parse, RawKind.LessLess),
     new(ImportDeclaration.Parse, (RawKind.Identifier, RawKind.ColonColonEqual, RawKind.Identifier)),
+    // Protocol and Service declarations (headers only for now)
+    new(ProtocolDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.Stop)),
+    new(ServiceDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.Hat)),
     // Type declarations (generic heads and specific body openers)
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.Any)),
     // Alias form: Name := TypeName (Identifier ...)
@@ -36,6 +39,8 @@ public sealed partial class Parser
     SyntaxKind.GenericOpenToken => RawKind.LBracket,
     SyntaxKind.GenericCloseToken => RawKind.RBracket,
     SyntaxKind.IdentifierToken => RawKind.Identifier,
+    SyntaxKind.StopToken => RawKind.Stop,
+    SyntaxKind.HatToken => RawKind.Hat,
     SyntaxKind.IntToken => RawKind.IntegerLiteral,
     SyntaxKind.DecimalToken => RawKind.DecimalLiteral,
     SyntaxKind.StrToken => RawKind.StringLiteral,

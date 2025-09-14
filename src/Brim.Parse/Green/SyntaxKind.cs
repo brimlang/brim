@@ -29,12 +29,16 @@ public enum SyntaxKind
   TerminatorToken,
   EobToken,
   NamedTupleToken,
+  StopToken,
+  HatToken,
 
   // Nodes
   Module,
   // Declarations
   TypeDeclaration,
   FunctionDeclaration,
+  ProtocolDeclaration,
+  ServiceDeclaration,
   ExportDirective,
   ImportDeclaration,
   ParameterList,
