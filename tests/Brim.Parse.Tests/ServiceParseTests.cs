@@ -19,7 +19,7 @@ public class ServiceParseTests
   [Fact]
   public void ServiceImpl_StateBlock_Parses_WithFields()
   {
-    string src = "[[m]];\nIntService<i>{\n  < accum :T, call_count :u64, >\n}\n";
+    string src = "[[m]];\nIntService<i>{\n  < accum :T, call_count :u64, >\n  ^(){} name() T {} ~(){}\n}\n";
     var m = Parse(src);
     var impl = m.Members.OfType<ServiceImpl>().FirstOrDefault();
     Assert.NotNull(impl);
@@ -31,7 +31,7 @@ public class ServiceParseTests
   [Fact]
   public void ServiceImpl_StateBlock_Empty_Allows_Stateless()
   {
-    string src = "[[m]];\nS<_>{\n  <>\n}\n";
+    string src = "[[m]];\nS<_>{\n  <>\n  ^(){}\n}\n";
     var m = Parse(src);
     var impl = m.Members.OfType<ServiceImpl>().FirstOrDefault();
     Assert.NotNull(impl);

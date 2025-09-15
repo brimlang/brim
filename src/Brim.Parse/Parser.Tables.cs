@@ -28,6 +28,7 @@ public sealed partial class Parser
     // Service implementation blocks: Name<Ts>? '<' binder '>' '{' ...
     new(ServiceImpl.Parse, (RawKind.Identifier, RawKind.Less)),
     new(ServiceImpl.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.Less)),
+    new(ServiceImpl.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.RBracket, RawKind.Less)),
   ];
 
   internal static PredictionTable ModuleMembersTable => PredictionTable.Build(ModuleMemberPredictions);
