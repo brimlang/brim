@@ -16,18 +16,18 @@ Pair     := #{User, Perms}
 -- syntax-only demo (parses; not a working program)
 
 -- function types and aliases
-FuncT := (A, B) C;
-MaybeStr := str?;
-ResI32 := i32!;
+FuncT := (A, B) C
+MaybeStr := str?
+ResI32 := i32!
 
 -- protocol with method signatures
-Proto := .{ get:(Key) Value, put:(Key, Value) unit, };
+Proto := .{ get:(Key) Value, put:(Key, Value) unit, }
 
 -- service type (protocol refs only)
-IntService[T] := ^{ Proto, };
+IntService[T] := ^{ Proto, }
 
 -- service implementation (syntax-only; bodies may error)
-IntService[T]<i>{
+<IntService[T], i>{
   < accum :T, call_count :u64, >
 
   ^(seed :T) {
@@ -46,5 +46,20 @@ IntService[T]<i>{
   ~() { }
 }
 
--- service header with receiver and implements list
-Cache :^ recv {} : Proto + OtherProto[T];
+-- non-generic service type + impl (parses structurally)
+SimpleSvc := ^{ Proto, }
+<SimpleSvc, i>{
+  <>
+  ^(){}
+  ping() unit {}
+  ~(){}
+}
+
+-- non-generic service with fields
+<StatefulSvc, i>{
+  < a :i32, b :u64, >
+  ^(){ a .= 0i32; b .= 0u64 }
+  swap() unit { let tmp = a; a .= b; b .= tmp }
+  ~(){}
+}
+

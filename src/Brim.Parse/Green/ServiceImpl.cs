@@ -22,14 +22,14 @@ public sealed record ServiceImpl(
 
   public static ServiceImpl Parse(Parser p)
   {
-    // Name [TypeArgs]? '<' ident '>' '{' StateBlock '}'
+    // '<' ServiceRef ',' recv '>' '{' StateBlock Member* '}'
+    _ = p.ExpectRaw(RawKind.Less);
     GreenToken head = p.ExpectSyntax(SyntaxKind.IdentifierToken);
     GreenNode sref = head;
     if (p.MatchRaw(RawKind.LBracket) && !p.MatchRaw(RawKind.LBracketLBracket))
       sref = GenericType.ParseAfterName(p, head);
-
-    _ = p.ExpectRaw(RawKind.Less);
-    GreenToken rid = p.ExpectSyntax(SyntaxKind.IdentifierToken); // '_' allowed as identifier
+    GreenToken comma = p.ExpectSyntax(SyntaxKind.CommaToken);
+    GreenToken rid = p.ExpectSyntax(SyntaxKind.IdentifierToken); // allow '_'
     _ = p.ExpectRaw(RawKind.Greater);
     GreenToken ob = p.ExpectSyntax(SyntaxKind.OpenBraceToken);
 

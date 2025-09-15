@@ -12,6 +12,8 @@ public sealed partial class Parser
     new(ImportDeclaration.Parse, (RawKind.Identifier, RawKind.ColonColonEqual, RawKind.Identifier)),
     // Service declarations (header-only for now)
     new(ServiceDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.Hat)),
+    // Service implementation blocks: '<' ServiceRef ',' recv '>' '{' ...
+    new(ServiceImpl.Parse, RawKind.Less),
     // Type declarations (generic heads and specific body openers)
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.Any)),
     // Alias form: Name := TypeName (Identifier ...)
@@ -20,18 +22,16 @@ public sealed partial class Parser
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.StopLBrace)),
     // Service type: Name := ^{ ProtoRef, ... }
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.Hat)),
+    // Function type: Name := '(' TypeList? ')' TypeExpr
+    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.LParen)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.PercentLBrace)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.PipeLBrace)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.Ampersand)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.HashLBrace)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.RBracket)), // empty generic param list
-    // Service implementation blocks: Name<Ts>? '<' binder '>' '{' ...
-    new(ServiceImpl.Parse, (RawKind.Identifier, RawKind.Less)),
-    new(ServiceImpl.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.Less)),
-    new(ServiceImpl.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.RBracket, RawKind.Less)),
   ];
 
-  internal static PredictionTable ModuleMembersTable => PredictionTable.Build(ModuleMemberPredictions);
+  internal static readonly PredictionTable ModuleMembersTable = PredictionTable.Build(ModuleMemberPredictions);
 
   internal static RawKind MapRawKind(SyntaxKind kind) => kind switch
   {

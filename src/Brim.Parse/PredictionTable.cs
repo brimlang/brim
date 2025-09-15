@@ -14,24 +14,23 @@ internal delegate GreenNode ParseAction(Parser parser);
 internal readonly record struct Prediction(ParseAction Action, TokenSequence Sequence);
 
 /// <summary>
-/// Read-only grouped prediction table. Provides O(1) access to subset sharing the same first token.
+/// Read-only grouped prediction table, backed by arrays for caching.
+/// Provides O(1) access to subset sharing the same first token.
 /// </summary>
-readonly ref struct PredictionTable
+internal readonly struct PredictionTable
 {
-  readonly ReadOnlySpan<int> _groupStart; // -1 if none
-  readonly ReadOnlySpan<byte> _groupCount; // 0 if none
+  readonly Prediction[] _entries;
+  readonly int[] _groupStart; // -1 if none
+  readonly byte[] _groupCount; // 0 if none
 
-  public PredictionTable(
-    ReadOnlySpan<Prediction> entries,
-    ReadOnlySpan<int> starts,
-    ReadOnlySpan<byte> counts)
+  private PredictionTable(Prediction[] entries, int[] starts, byte[] counts)
   {
-    Entries = entries;
+    _entries = entries;
     _groupStart = starts;
     _groupCount = counts;
   }
 
-  public ReadOnlySpan<Prediction> Entries { get; }
+  public ReadOnlySpan<Prediction> Entries => _entries;
 
   public bool TryGetGroup(RawKind kind, out ReadOnlySpan<Prediction> group)
   {
@@ -44,11 +43,11 @@ readonly ref struct PredictionTable
 
     int start = _groupStart[idx];
     int count = _groupCount[idx];
-    group = Entries.Slice(start, count);
+    group = _entries.AsSpan(start, count);
     return true;
   }
 
-  internal static PredictionTable Build(ReadOnlySpan<Prediction> preds)
+  internal static PredictionTable Build(Prediction[] preds)
   {
     if (preds.Length == 0)
       return new PredictionTable(preds, [], []);
@@ -81,5 +80,11 @@ readonly ref struct PredictionTable
 
     return new PredictionTable(preds, starts, counts);
   }
-}
 
+  internal static PredictionTable Build(ReadOnlySpan<Prediction> preds)
+  {
+    // Fallback that copies when only a span is available.
+    Prediction[] arr = preds.Length == 0 ? [] : preds.ToArray();
+    return Build(arr);
+  }
+}
