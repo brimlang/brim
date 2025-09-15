@@ -3,7 +3,7 @@ name: Benchmarks
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   run-benchmarks:
@@ -12,11 +12,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup .NET 9 SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: "9.0.x"
 
       - name: Restore
         run: dotnet restore
@@ -33,4 +35,3 @@ jobs:
           name: brim-parse-benchmarks
           path: artifacts/benchmarks/**
           if-no-files-found: error
-
