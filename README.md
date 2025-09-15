@@ -1,5 +1,7 @@
 # brim
 
+[![CI](https://github.com/brimlang/brim/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/brimlang/brim/actions/workflows/ci.yml) [![Benchmarks](https://github.com/brimlang/brim/actions/workflows/benchmarks.yml/badge.svg?branch=main)](https://github.com/brimlang/brim/actions/workflows/benchmarks.yml)
+
 > Pre-release: The Brim language and toolchain are in an early, unstable phase. Breaking changes may land at any time without deprecation. Specs in `spec/` describe only the current accepted state; historical/migration notes are intentionally omitted until stabilization.
 
 ## Layout
@@ -38,3 +40,12 @@ Use mise targets to run the CLI:
 - Core topical specs live under `spec/core/syntax/` and `spec/core/`.
 
 Pre‑release policy: specs describe only the current accepted state; compatibility is not guaranteed until stabilization.
+
+## Benchmarks
+
+- Run all benches: `mise run bench` (alias: `mise bn`)
+- Filter benches: `mise bn -- --filter *Parse_*` (BenchmarkDotNet filter syntax)
+- Use a local corpus: `BRIM_BENCH_CORPUS=/abs/path/to/corpus mise bn`
+  - Recursively discovers `*.brim` files; falls back to synthetic samples if none found.
+- Results location: `artifacts/benchmarks/results/` (CSV, HTML, GitHub Markdown)
+- CI: Benchmarks run on pushes to `main` and upload the same `artifacts/benchmarks` directory.

@@ -1,0 +1,36 @@
+name: Benchmarks
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  run-benchmarks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build (Release)
+        run: dotnet build -c Release --no-restore
+
+      - name: Run Brim.Parse Benchmarks (ShortRun)
+        run: dotnet run -c Release --no-build --project benchmarks/Brim.Parse.Benchmarks -- --filter '*'
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: brim-parse-benchmarks
+          path: artifacts/benchmarks/**
+          if-no-files-found: error
+

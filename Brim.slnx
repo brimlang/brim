@@ -17,4 +17,7 @@
     <Project Path="tests/Brim.Parse.Tests/Brim.Parse.Tests.csproj" />
     <Project Path="tests/Brim.S0.Tests/Brim.S0.Tests.csproj" />
   </Folder>
+  <Folder Name="/benchmarks/">
+    <Project Path="benchmarks/Brim.Parse.Benchmarks/Brim.Parse.Benchmarks.csproj" />
+  </Folder>
 </Solution>

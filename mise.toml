@@ -19,15 +19,36 @@ description = "Runs dotnet format to fix code style"
 run = "dotnet format"
 alias = "f"
 
+[tasks.restore]
+description = "Restores all projects"
+run = "dotnet restore"
+alias = "res"
+sources = [
+  "Directory.Build.props",
+  "Directory.Build.targets",
+  "Directory.Packages.props",
+  "src/**/*.csproj",
+  "tests/**/*.csproj",
+  "benchmarks/**/*.csproj",
+]
+outputs = { auto = true }
+
 [tasks.build]
 description = "Builds all projects"
-run = "dotnet build"
+depends = ["restore"]
+run = "dotnet build --no-restore"
 alias = "b"
 sources = [
+  "Directory.Build.props",
+  "Directory.Build.targets",
+  "Directory.Packages.props",
+  "**/.editorconfig",
   "src/**/*.cs",
   "src/**/*.csproj",
   "tests/**/*.cs",
   "tests/**/*.csproj",
+  "benchmarks/**/*.cs",
+  "benchmarks/**/*.csproj",
 ]
 outputs = { auto = true }
 
@@ -47,6 +68,13 @@ description = "Runs the Brim.Tool project with the debug build"
 depends = ["build -c Debug src/Brim.Tool"]
 run = "dotnet run -c Debug --no-build --no-restore --project src/Brim.Tool --"
 alias = "rdx"
+
+[tasks.bench]
+description = "Runs Brim.Parse benchmarks (ShortRun, in-process)"
+depends = ["build -c Release benchmarks/Brim.Parse.Benchmarks"]
+run = "dotnet run -c Release --no-build --no-restore --project benchmarks/Brim.Parse.Benchmarks --"
+alias = "bn"
+
 
 [tasks."aot:linux-x64:publish"]
 description = "Publishes the Brim.Tool project as a self-contained AOT-compiled binary for Linux x64"

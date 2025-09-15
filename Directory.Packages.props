@@ -8,6 +8,7 @@
     <PackageVersion Include="Tomlyn" Version="0.19.0" />
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta7.25380.108" />
     <PackageVersion Include="Nerdbank.GitVersioning" Version="3.7.115" />
+    <PackageVersion Include="BenchmarkDotNet" Version="0.15.2" />
   </ItemGroup>
   <ItemGroup>
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
