@@ -14,10 +14,12 @@ Status: draft (informative). Canonical meaning is defined in accepted core specs
 ## Lexical & Separators
 | Surface | Category | Notes |
 |---|---|---|
-| Ident | lexical | Unicode; normalization TBD |
+| Ident | lexical | Unicode; normalization TBD; lexed as single token |
 | Integer, Decimal, String, Rune | literal | |
-| `-- comment` | comment | To end of line |
-| Terminator (newline, `;`) | separator | Statement separator |
+| `-- comment` | comment | To end of line; single token |
+| Terminator (newline, `;`) | separator | Collapsed runs; single token |
+
+Greedy compound glyphs: operators and delimiters are lexed with longest-match semantics using an ASCII table. Sequences up to 3 characters (e.g., `::=`, `<<`, `|{`, `*{`, `!!{`, `[[`, `]]`, `.=`, `??`) are matched as single tokens (a 4th char may be added in future). Example: `[[` is a single token and never two `[` tokens.
 
 ## Bindings & Modules
 | Surface | Category | Notes |
