@@ -1,6 +1,6 @@
 ---
 id: core.services
-title: Services, Interfaces, and Constraints
+title: Services, Protocols, and Constraints
 layer: core
 authors: ['trippwill']
 updated: 2025-09-13
@@ -12,34 +12,57 @@ version: 0.1.0
 
 ## Services
 
-Unified nominal form aligns services with other aggregates and protocols.
+Services are nominal types that implement one or more protocols. The service type declaration lists protocol references only. Private state and behavior are defined in a separate implementation block.
 
-- **Declaration:** `ServiceName :^recv{ state_field :Type, ... } :Proto (+Proto)* = { members }`
-  - `^recv{ ... }` declares a service with receiver identifier `recv` and named private state fields.
-  - After the service type shape, a colon introduces implemented protocols: `:Proto + Other`.
-  - Body block provides constructors, methods, destructor.
+### Type declaration (protocol refs only)
+- **Form:** `Service[T?] := ^{ ProtoRef (',' ProtoRef)* (',')? }`
+- `ProtoRef ::= Ident GenericArgs?`
 
-### Members
-- **Constructors:** `^() = { ... }` or `^(params) = { ... }` returning implicit service instance.
-- **Methods:**
-  - Binding form: `name :(ParamTypes...) Ret = (params) { ... }`
-  - Combined header (ergonomic, const‑only): `name :(ParamTypes...) Ret { ... }`
-- **Destructor:** `~() unit = { ... }` (runs on `~=` scope exit, reverse lexical order of binding sites).
-
-State fields are immutable unless explicitly reassigned within methods via the receiver (e.g., `recv.field = ...`). Direct bare field references outside `recv.` are disallowed.
-
+Example:
 ```brim
-io ::= std::io     -- import required for term-space access
+Adder[T] := .{ add :(T, T) T }
+Fmt      := .{ to_str :() str, fmt :(str) str, }
 
-Fmt := .{ to_string :() str }
+IntService[T] := ^{ Adder[T], Fmt, }
+```
 
-Logger :^log{ target :str, hits :i32 } :Fmt + Flush = {
-  ^(to : str) = { log.target = to; log.hits = log.hits + 1 }
+### Implementation block
+- **Form:** `Service[T?] <recv> { StateBlock Member* }`
+- Receiver binder is explicit and mandatory; use `<_>` if intentionally unused.
+- Exactly one `StateBlock`, and it must be the first item.
 
-  write :(str) unit { io:write(log.target, s) }
-  flush :() unit { io:flush(log.target) }
-  to_string :() str { log.target }
-  ~() unit = { }
+State and members:
+- `StateBlock ::= '<' FieldDecl (',' FieldDecl)* (',')? '>' StmtSep` (empty `<>` allowed for stateless)
+- `FieldDecl  ::= Ident ':' TypeExpr` (no initializers; ctors must assign)
+- `CtorImpl   ::= '^(' ParamDeclList? ')' BlockExpr`
+- `MethodImpl ::= Ident '(' ParamDeclList? ')' ReturnType BlockExpr`
+- `DtorImpl   ::= '~()' BlockExpr`
+
+Rules:
+- All declared fields must be assigned exactly once in every constructor before any read.
+- Field writes are allowed only inside service impls on the bound receiver: `recv:field .= expr`.
+- Outside impls, the language remains whole‑value rebinding only (no field mutation).
+
+Example:
+```brim
+IntService[T]<i>{
+  < accum :T, call_count :u64, >
+
+  ^(seed :T) {
+    i:accum .= seed
+    i:call_count .= 0u64
+  }
+
+  add(x :T, y :T) T {
+    r = x + y
+    i:accum .= i:accum + r
+    i:call_count .= i:call_count + 1
+    r
+  }
+
+  to_str() str { sfmt:itoa(i:accum) }
+  fmt(s :str) str { panic("not implemented") }
+  ~() { }
 }
 ```
 

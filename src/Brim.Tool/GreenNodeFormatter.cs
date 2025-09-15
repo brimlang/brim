@@ -69,6 +69,9 @@ public static class GreenNodeFormatter
       case ProtocolShape ps:
         _ = sb.Append($" methods={ps.Methods.Count}");
         break;
+      case ServiceShape svs:
+        _ = sb.Append($" protos={svs.Protocols.Count}");
+        break;
       default:
         break;
     }
@@ -169,7 +172,8 @@ public static class GreenNodeFormatter
     SyntaxKind.UnionShape or
     SyntaxKind.FlagsShape or
     SyntaxKind.NamedTupleShape or
-    SyntaxKind.ProtocolShape => "[yellow]",
+    SyntaxKind.ProtocolShape or
+    SyntaxKind.ServiceShape => "[yellow]",
     _ => "[yellow]"
   };
 }

@@ -18,11 +18,16 @@ public sealed partial class Parser
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.Identifier)),
     // Protocol type: Name := .{ ... }
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.StopLBrace)),
+    // Service type: Name := ^{ ProtoRef, ... }
+    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.Hat)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.PercentLBrace)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.PipeLBrace)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.Ampersand)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.HashLBrace)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.RBracket)), // empty generic param list
+    // Service implementation blocks: Name<Ts>? '<' binder '>' '{' ...
+    new(ServiceImpl.Parse, (RawKind.Identifier, RawKind.Less)),
+    new(ServiceImpl.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.Less)),
   ];
 
   internal static PredictionTable ModuleMembersTable => PredictionTable.Build(ModuleMemberPredictions);

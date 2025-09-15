@@ -33,6 +33,10 @@ public static class TypeExpr
     {
       primary = ProtocolShape.Parse(p);
     }
+    else if (p.MatchRaw(RawKind.Hat))
+    {
+      primary = ServiceShape.Parse(p);
+    }
     else
     {
       GreenToken head = p.ExpectSyntax(SyntaxKind.IdentifierToken);

@@ -113,7 +113,7 @@ TypeExpr        ::= BuiltinType
 GenericArgs     ::= '[' TypeList? ']'
 ListType        ::= 'list' '[' TypeExpr ']'
 
-AggregateShape  ::= StructShape | UnionShape | NamedTupleShape | FlagsShape | ProtocolShape
+AggregateShape  ::= StructShape | UnionShape | NamedTupleShape | FlagsShape | ProtocolShape | ServiceShape
 StructShape     ::= '%{' FieldTypes? '}'
 FieldTypes      ::= FieldType (',' FieldType)* (',')?
 FieldType       ::= Ident ':' TypeExpr
@@ -123,6 +123,8 @@ VariantType     ::= Ident (':' TypeExpr)?
 NamedTupleShape ::= '#{' TypeList '}'
 FlagsShape      ::= '&' Ident '{' Ident (',' Ident)* (',')? '}'
 ProtocolShape   ::= '.{' MethodSigList? '}'
+ServiceShape    ::= '^' '{' ProtoRef (',' ProtoRef)* (',')? '}'
+ProtoRef        ::= Ident GenericArgs?
 
 ConstructorExpr ::= TypeName '%{' FieldInits? '}'
                   | TypeName '|{' VariantInit '}'
@@ -163,16 +165,19 @@ SignedFlag      ::= ('+' Ident) | ('-' Ident)
 --   Proto[T?] := .{ method :(TypeList?) TypeExpr (, ...)? }
 MethodSigList   ::= MethodSig (',' MethodSig)* (',')?
 MethodSig       ::= Ident GenericParams? ':(' TypeList? ')' TypeExpr
+-- Services: type declaration uses ServiceShape (protocol refs only):
+--   Svc[T?] := ^{ ProtoRef (, ProtoRef)* (',')? }
 
-ServiceDecl     ::= Ident GenericParams? ':^' Ident '{' FieldTypes? '}' ':' ImplementsList? '=' ServiceBody
-ImplementsList  ::= ProtocolRef ('+' ProtocolRef)*
-ServiceBody     ::= '{' ServiceMember* '}'
-ServiceMember   ::= CtorDecl | MethodDecl | DtorDecl
-CtorDecl        ::= '^(' ParamList? ')' '=' BlockExpr
-MethodDecl      ::= MethodHeader ( '=' FunctionExpr )? | MethodCombined
-MethodHeader    ::= Ident ':(' TypeList? ')' TypeExpr
-MethodCombined  ::= Ident ':(' TypeList? ')' TypeExpr BlockExpr   -- const-only ergonomic
-DtorDecl        ::= '~()' TypeExpr '=' BlockExpr                  -- `unit` return
+-- Implementation blocks (term space) — structure only (bodies elided here):
+ImplBlock       ::= ServiceRef ReceiverBinder '{' StateBlock Member* '}'
+ServiceRef      ::= Ident GenericArgs?
+ReceiverBinder  ::= '<' (Ident | '_') '>'
+StateBlock      ::= '<' FieldDecl (',' FieldDecl)* (',')? '>' StmtSep
+FieldDecl       ::= Ident ':' TypeExpr
+Member          ::= CtorImpl | MethodImpl | DtorImpl
+CtorImpl        ::= '^(' ParamDeclList? ')' BlockExpr
+MethodImpl      ::= Ident '(' ParamDeclList? ')' ReturnType BlockExpr
+DtorImpl        ::= '~()' BlockExpr
 ```
 
 ## Prediction (Statement Start)

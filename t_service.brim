@@ -1,0 +1,4 @@
+[[m]];
+IntService<i>{
+  < accum :T, call_count :u64, >
+}

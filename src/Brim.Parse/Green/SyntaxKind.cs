@@ -66,6 +66,7 @@ public enum SyntaxKind
   FlagsShape,
   NamedTupleShape,
   ProtocolShape,
+  ServiceShape,
   DeclarationName,
   GenericArgument,
   NamedTupleElement,
