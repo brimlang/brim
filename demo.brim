@@ -23,5 +23,28 @@ ResI32 := i32!;
 -- protocol with method signatures
 Proto := .{ get:(Key) Value, put:(Key, Value) unit, };
 
+-- service type (protocol refs only)
+IntService[T] := ^{ Proto, };
+
+-- service implementation (syntax-only; bodies may error)
+IntService[T]<i>{
+  < accum :T, call_count :u64, >
+
+  ^(seed :T) {
+    i:accum .= seed
+    i:call_count .= 0u64
+  }
+
+  add(x :T, y :T) T {
+    r = x + y
+    i:accum .= i:accum + r
+    i:call_count .= i:call_count + 1
+    r
+  }
+
+  to_str() str { sfmt:itoa(i:accum) }
+  ~() { }
+}
+
 -- service header with receiver and implements list
 Cache :^ recv {} : Proto + OtherProto[T];

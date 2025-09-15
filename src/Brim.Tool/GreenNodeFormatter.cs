@@ -36,6 +36,11 @@ public static class GreenNodeFormatter
     GreenToken? tokenForComments = null;
     switch (node)
     {
+      case ServiceImpl si:
+        _ = sb.Append(" svc=").Append(Escape(si.ServiceRef.GetText(source)));
+        _ = sb.Append(" recv=").Append(Escape(si.ReceiverIdent.GetText(source)));
+        _ = sb.Append($" fields={si.StateFields.Count} members={si.Members.Count}");
+        break;
       case TypeDeclaration td:
         _ = sb.Append(" name=").Append(Escape(td.Name.Identifier.GetText(source)));
         _ = sb.Append(" type=").Append(td.TypeNode.Kind.ToString());
