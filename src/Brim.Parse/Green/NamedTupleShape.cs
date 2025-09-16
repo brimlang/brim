@@ -1,3 +1,5 @@
+using Brim.Parse.Collections;
+
 namespace Brim.Parse.Green;
 
 public sealed record NamedTupleShape(
@@ -18,31 +20,24 @@ public sealed record NamedTupleShape(
   {
     GreenToken open = p.ExpectSyntax(SyntaxKind.NamedTupleToken);
 
-    ImmutableArray<NamedTupleElement>.Builder elems = ImmutableArray.CreateBuilder<NamedTupleElement>();
-    if (!p.MatchRaw(RawKind.RBrace) && !p.MatchRaw(RawKind.Eob))
-    {
-      while (true)
-      {
-        GreenToken typeNameTok = p.ExpectSyntax(SyntaxKind.IdentifierToken);
-        GreenNode ty = typeNameTok;
-        if (p.MatchRaw(RawKind.LBracket) && !p.MatchRaw(RawKind.LBracketLBracket))
+    StructuralArray<NamedTupleElement> elems =
+      Delimited.ParseCommaSeparatedTypes(
+        p,
+        static p2 =>
         {
-          ty = GenericType.ParseAfterName(p, typeNameTok);
-        }
-        GreenToken? trailing = null;
-        if (p.MatchRaw(RawKind.Comma)) trailing = p.ExpectSyntax(SyntaxKind.CommaToken);
-        elems.Add(new NamedTupleElement(ty, trailing));
-        if (trailing is null) break;
-        if (p.MatchRaw(RawKind.RBrace) || p.MatchRaw(RawKind.Eob)) break; // trailing
-      }
-    }
+          GreenToken typeNameTok2 = p2.ExpectSyntax(SyntaxKind.IdentifierToken);
+          GreenNode ty2 = typeNameTok2;
+          if (p2.MatchRaw(RawKind.LBracket) && !p2.MatchRaw(RawKind.LBracketLBracket))
+            ty2 = GenericType.ParseAfterName(p2, typeNameTok2);
+          return ty2;
+        },
+        static (n, c) => new NamedTupleElement(n, c),
+        RawKind.RBrace);
 
     if (elems.Count == 0)
       p.AddDiagEmptyNamedTupleElementList();
 
-    StructuralArray<NamedTupleElement> arr = [.. elems];
     GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBraceToken);
-    return new NamedTupleShape(open, arr, close);
+    return new NamedTupleShape(open, elems, close);
   }
 }
-

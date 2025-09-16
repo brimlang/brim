@@ -1,10 +1,15 @@
+using Brim.Parse.Collections;
+
 namespace Brim.Parse.Green;
 
 public sealed record ServiceImpl(
   GreenNode ServiceRef,
   GreenToken ReceiverIdent,
+  GreenToken HeaderOpenAngle,
+  GreenToken HeaderComma,
+  GreenToken HeaderCloseAngle,
   GreenToken OpenBrace,
-  StructuralArray<ServiceStateField> StateFields,
+  ServiceStateBlock State,
   StructuralArray<GreenNode> Members,
   GreenToken CloseBrace)
   : GreenNode(SyntaxKind.Block, ServiceRef.Offset)
@@ -14,8 +19,11 @@ public sealed record ServiceImpl(
   {
     yield return ServiceRef;
     yield return ReceiverIdent;
+    yield return HeaderOpenAngle;
+    yield return HeaderComma;
+    yield return HeaderCloseAngle;
     yield return OpenBrace;
-    foreach (ServiceStateField f in StateFields) yield return f;
+    yield return State;
     foreach (GreenNode m in Members) yield return m;
     yield return CloseBrace;
   }
@@ -23,17 +31,17 @@ public sealed record ServiceImpl(
   public static ServiceImpl Parse(Parser p)
   {
     // '<' ServiceRef ',' recv '>' '{' StateBlock Member* '}'
-    _ = p.ExpectRaw(RawKind.Less);
+    GreenToken headerOpen = p.ExpectSyntax(SyntaxKind.LessToken);
     GreenToken head = p.ExpectSyntax(SyntaxKind.IdentifierToken);
     GreenNode sref = head;
     if (p.MatchRaw(RawKind.LBracket) && !p.MatchRaw(RawKind.LBracketLBracket))
       sref = GenericType.ParseAfterName(p, head);
     GreenToken comma = p.ExpectSyntax(SyntaxKind.CommaToken);
     GreenToken rid = p.ExpectSyntax(SyntaxKind.IdentifierToken); // allow '_'
-    _ = p.ExpectRaw(RawKind.Greater);
+    GreenToken headerClose = p.ExpectSyntax(SyntaxKind.GreaterToken);
     GreenToken ob = p.ExpectSyntax(SyntaxKind.OpenBraceToken);
 
-    StructuralArray<ServiceStateField> fields = ParseStateBlock(p);
+    ServiceStateBlock state = ParseStateBlock(p);
 
     // Parse members structurally (headers only), skip bodies
     ImmutableArray<GreenNode>.Builder memb = ImmutableArray.CreateBuilder<GreenNode>();
@@ -75,10 +83,10 @@ public sealed record ServiceImpl(
     }
 
     GreenToken cb = p.ExpectSyntax(SyntaxKind.CloseBraceToken);
-    return new ServiceImpl(sref, rid, ob, fields, [.. memb], cb);
+    return new ServiceImpl(sref, rid, headerOpen, comma, headerClose, ob, state, memb, cb);
   }
 
-  static GreenNode ParseCtorHeaderAndSkipBody(Parser p)
+  static ServiceCtorHeader ParseCtorHeaderAndSkipBody(Parser p)
   {
     GreenToken hat = new(SyntaxKind.HatToken, p.ExpectRaw(RawKind.Hat));
     GreenToken op = p.ExpectSyntax(SyntaxKind.OpenParenToken);
@@ -89,7 +97,7 @@ public sealed record ServiceImpl(
     return new ServiceCtorHeader(hat, op, @params, cp, bodyOpen);
   }
 
-  static GreenNode ParseMethodHeaderAndSkipBody(Parser p)
+  static ServiceMethodHeader ParseMethodHeaderAndSkipBody(Parser p)
   {
     GreenToken name = p.ExpectSyntax(SyntaxKind.IdentifierToken);
     GreenToken op = p.ExpectSyntax(SyntaxKind.OpenParenToken);
@@ -101,7 +109,7 @@ public sealed record ServiceImpl(
     return new ServiceMethodHeader(name, op, @params, cp, ret, bodyOpen);
   }
 
-  static GreenNode ParseDtorHeaderAndSkipBody(Parser p)
+  static ServiceDtorHeader ParseDtorHeaderAndSkipBody(Parser p)
   {
     _ = p.ExpectRaw(RawKind.Tilde);
     GreenToken op = p.ExpectSyntax(SyntaxKind.OpenParenToken);
@@ -117,21 +125,23 @@ public sealed record ServiceImpl(
     ImmutableArray<ServiceParam>.Builder list = ImmutableArray.CreateBuilder<ServiceParam>();
     while (true)
     {
-      int before = p.Current.CoreToken.Offset;
+      Parser.StallGuard sg = p.GetStallGuard();
       GreenToken pname = p.ExpectSyntax(SyntaxKind.IdentifierToken);
       GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
       GreenNode ptype = TypeExpr.Parse(p);
-      list.Add(new ServiceParam(pname, colon, ptype));
+
+      GreenToken? trailing = null;
       if (p.MatchRaw(RawKind.Comma))
-      {
-        _ = p.ExpectSyntax(SyntaxKind.CommaToken);
-        if (p.MatchRaw(RawKind.RParen) || p.MatchRaw(RawKind.Eob)) break;
-        if (p.Current.CoreToken.Offset == before) break;
-        continue;
-      }
-      break;
+        trailing = p.ExpectSyntax(SyntaxKind.CommaToken);
+
+      list.Add(new ServiceParam(pname, colon, ptype, trailing));
+
+      if (trailing is null) break;
+      if (p.MatchRaw(RawKind.RParen) || p.MatchRaw(RawKind.Eob)) break;
+      if (sg.Stalled) break;
     }
-    return [.. list];
+
+    return list;
   }
 
   static void SkipBlock(Parser p)
@@ -146,53 +156,82 @@ public sealed record ServiceImpl(
     _ = p.ExpectSyntax(SyntaxKind.CloseBraceToken);
   }
 
-  static StructuralArray<ServiceStateField> ParseStateBlock(Parser p)
+  static ServiceStateBlock ParseStateBlock(Parser p)
   {
     // '<' FieldDecl (',' FieldDecl)* (',')? '>' Terminator or empty '<>' Terminator
     // skip standalone syntax (terminators/comments)
     while (p.MatchRaw(RawKind.Terminator) || p.MatchRaw(RawKind.CommentTrivia))
       _ = p.ExpectRaw(p.Current.Kind);
 
-    _ = p.ExpectRaw(RawKind.Less);
+    GreenToken open = p.ExpectSyntax(SyntaxKind.LessToken);
     if (p.MatchRaw(RawKind.Greater))
     {
-      _ = p.ExpectRaw(RawKind.Greater);
-      _ = p.ExpectSyntax(SyntaxKind.TerminatorToken);
-      return [];
+      GreenToken closeEmpty = p.ExpectSyntax(SyntaxKind.GreaterToken);
+      GreenToken termEmpty = p.ExpectSyntax(SyntaxKind.TerminatorToken);
+      return new ServiceStateBlock(open, [], closeEmpty, termEmpty);
     }
 
     ImmutableArray<ServiceStateField>.Builder list = ImmutableArray.CreateBuilder<ServiceStateField>();
     while (true)
     {
-      int before = p.Current.CoreToken.Offset;
+      Parser.StallGuard sg = p.GetStallGuard();
       GreenToken fname = p.ExpectSyntax(SyntaxKind.IdentifierToken);
       GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
       GreenNode ftype = TypeExpr.Parse(p);
-      list.Add(new ServiceStateField(fname, colon, ftype));
+
+      GreenToken? trailing = null;
       if (p.MatchRaw(RawKind.Comma))
-      {
-        _ = p.ExpectSyntax(SyntaxKind.CommaToken);
-        if (p.MatchRaw(RawKind.Greater) || p.MatchRaw(RawKind.Eob)) break;
-        if (p.Current.CoreToken.Offset == before) break;
-        continue;
-      }
-      break;
+        trailing = p.ExpectSyntax(SyntaxKind.CommaToken);
+
+      list.Add(new ServiceStateField(fname, colon, ftype, trailing));
+      if (trailing is null)
+        break;
+
+      if (p.MatchRaw(RawKind.Greater) || p.MatchRaw(RawKind.Eob))
+        break;
+
+      if (sg.Stalled)
+        break;
     }
-    _ = p.ExpectRaw(RawKind.Greater);
-    _ = p.ExpectSyntax(SyntaxKind.TerminatorToken);
-    return [.. list];
+
+    GreenToken close = p.ExpectSyntax(SyntaxKind.GreaterToken);
+    GreenToken term = p.ExpectSyntax(SyntaxKind.TerminatorToken);
+    return new ServiceStateBlock(open, list, close, term);
   }
 }
 
 public sealed record ServiceStateField(
   GreenToken Name,
   GreenToken Colon,
-  GreenNode Type)
+  GreenNode Type,
+  GreenToken? TrailingComma)
   : GreenNode(SyntaxKind.FieldDeclaration, Name.Offset)
 {
-  public override int FullWidth => Type.EndOffset - Name.Offset;
+  public override int FullWidth => (TrailingComma?.EndOffset ?? Type.EndOffset) - Name.Offset;
   public override IEnumerable<GreenNode> GetChildren()
   {
-    yield return Name; yield return Colon; yield return Type;
+    yield return Name;
+    yield return Colon;
+    yield return Type;
+    if (TrailingComma is not null)
+      yield return TrailingComma;
+  }
+}
+
+public sealed record ServiceStateBlock(
+  GreenToken OpenAngle,
+  StructuralArray<ServiceStateField> Fields,
+  GreenToken CloseAngle,
+  GreenToken Terminator)
+  : GreenNode(SyntaxKind.FieldList, OpenAngle.Offset)
+{
+  public override int FullWidth => Terminator.EndOffset - OpenAngle.Offset;
+  public override IEnumerable<GreenNode> GetChildren()
+  {
+    yield return OpenAngle;
+    foreach (ServiceStateField f in Fields)
+      yield return f;
+    yield return CloseAngle;
+    yield return Terminator;
   }
 }

@@ -44,5 +44,7 @@ public class ProtocolServiceHeaderTests
     var m = Parse(src);
     var decl = Assert.IsType<ServiceDeclaration>(m.Members.First());
     Assert.Equal(2, decl.Implements.Count);
+    Assert.NotNull(decl.Implements[0].TrailingPlus);
+    Assert.Null(decl.Implements[1].TrailingPlus);
   }
 }

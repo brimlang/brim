@@ -59,11 +59,24 @@ SourceText
 - Expression precedence isolated in future module.
 - Predictability: Because lexing is greedy and run-collapsing, prediction tables can rely on small k (≤4) and stable first tokens (e.g., `<<`, `::=`, `:=`, `.[{]`, `^{`, `[[`, etc.). Design grammar around these stable starters rather than whitespace-sensitive sequences.
 
+### Token Preservation Rule
+- Every token produced by SignificantProducer must appear in the Green tree, in lexical order.
+- Leading trivia attaches to the following GreenToken; there is no trailing trivia. Terminators and comments are standalone GreenTokens at their source positions.
+- All delimited forms must keep their delimiters as explicit GreenTokens on the owning node.
+- All comma- or plus-separated lists must preserve separators by using typed element nodes that carry an optional trailing separator token. Never drop separators by storing raw children as `GreenNode` only.
+- A token-order regression in `tests/Brim.Parse.Tests/TokenOrderRegressionTests.cs` verifies that the flattened GreenToken stream matches the Significant token stream.
+
 ## Syntax Tree Model
 - Single layer; nodes/tokens immutable (span = first..last child).
 - Tokens carry offset, width, line, column, leading trivia list.
 - No red overlay; do not resurrect dual model.
 - Structural nodes are strongly typed records/classes.
+
+### Delimited List Helper
+- For lists whose items are type nodes wrapped in element records with an optional trailing token (e.g., function parameters, generic arguments, service protocols, named tuple elements), use the helper:
+  - `Delimited.ParseCommaSeparatedTypes(p, parseType, (node, comma) => new Element(node, comma), closeKinds)`
+  - Define element as `sealed record Element(GreenNode TypeNode, GreenToken? TrailingComma)` (or `TrailingPlus`).
+- For lists with richer element shape (e.g., fields `name : Type`), the element parser should attach its own trailing separator; the container parses open/close and iterates until `element.TrailingX is null` or end.
 
 ## Diagnostics System
 - Value-type entries; max 512 (flood cap) → last slot = `TooManyErrors` sentinel.

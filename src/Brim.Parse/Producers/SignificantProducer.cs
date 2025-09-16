@@ -1,3 +1,5 @@
+using Brim.Parse.Collections;
+
 namespace Brim.Parse.Producers;
 
 /// <summary>

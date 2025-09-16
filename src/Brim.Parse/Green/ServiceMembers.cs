@@ -1,13 +1,16 @@
+using Brim.Parse.Collections;
+
 namespace Brim.Parse.Green;
 
 public sealed record ServiceParam(
   GreenToken Name,
   GreenToken Colon,
-  GreenNode Type)
+  GreenNode Type,
+  GreenToken? TrailingComma)
   : GreenNode(SyntaxKind.FieldDeclaration, Name.Offset)
 {
-  public override int FullWidth => Type.EndOffset - Name.Offset;
-  public override IEnumerable<GreenNode> GetChildren() { yield return Name; yield return Colon; yield return Type; }
+  public override int FullWidth => (TrailingComma?.EndOffset ?? Type.EndOffset) - Name.Offset;
+  public override IEnumerable<GreenNode> GetChildren() { yield return Name; yield return Colon; yield return Type; if (TrailingComma is not null) yield return TrailingComma; }
 }
 
 public sealed record ServiceCtorHeader(

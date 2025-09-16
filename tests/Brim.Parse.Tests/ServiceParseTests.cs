@@ -14,6 +14,8 @@ public class ServiceParseTests
     var td = Assert.IsType<TypeDeclaration>(m.Members.First());
     var sv = Assert.IsType<ServiceShape>(td.TypeNode);
     Assert.Equal(2, sv.Protocols.Count);
+    Assert.NotNull(sv.Protocols[0].TrailingComma);
+    Assert.NotNull(sv.Protocols[1].TrailingComma);
   }
 
   [Fact]
@@ -25,7 +27,7 @@ public class ServiceParseTests
     Assert.NotNull(impl);
     Assert.Contains("IntService", impl!.ServiceRef.GetText(src));
     Assert.Equal("i", impl.ReceiverIdent.GetText(src));
-    Assert.Equal(2, impl.StateFields.Count);
+    Assert.Equal(2, impl.State.Fields.Count);
   }
 
   [Fact]
@@ -35,6 +37,6 @@ public class ServiceParseTests
     var m = Parse(src);
     var impl = m.Members.OfType<ServiceImpl>().FirstOrDefault();
     Assert.NotNull(impl);
-    Assert.Empty(impl!.StateFields);
+    Assert.Empty(impl!.State.Fields);
   }
 }

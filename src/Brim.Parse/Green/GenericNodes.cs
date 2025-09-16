@@ -1,3 +1,5 @@
+using Brim.Parse.Collections;
+
 namespace Brim.Parse.Green;
 
 public sealed record GenericParameterList(
@@ -20,7 +22,7 @@ public sealed record GenericParameter(
   ConstraintList? Constraints,
   GreenToken? TrailingComma) : GreenNode(SyntaxKind.GenericParameter, Name.Offset)
 {
-  public override int FullWidth => (TrailingComma?.EndOffset ?? (Constraints?.EndOffset ?? Name.EndOffset)) - Name.Offset;
+  public override int FullWidth => (TrailingComma?.EndOffset ?? Constraints?.EndOffset ?? Name.EndOffset) - Name.Offset;
   public override IEnumerable<GreenNode> GetChildren()
   {
     yield return Name;
@@ -31,13 +33,13 @@ public sealed record GenericParameter(
 
 public sealed record ConstraintList(
   GreenToken Colon,
-  StructuralArray<GreenNode> Constraints) : GreenNode(SyntaxKind.ConstraintList, Colon.Offset)
+  StructuralArray<ConstraintRef> Constraints) : GreenNode(SyntaxKind.ConstraintList, Colon.Offset)
 {
   public override int FullWidth => Constraints.Count == 0 ? Colon.FullWidth : Constraints[^1].EndOffset - Colon.Offset;
   public override IEnumerable<GreenNode> GetChildren()
   {
     yield return Colon;
-    foreach (GreenNode c in Constraints) yield return c;
+    foreach (ConstraintRef c in Constraints) yield return c;
   }
 }
 

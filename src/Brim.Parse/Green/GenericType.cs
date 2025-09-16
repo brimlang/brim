@@ -1,3 +1,5 @@
+using Brim.Parse.Collections;
+
 namespace Brim.Parse.Green;
 
 public sealed record GenericType(
@@ -22,34 +24,23 @@ GreenNode(SyntaxKind.GenericType, Name.Offset)
   {
     GreenToken open = p.ExpectSyntax(SyntaxKind.GenericOpenToken);
     bool empty = p.MatchRaw(RawKind.RBracket);
-
-    ImmutableArray<GenericArgument>.Builder builder = ImmutableArray.CreateBuilder<GenericArgument>();
-    if (!empty)
-    {
-      while (true)
-      {
-        GreenToken headTok = p.ExpectSyntax(SyntaxKind.IdentifierToken);
-        GreenNode typeNode = headTok;
-        if (p.MatchRaw(RawKind.LBracket))
+    StructuralArray<GenericArgument> arr =
+      Delimited.ParseCommaSeparatedTypes(
+        p,
+        static p2 =>
         {
-          // nested generic
-          typeNode = ParseAfterName(p, headTok);
-        }
-        GreenToken? trailing = null;
-        if (p.MatchRaw(RawKind.Comma))
-          trailing = p.ExpectSyntax(SyntaxKind.CommaToken);
-        builder.Add(new GenericArgument(typeNode, trailing));
-        if (trailing is null) break; // no comma => end
-        if (p.MatchRaw(RawKind.RBracket) || p.MatchRaw(RawKind.Eob)) break; // trailing comma on last
-        continue;
-      }
-    }
+          GreenToken headTok2 = p2.ExpectSyntax(SyntaxKind.IdentifierToken);
+          GreenNode typeNode2 = headTok2;
+          if (p2.MatchRaw(RawKind.LBracket))
+            typeNode2 = ParseAfterName(p2, headTok2);
+          return typeNode2;
+        },
+        static (n, c) => new GenericArgument(n, c),
+        RawKind.RBracket);
 
     GreenToken close = p.ExpectSyntax(SyntaxKind.GenericCloseToken);
     if (empty)
       p.AddDiagEmptyGeneric(open);
-
-    StructuralArray<GenericArgument> arr = [.. builder];
     return new GenericArgumentList(open, arr, close);
   }
 }

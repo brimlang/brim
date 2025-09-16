@@ -43,6 +43,21 @@ public class TypeAliasParseTests
   }
 
   [Fact]
+  public void GenericParam_Constraints_Preserve_Plus_Separators()
+  {
+    string src = "[[m]];\nAlias[T: C1 + C2] := X;\n";
+    var m = Parse(src);
+    var td = Assert.IsType<TypeDeclaration>(m.Members.First());
+    var gp = td.Name.GenericParams!;
+    Assert.Single(gp.Parameters);
+    var p0 = gp.Parameters[0];
+    Assert.NotNull(p0.Constraints);
+    Assert.Equal(2, p0.Constraints!.Constraints.Count);
+    Assert.NotNull(p0.Constraints!.Constraints[0].TrailingPlus);
+    Assert.Null(p0.Constraints!.Constraints[1].TrailingPlus);
+  }
+
+  [Fact]
   public void Alias_GenericArgs_TrailingComma_Allows()
   {
     string src = "[[m]];\nAlias := Outer[Inner,];\n";

@@ -7,8 +7,8 @@ namespace Brim.Parse.Benchmarks;
 [MemoryDiagnoser]
 public class CorpusBenchmarks
 {
-  string[] _files = Array.Empty<string>();
-  string[] _texts = Array.Empty<string>();
+  string[] _files = [];
+  string[] _texts = [];
 
   [Params(false, true)]
   public bool IncludeSynthetic { get; set; }
@@ -17,16 +17,11 @@ public class CorpusBenchmarks
   public void Setup()
   {
     string? root = Environment.GetEnvironmentVariable("BRIM_BENCH_CORPUS");
-    if (!string.IsNullOrWhiteSpace(root) && Directory.Exists(root))
-    {
-      _files = Directory.GetFiles(root, "*.brim", SearchOption.AllDirectories);
-    }
-    else
-    {
-      _files = Array.Empty<string>();
-    }
+    _files = !string.IsNullOrWhiteSpace(root) && Directory.Exists(root)
+      ? Directory.GetFiles(root, "*.brim", SearchOption.AllDirectories)
+      : [];
 
-    List<string> texts = new();
+    List<string> texts = [];
     foreach (string f in _files)
     {
       try { texts.Add(File.ReadAllText(f)); }
@@ -39,7 +34,7 @@ public class CorpusBenchmarks
       texts.Add(ParserBenchmarks.BuildModule(200));
     }
 
-    _texts = texts.ToArray();
+    _texts = [.. texts];
   }
 
   [Benchmark]

@@ -72,4 +72,15 @@ public class TrailingCommaTests
     Assert.Single(gt.Arguments.Arguments); // one argument
     Assert.NotNull(gt.Arguments.Arguments[0].TrailingComma);
   }
+
+  [Fact]
+  public void FunctionType_Params_TrailingComma_Allows()
+  {
+    var m = Parse("[[m]];\nF := (A, B,) C;\n");
+    var td = m.Members.OfType<TypeDeclaration>().First();
+    var ft = Assert.IsType<FunctionType>(td.TypeNode);
+    Assert.Equal(2, ft.Parameters.Count);
+    Assert.NotNull(ft.Parameters[0].TrailingComma);
+    Assert.NotNull(ft.Parameters[1].TrailingComma); // trailing on last
+  }
 }

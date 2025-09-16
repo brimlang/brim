@@ -1,3 +1,5 @@
+using Brim.Parse.Collections;
+
 namespace Brim.Parse.Green;
 
 public sealed record ServiceDeclaration(
@@ -7,7 +9,8 @@ public sealed record ServiceDeclaration(
   GreenToken Receiver,
   GreenToken OpenBrace,
   GreenToken CloseBrace,
-  StructuralArray<GreenNode> Implements,
+  GreenToken? ImplementsColon,
+  StructuralArray<ImplementsRef> Implements,
   GreenToken Terminator)
   : GreenNode(SyntaxKind.ServiceDeclaration, Name.Offset)
 {
@@ -20,7 +23,8 @@ public sealed record ServiceDeclaration(
     yield return Receiver;
     yield return OpenBrace;
     yield return CloseBrace;
-    foreach (GreenNode impl in Implements) yield return impl;
+    if (ImplementsColon is not null) yield return ImplementsColon;
+    foreach (ImplementsRef impl in Implements) yield return impl;
     yield return Terminator;
   }
 
@@ -33,10 +37,11 @@ public sealed record ServiceDeclaration(
     GreenToken recv = p.ExpectSyntax(SyntaxKind.IdentifierToken);
     GreenToken open = p.ExpectSyntax(SyntaxKind.OpenBraceToken);
     GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBraceToken);
-    ImmutableArray<GreenNode>.Builder impls = ImmutableArray.CreateBuilder<GreenNode>();
+    ImmutableArray<ImplementsRef>.Builder impls = ImmutableArray.CreateBuilder<ImplementsRef>();
+    GreenToken? implsColon = null;
     if (p.MatchRaw(RawKind.Colon))
     {
-      _ = p.ExpectSyntax(SyntaxKind.ColonToken);
+      implsColon = p.ExpectSyntax(SyntaxKind.ColonToken);
       // ImplementsList: ProtocolRef ('+' ProtocolRef)*
       while (true)
       {
@@ -46,19 +51,16 @@ public sealed record ServiceDeclaration(
         GreenNode tref = head;
         if (p.MatchRaw(RawKind.LBracket) && !p.MatchRaw(RawKind.LBracketLBracket))
           tref = GenericType.ParseAfterName(p, head);
-        impls.Add(tref);
-        if (p.MatchRaw(RawKind.Plus))
-        {
-          _ = p.ExpectRaw(RawKind.Plus);
-          continue;
-        }
+        GreenToken? trailingPlus = null;
+        if (p.MatchRaw(RawKind.Plus)) trailingPlus = new GreenToken(SyntaxKind.PlusToken, p.ExpectRaw(RawKind.Plus));
+        impls.Add(new ImplementsRef(tref, trailingPlus));
+        if (trailingPlus is null) break;
         if (p.Current.CoreToken.Offset == before) break;
-        break;
       }
     }
-    StructuralArray<GreenNode> implArr = [.. impls];
+    StructuralArray<ImplementsRef> implArr = [.. impls];
     GreenToken term = p.ExpectSyntax(SyntaxKind.TerminatorToken);
-    return new ServiceDeclaration(name, colon, hat, recv, open, close, implArr, term);
+    return new ServiceDeclaration(name, colon, hat, recv, open, close, implsColon, implArr, term);
   }
 }
 
@@ -66,7 +68,7 @@ public sealed record MethodSignature(
   DeclarationName Name,
   GreenToken Colon,
   GreenToken OpenParen,
-  StructuralArray<GreenNode> Parameters,
+  StructuralArray<FunctionParameter> Parameters,
   GreenToken CloseParen,
   GreenNode ReturnType,
   GreenToken? TrailingComma)
@@ -89,35 +91,16 @@ public sealed record MethodSignature(
     DeclarationName name = DeclarationName.Parse(p);
     GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
     GreenToken open = p.ExpectSyntax(SyntaxKind.OpenParenToken);
-    ImmutableArray<GreenNode>.Builder @params = ImmutableArray.CreateBuilder<GreenNode>();
-    bool empty = p.MatchRaw(RawKind.RParen);
-    if (!empty)
-    {
-      while (true)
-      {
-        int before = p.Current.CoreToken.Offset;
-        GreenNode ty = TypeExpr.Parse(p);
-        @params.Add(ty);
-        if (p.MatchRaw(RawKind.Comma))
-        {
-          _ = p.ExpectSyntax(SyntaxKind.CommaToken);
-          if (p.MatchRaw(RawKind.RParen) || p.MatchRaw(RawKind.Eob))
-          {
-            break;
-          }
-        }
-        else
-        {
-          break;
-        }
-        if (p.Current.CoreToken.Offset == before) break;
-      }
-    }
-    StructuralArray<GreenNode> plist = [.. @params];
+    StructuralArray<FunctionParameter> plist =
+      Delimited.ParseCommaSeparatedTypes(
+        p,
+        static p2 => TypeExpr.Parse(p2),
+        static (n, c) => new FunctionParameter(n, c),
+        RawKind.RParen);
     GreenToken close = p.ExpectSyntax(SyntaxKind.CloseParenToken);
     GreenNode ret = TypeExpr.Parse(p);
-    GreenToken? trailing = null;
-    if (p.MatchRaw(RawKind.Comma)) trailing = p.ExpectSyntax(SyntaxKind.CommaToken);
-    return new MethodSignature(name, colon, open, plist, close, ret, trailing);
+    GreenToken? listTrailing = null;
+    if (p.MatchRaw(RawKind.Comma)) listTrailing = p.ExpectSyntax(SyntaxKind.CommaToken);
+    return new MethodSignature(name, colon, open, plist, close, ret, listTrailing);
   }
 }

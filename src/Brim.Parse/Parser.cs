@@ -179,6 +179,8 @@ public sealed partial class Parser(
   internal void AddDiagEmptyNamedTupleElementList() => _diags.Add(Diagnostic.Unexpected(Current.CoreToken, [RawKind.Identifier]));
   internal void AddDiagInvalidGenericConstraint() => _diags.Add(Diagnostic.InvalidGenericConstraint(Current.CoreToken));
 
+  internal StallGuard GetStallGuard() => new(this);
+
   static bool IsStandaloneSyntax(RawKind kind) => kind is RawKind.Terminator or RawKind.CommentTrivia;
 
   void Advance() => _look.Advance();
@@ -231,5 +233,22 @@ public sealed partial class Parser(
         : new ParserProgress(currentOffset, 0);
 
     public ParserProgress Update(TokenView tok) => Update(tok.Offset);
+  }
+
+  /// <summary>
+  /// Represents a guard that checks if the parser's position has stalled (not advanced).
+  /// </summary>
+  /// <remarks>
+  /// Captures the parser's current token offset at construction and provides a property to check if the parser has advanced.
+  /// </remarks>
+  /// <param name="p">The parser whose position to monitor.</param>
+  internal readonly ref struct StallGuard(Parser p)
+  {
+    private readonly int _before = p.Current.CoreToken.Offset;
+
+    /// <summary>
+    /// Gets a value indicating whether the parser has stalled (i.e., not advanced since construction).
+    /// </summary>
+    public bool Stalled => _before == p.Current.CoreToken.Offset;
   }
 }

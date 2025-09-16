@@ -10,19 +10,12 @@ public sealed partial class Parser
   [
     new(ExportDirective.Parse, RawKind.LessLess),
     new(ImportDeclaration.Parse, (RawKind.Identifier, RawKind.ColonColonEqual, RawKind.Identifier)),
-    // Service declarations (header-only for now)
     new(ServiceDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.Hat)),
-    // Service implementation blocks: '<' ServiceRef ',' recv '>' '{' ...
     new(ServiceImpl.Parse, RawKind.Less),
-    // Type declarations (generic heads and specific body openers)
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.Any)),
-    // Alias form: Name := TypeName (Identifier ...)
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.Identifier)),
-    // Protocol type: Name := .{ ... }
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.StopLBrace)),
-    // Service type: Name := ^{ ProtoRef, ... }
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.Hat)),
-    // Function type: Name := '(' TypeList? ')' TypeExpr
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.LParen)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.PercentLBrace)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.PipeLBrace)),
@@ -63,12 +56,14 @@ public sealed partial class Parser
     SyntaxKind.EobToken => RawKind.Eob,
     SyntaxKind.ColonToken => RawKind.Colon,
     SyntaxKind.TypeBindToken => RawKind.ColonEqual,
+    SyntaxKind.LessToken => RawKind.Less,
+    SyntaxKind.GreaterToken => RawKind.Greater,
+    SyntaxKind.PlusToken => RawKind.Plus,
     SyntaxKind.CommaToken => RawKind.Comma,
     SyntaxKind.ErrorToken => RawKind.Error,
     SyntaxKind.NamedTupleToken => RawKind.HashLBrace,
     _ => RawKind.Error
   };
-
 
   static SyntaxKind MapStandaloneSyntaxKind(RawKind kind) => kind switch
   {
