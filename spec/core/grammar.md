@@ -171,12 +171,13 @@ MethodSig       ::= Ident GenericParams? ':(' TypeList? ')' TypeExpr
 --   Svc[T?] := ^{ ProtoRef (, ProtoRef)* (',')? }
 
 -- Implementation blocks (term space) — structure only (bodies elided here):
-ImplBlock       ::= '^' ServiceRef ReceiverBinder CtorParamsOpt '{' InitDecl* Member* '}'
+ImplBlock       ::= '^' ServiceRef ReceiverBinder CtorParamsOpt '{' InitDecl* DtorOpt MethodImpl* '}'
 ServiceRef      ::= Ident GenericArgs?
 ReceiverBinder  ::= '<' (Ident | '_') '>'
 CtorParamsOpt   ::= /* empty */ | '(' ParamDeclList? ')'
 InitDecl        ::= ('@')? Ident ':' TypeExpr '=' Expr
-Member          ::= MethodImpl | DtorImpl
+Member          ::= MethodImpl
+DtorOpt         ::= /* empty */ | DtorImpl
 MethodImpl      ::= Ident '(' ParamDeclList? ')' ReturnType BlockExpr
 DtorImpl        ::= '~' BlockExpr
 ```

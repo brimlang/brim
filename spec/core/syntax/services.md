@@ -27,14 +27,14 @@ IntService[T] := ^{ Adder[T], Fmt, }
 ```
 
 ### Implementation block (combined)
-- **Form:** `^Service[T?] <recv> (params)? { InitDecl* Member* }`
+- **Form:** `^Service[T?] <recv> (params)? { InitDecl* DtorOpt Method* }`
 - Receiver binder is explicit and mandatory; use `<_>` if intentionally unused.
 - Initialization comes first and contains field declarations with initializers. Zero‑state services omit the section entirely.
 
 State and members:
 - `InitDecl    ::= ('@')? Ident ':' TypeExpr '=' Expr` — `@` marks mutable post‑ctor; init required
 - `MethodImpl  ::= Ident '(' ParamDeclList? ')' ReturnType BlockExpr`
-- `DtorImpl    ::= '~' BlockExpr` — simplified destructor (no params)
+- `DtorImpl    ::= '~' BlockExpr` — simplified destructor (no params); if present, it must appear immediately after the init section and before any methods.
 
 Rules:
 - If any fields exist, they must be declared and initialized exactly once in the init section.

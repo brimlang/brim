@@ -90,18 +90,16 @@ public sealed record ServiceImpl(
       inits.Add(new ServiceFieldInit(at, fname, colon, ftype, eq, term));
     }
 
-    // Members: methods and simplified destructor; skip bodies
+    // Optional destructor immediately after init section
     ImmutableArray<GreenNode>.Builder memb = ImmutableArray.CreateBuilder<GreenNode>();
+    if (p.MatchRaw(RawKind.Tilde))
+      memb.Add(ParseDtorHeaderAndSkipBody(p));
+
+    // Members: methods only; skip bodies
     while (!p.MatchRaw(RawKind.RBrace) && !p.MatchRaw(RawKind.Eob))
     {
       if (p.MatchRaw(RawKind.Terminator)) { _ = p.ExpectRaw(RawKind.Terminator); continue; }
       if (p.MatchRaw(RawKind.LBrace)) { _ = p.ExpectSyntax(SyntaxKind.OpenBraceToken); SkipBlock(p); continue; }
-
-      if (p.MatchRaw(RawKind.Tilde))
-      {
-        memb.Add(ParseDtorHeaderAndSkipBody(p));
-        continue;
-      }
 
       if (p.MatchRaw(RawKind.Identifier))
       {

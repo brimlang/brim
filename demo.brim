@@ -65,6 +65,6 @@ SimpleSvc := ^{ Proto, }
 ^StatefulSvc<i>(){
   @a :i32 = 0i32
   @b :u64 = 0u64
-  swap() unit { let tmp = i.a; @i.a = i.b; @i.b = tmp }
   ~ { }
+  swap() unit { let tmp = i.a; @i.a = i.b; @i.b = tmp }
 }
