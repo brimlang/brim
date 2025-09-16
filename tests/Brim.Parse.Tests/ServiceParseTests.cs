@@ -39,7 +39,7 @@ public class ServiceParseTests
     Assert.NotNull(impl);
     Assert.Empty(impl!.InitDecls);
   }
-  
+
   [Fact]
   public void ServiceImpl_Ignores_Destructor_After_Methods()
   {
