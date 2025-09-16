@@ -49,14 +49,14 @@ IntService[T]<i>{
   < @accum :T, @call_count :u64, >
 
   ^(seed :T) {
-    i.accum = seed
-    i.call_count = 0u64
+    @i.accum = seed
+    @i.call_count = 0u64
   }
 
   add(x :T, y :T) T {
     r = x + y
-    i.accum = i.accum + r
-    i.call_count = i.call_count + 1
+    @i.accum = i.accum + r
+    @i.call_count = i.call_count + 1
     r
   }
 

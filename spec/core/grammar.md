@@ -72,7 +72,7 @@ SimpleExpr      ::= Ident
 
 BlockExpr       ::= '{' BlockBody '}'
 BlockBody       ::= (Statement StmtSep+)* Expr?      -- final expression optional
-Statement       ::= ValueConstDecl | ValueMutDecl | LifeBind | Expr
+Statement       ::= AssignmentStmt | ValueConstDecl | ValueMutDecl | LifeBind | Expr
 StmtSep         ::= Terminator
 
 MemberExpr      ::= NonLiteralPrimary '.' Ident ( '(' ArgList? ')' )?   -- field or method; no literal receiver
@@ -187,3 +187,8 @@ At statement start (immediately after `{` or any Terminator):
 - If the next significant tokens are `Identifier ':'`, parse a const value declaration or function header.
 - If the next tokens are `'@' Identifier ':'`, parse a mutable value declaration.
 - Otherwise, parse an expression statement. Member/field access in expression space is `expr.member(...)` and does not compete with `:`.
+-- Write-intent assignment (mutables only)
+AssignmentStmt  ::= '@' LValue '=' Expr
+LValue          ::= Identifier | MemberAccess
+MemberAccess    ::= NonLiteralPrimary '.' Ident ( '(' ArgList? ')' )?
+NonLiteralPrimary ::= Ident | '(' Expr ')' | ConstructorExpr | ListCtor
