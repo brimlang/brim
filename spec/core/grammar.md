@@ -74,7 +74,8 @@ BlockBody       ::= (Statement StmtSep+)* Expr?      -- final expression optiona
 Statement       ::= ConstBind | VarBind | LifeBind | Expr
 StmtSep         ::= Terminator
 
-MemberExpr      ::= Expr ':' Ident ( '(' ArgList? ')' )?   -- field or method
+MemberExpr      ::= NonLiteralPrimary '.' Ident ( '(' ArgList? ')' )?   -- field or method; no literal receiver
+NonLiteralPrimary ::= Ident | '(' Expr ')' | ConstructorExpr | ListCtor
 CallExpr        ::= Expr '(' ArgList? ')'
 ArgList         ::= Expr (',' Expr)* (',')?
 
@@ -183,4 +184,4 @@ DtorImpl        ::= '~()' BlockExpr
 ## Prediction (Statement Start)
 At statement start (immediately after `{` or any Terminator):
 - If the next significant tokens are `Identifier ':'`, parse a binding header (const/var/function/type) according to the binding operator that follows (`=`, `.=` or `:=`).
-- Otherwise, parse an expression statement. Member/field access in expression space is always `expr:member(...)`.
+- Otherwise, parse an expression statement. Member/field access in expression space is `expr.member(...)` and does not compete with `:`.

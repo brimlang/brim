@@ -19,7 +19,7 @@ Status: draft (informative). Canonical meaning is defined in accepted core specs
 | `-- comment` | comment | To end of line; single token |
 | Terminator (newline, `;`) | separator | Collapsed runs; single token |
 
-Greedy compound glyphs: operators and delimiters are lexed with longest-match semantics using an ASCII table. Sequences up to 3 characters (e.g., `::=`, `<<`, `|{`, `*{`, `!!{`, `[[`, `]]`, `.=`, `??`) are matched as single tokens (a 4th char may be added in future). Example: `[[` is a single token and never two `[` tokens.
+Greedy compound glyphs: operators and delimiters are lexed with longest-match semantics using an ASCII table. Sequences up to 3 characters (e.g., `::=`, `<<`, `|{`, `*{`, `!!{`, `[[`, `]]`, `.=`, `.{`, `??`) are matched as single tokens (a 4th char may be added in future). Example: `[[` is a single token and never two `[` tokens.
 
 ## Bindings & Modules
 | Surface | Category | Notes |
@@ -43,7 +43,7 @@ Greedy compound glyphs: operators and delimiters are lexed with longest-match se
 ## Member & Paths
 | Surface | Category | Notes |
 |---|---|---|
-| `expr:member(args?)` | expression | Field/method/module member |
+| `expr.member(args?)` | expression | Field/method/module member; not allowed on literals |
 | `[[pkg::ns]]` | path-literal | Module header only |
 | `pkg::ns::Name` | path | Used in headers and types |
 

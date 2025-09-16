@@ -73,12 +73,12 @@ io ::= std::io          -- import required for term-space access
 
 result = add(1i32, 2i32)
 next   = fact(result)
-logger:to_string()
-io:write("stdout", "hi")
+logger.to_string()
+io.write("stdout", "hi")
 ```
 
 Calls always supply parentheses; arguments are comma‑separated expressions.
-Member access uses a colon: `expr:member(args?)`. Module members must be accessed via an import alias; direct `pkg::ns:member` is disallowed in core.
+Member access uses a dot: `expr.member(args?)`. Member access on literals is not allowed. Module members must be accessed via an import alias; direct `pkg::ns.member` is disallowed in core.
 
 ## Constructor Expressions
 See `Aggregate Types` spec for structural details. For full grammar, see `spec/core/grammar.md` (Expressions, Aggregates, Patterns).
@@ -151,7 +151,8 @@ FunctionExpr    ::= "(" ParamList? ")" "=>" (Expr | BlockExpr)
 ParamList       ::= Param ("," Param)*
 Param           ::= Identifier (":" Type)?
 CallExpr        ::= Expr "(" ArgList? ")"
-Postfix         ::= Primary ( ":" Identifier ( "(" ArgList? ")" )? )*
+Postfix         ::= NonLiteralPrimary ( "." Identifier ( "(" ArgList? ")" )? )*
+NonLiteralPrimary ::= Identifier | ParenExpr | ConstructorExpr | ListCtor
 ArgList         ::= Expr ("," Expr)*
 ConstructorExpr ::= OptionResultCtor
                   | AggregateCtor
@@ -171,8 +172,7 @@ GuardOpt        ::= /* empty */ | "??" Expr
 
 -- Compile‑time cast/assertion (type‑directed)
 CastExpr        ::= Expr ":>" Type
-AscribeExpr     ::= ParenExpr ":" Type | ExprAscribeUnambiguous
-ExprAscribeUnambiguous ::= Expr ":" Type   -- only when not parseable as member access; see Notes
+AscribeExpr     ::= ParenExpr ":" Type
 
 StmtSep         ::= NEWLINE | ";"
 ```
@@ -181,8 +181,9 @@ Notes:
 - `Statement` is syntactically either a binding or expression; bindings appear only inside blocks.
 - Precedence is currently trivial: forms are distinguished by leading tokens; there are no chained infix operators yet.
 - Future operator introduction will refine `Expr` and precedence rules without invalidating existing forms.
-- Statement start prediction inside blocks: Immediately after `{` or any Terminator, the parser is at statement start. If the next significant tokens are `Identifier ':'`, parse a binding header; otherwise parse an expression statement. This keeps `expr:member(...)` unambiguous in expression space while allowing `name :Type = expr`/`.= expr` at line start in any scope.
-- Ascription vs member access disambiguation: `expr:member` is member access. To ascribe to a bare named type without additional type tokens, parenthesize the operand: `(expr) : Type`. Ascriptions that begin with a non-member head (e.g., `list[...]`, function type `(A) R`) are unambiguous.
+- Statement start prediction inside blocks: Immediately after `{` or any Terminator, the parser is at statement start. If the next significant tokens are `Identifier ':'`, parse a binding header; otherwise parse an expression statement. Member access in expression space uses `.` and does not compete with `:`.
+- Ascription vs member access: Member access is `expr.member`. Ascriptions use `:` and are limited to binding headers or parenthesized expressions `(expr) : Type`.
+- DecimalLiteral includes fractional forms like `1.23`. Member access on literals is not allowed; e.g., `1.to_string` is invalid.
 
 ## Examples
 

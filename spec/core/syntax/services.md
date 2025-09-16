@@ -40,7 +40,7 @@ State and members:
 
 Rules:
 - All declared fields must be assigned exactly once in every constructor before any read.
-- Field writes are allowed only inside service impls on the bound receiver: `recv:field .= expr`.
+- Field writes are allowed only inside service impls on the bound receiver: `recv.field .= expr`.
 - Outside impls, the language remains whole‑value rebinding only (no field mutation).
 
 Example:
@@ -49,18 +49,18 @@ IntService[T]<i>{
   < accum :T, call_count :u64, >
 
   ^(seed :T) {
-    i:accum .= seed
-    i:call_count .= 0u64
+    i.accum .= seed
+    i.call_count .= 0u64
   }
 
   add(x :T, y :T) T {
     r = x + y
-    i:accum .= i:accum + r
-    i:call_count .= i:call_count + 1
+    i.accum .= i.accum + r
+    i.call_count .= i.call_count + 1
     r
   }
 
-  to_str() str { sfmt:itoa(i:accum) }
+  to_str() str { sfmt.itoa(i.accum) }
   fmt(s :str) str { panic("not implemented") }
   ~() { }
 }
@@ -99,6 +99,6 @@ Logger :^log{ target :str } :Fmt = {
 
 main :() str = {
   logger ~= Logger("stdout")
-  logger:to_string()
+  logger.to_string()
 }
 ```

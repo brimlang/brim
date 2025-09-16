@@ -54,7 +54,7 @@ inc :(x :i32) i32 { x + 1 }
 -- Generic function
 map[T, U] :((T) U, list[T]) list[U] = (f, xs) {
   xs =>
-    (h, ..t) => std::list:concat(list{ f(h) }, map(f, t))
+    (h, ..t) => std::list.concat(list{ f(h) }, map(f, t))
     ()       => list{}
 }
 ```

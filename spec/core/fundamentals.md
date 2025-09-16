@@ -93,7 +93,7 @@ limit := 0
 -- **Exports:** `<< Symbol` per line exports the symbol’s entire surface.
   - Only const bound symbols may be exported.
   - There are no implicit exports, and no wildcard exports.
--- **Imports:** `alias ::= pkg::ns::path` (module binding) anywhere at top level. Imports are required to use module members in term space; direct path calls like `pkg::ns:func()` are disallowed in core. Per‑item aliases use ordinary const binds: `write = io:write`.
+-- **Imports:** `alias ::= pkg::ns::path` (module binding) anywhere at top level. Imports are required to use module members in term space; direct path calls like `pkg::ns.func()` are disallowed in core. Per‑item aliases use ordinary const binds: `write = io.write`.
   - Re-export is not allowed.
 - **State:** top‑level `.=` bindings with literal/aggregate initializers.
 - **Shadowing**: const bound symbols cannot be shadowed.
@@ -166,13 +166,15 @@ Runes:
 
 - Use `expr :> Type` for explicit, compile‑time checked conversions.
 - If the conversion cannot be proven viable (per the type system’s rules for coercion/narrowing/widening), a diagnostic is emitted. There are no runtime casts in core.
-- Expression‑level ascription `:Type` is allowed to assert/check the type without conversion. To avoid ambiguity with member access `expr:member`, ascribe either with a parenthesized operand `(expr) : Type`, or with a type head that cannot be a member (e.g., `list[...]`).
+- Expression‑level ascription `:Type` is allowed to assert/check the type without conversion. Ascriptions and member access are unambiguous: member access uses `.` (e.g., `expr.member`), while general ascription, when used, should parenthesize the operand `(expr) : Type`.
 
 ## Member Access & Ascription
 
-- Member access uses a colon in expression space: `expr:member(args?)`.
+- Member access uses a dot in expression space: `expr.member(args?)`. Member access on literals is not allowed.
 - Paths use double colon: `pkg::ns::Name`.
-- Type ascription is only allowed in binding headers as `Ident :Type` (one space before colon, none after). General `expr : Type` is not part of core.
+- Type ascription:
+  - In headers: `Ident :Type` (one space before colon, none after).
+  - In expressions: parenthesize the operand `(expr) : Type`.
 
 ## Spec Map
 

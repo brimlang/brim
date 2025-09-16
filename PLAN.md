@@ -9,8 +9,23 @@
         - [ ] Gaps to fix to meet the rule uniformly:
             - [ ] FunctionType parameter list: currently stores `StructuralArray<GreenNode>` (commas dropped). Needs element nodes with optional `TrailingComma`.
             - [ ] ServiceShape protocol refs list: currently drops commas. Needs element nodes with optional `TrailingComma`.
-            - [ ] Service impl:
-                - [ ] StateBlock field list: currently drops commas. `ServiceStateField` should carry optional `TrailingComma`.
+    - [ ] Service impl:
+        - [ ] StateBlock field list: currently drops commas. `ServiceStateField` should carry optional `TrailingComma`.
+
+- [ ] **PRIORITY PHASE – Module-level typed value bindings**
+    - [ ] Surface: support `Ident ':' Type ('=' | '.=') Initializer Terminator` at module scope.
+    - [ ] Parser: add a Module member prediction for `Identifier ':'` followed by `=` or `.=`; parse header and capture initializer through the next Terminator.
+        - [ ] Phase 0 initializer: accept literals and aggregate constructors; otherwise token-skip to Terminator (structure-only, no expression layer yet).
+        - [ ] Phase 1: wire initializer to expression parser once available.
+    - [ ] AST: introduce a `ValueDeclaration` green node carrying `Name`, `Colon`, `Type`, `BindOp` (`=` or `.=`), `InitializerTokens`, and `Terminator`.
+    - [ ] Diagnostics:
+        - [ ] Missing initializer after `=`/`.=`.
+        - [ ] Reject exports of var-bound symbols; only const-bound (`=`) may be exported.
+        - [ ] Consistent error for stray `:` without a following `=`/`.=` at module scope.
+    - [ ] Tests:
+        - [ ] Parse: `pi :f32 = 3.14`, `limit :i32 .= 10`.
+        - [ ] Error: `x :i32` (no initializer), `<< varName` (exporting var), malformed operators.
+    - [ ] Docs: update Core Grammar (Module members), Fundamentals examples, and Expressions linkage once expression parsing lands.
 - [ ] **Phase 4 (Option/Result Type Postfix)**
     - [ ] Add type parser support for postfix `?` / `!` creating `OptionTypeNode` / `ResultTypeNode`.
     - [ ] Decide and document chaining precedence (likely restrict ambiguous multi-postfix chains).
