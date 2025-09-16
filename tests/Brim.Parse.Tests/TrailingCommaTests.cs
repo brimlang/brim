@@ -78,7 +78,7 @@ public class TrailingCommaTests
   {
     var m = Parse("[[m]];\nF := (A, B,) C;\n");
     var td = m.Members.OfType<TypeDeclaration>().First();
-    var ft = Assert.IsType<FunctionType>(td.TypeNode);
+    var ft = Assert.IsType<FunctionShape>(td.TypeNode);
     Assert.Equal(2, ft.Parameters.Count);
     Assert.NotNull(ft.Parameters[0].TrailingComma);
     Assert.NotNull(ft.Parameters[1].TrailingComma); // trailing on last

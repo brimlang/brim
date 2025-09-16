@@ -1,4 +1,5 @@
 using System.CommandLine;
+using System.Text;
 using Brim.Parse;
 using Brim.Parse.Collections;
 using Brim.Parse.Green;
@@ -21,11 +22,18 @@ class ParseCommand : Command
     Arity = ArgumentArity.ZeroOrOne,
   };
 
+  static readonly Option<bool> _showSourceOption = new("--source", "-s")
+  {
+    Description = "Display labeled source with line/column character guides",
+    Arity = ArgumentArity.ZeroOrOne,
+  };
+
   internal ParseCommand() : base("parse")
   {
     Description = "Parse a Brim source file and display the parse tree";
     Arguments.Add(_fileArgument);
     Options.Add(_diagnosticsOption);
+    Options.Add(_showSourceOption);
     SetAction(Handle);
   }
 
@@ -33,6 +41,7 @@ class ParseCommand : Command
   {
     string file = parseResult.GetValue(_fileArgument)!;
     bool showDiagnostics = parseResult.GetValue(_diagnosticsOption);
+    bool showSource = parseResult.GetValue(_showSourceOption);
     if (!File.Exists(file))
     {
       AnsiConsole.MarkupLine($"[red]File not found:[/] {file}");
@@ -45,7 +54,52 @@ class ParseCommand : Command
 
     AnsiConsole.MarkupLine("[bold]Parse Tree:[/]");
     AnsiConsole.Write(GreenNodeFormatter.RenderTree(source, module));
-    AnsiConsole.WriteLine(module.GetText(source));
+    if (showSource)
+    {
+      AnsiConsole.WriteLine();
+      string sourceText = source;
+
+      List<string> lines = [];
+      StringBuilder lineBuilder = new();
+      for (int i = 0; i < sourceText.Length; i++)
+      {
+        char ch = sourceText[i];
+        if (ch == '\n')
+        {
+          lineBuilder.Append('\n'); // keep marker to visualize
+          lines.Add(lineBuilder.ToString());
+          lineBuilder.Clear();
+          continue;
+        }
+
+        if (ch == '\r')
+        {
+          // If next is \n we still show both explicitly
+          lineBuilder.Append('\r');
+          continue;
+        }
+
+        lineBuilder.Append(ch);
+      }
+
+      if (lineBuilder.Length > 0)
+        lines.Add(lineBuilder.ToString());
+
+      int lineDigits = Math.Max(2, lines.Count.ToString().Length);
+      AnsiConsole.MarkupLine("[bold]Source[/]");
+      for (int i = 0; i < lines.Count; i++)
+      {
+        string ln = (i + 1).ToString().PadLeft(lineDigits, '0');
+        // Visualize control chars inside line
+        string content = lines[i]
+          .Replace("\r", "␍")
+          .Replace("\n", "␊");
+        content = Markup.Escape(content);
+        AnsiConsole.MarkupLine($"[grey]{ln}[/] {content}");
+      }
+
+      AnsiConsole.WriteLine();
+    }
 
     if (module.Diagnostics.Count == 0)
       AnsiConsole.MarkupLine("[green]No diagnostics.[/]");

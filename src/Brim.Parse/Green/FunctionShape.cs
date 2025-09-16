@@ -2,12 +2,12 @@ using Brim.Parse.Collections;
 
 namespace Brim.Parse.Green;
 
-public sealed record FunctionType(
+public sealed record FunctionShape(
   GreenToken OpenParen,
   StructuralArray<FunctionParameter> Parameters,
   GreenToken CloseParen,
   GreenNode ReturnType)
-  : GreenNode(SyntaxKind.FunctionType, OpenParen.Offset)
+  : GreenNode(SyntaxKind.FunctionShape, OpenParen.Offset)
 {
   public override int FullWidth => ReturnType.EndOffset - OpenParen.Offset;
   public override IEnumerable<GreenNode> GetChildren()
@@ -18,7 +18,7 @@ public sealed record FunctionType(
     yield return ReturnType;
   }
 
-  public static FunctionType Parse(Parser p)
+  public static FunctionShape Parse(Parser p)
   {
     GreenToken open = p.ExpectSyntax(SyntaxKind.OpenParenToken);
     StructuralArray<FunctionParameter> plist =
@@ -29,6 +29,6 @@ public sealed record FunctionType(
         RawKind.RParen);
     GreenToken close = p.ExpectSyntax(SyntaxKind.CloseParenToken);
     GreenNode ret = TypeExpr.Parse(p);
-    return new FunctionType(open, plist, close, ret);
+    return new FunctionShape(open, plist, close, ret);
   }
 }

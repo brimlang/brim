@@ -149,8 +149,6 @@ public static class GreenNodeFormatter
     // Specific token colors
     SyntaxKind.ErrorToken => "[red]",
     SyntaxKind.IdentifierToken => "[cyan]",
-    // All other tokens default to grey for low visual weight
-    _ when kind <= SyntaxKind.EobToken => "[grey]",
 
     // Declarations (types/functions + import/export) magenta
     SyntaxKind.FunctionDeclaration or
@@ -169,16 +167,21 @@ public static class GreenNodeFormatter
     SyntaxKind.Module => "[bold blue]",
     SyntaxKind.ModuleHeader or SyntaxKind.ModulePath => "[blue]",
     SyntaxKind.FieldList => "[teal]",
-    SyntaxKind.Block or SyntaxKind.ParameterList => "[purple]",
+    SyntaxKind.Block or SyntaxKind.ParameterList  => "[purple]",
     SyntaxKind.GenericParameterList or SyntaxKind.GenericArgumentList => "[purple]",
+
+    SyntaxKind.ConstraintList or SyntaxKind.MethodSignature => "[purple3]",
+
     SyntaxKind.GenericType or
-    // Postfix types are considered type nodes (yellow)
     SyntaxKind.StructShape or
     SyntaxKind.UnionShape or
     SyntaxKind.FlagsShape or
     SyntaxKind.NamedTupleShape or
     SyntaxKind.ProtocolShape or
+    SyntaxKind.FunctionShape or
     SyntaxKind.ServiceShape => "[yellow]",
-    _ => "[yellow]"
+
+    // All other tokens default to grey for low visual weight
+    _ => "[grey]",
   };
 }

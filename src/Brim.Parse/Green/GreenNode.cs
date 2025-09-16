@@ -1,5 +1,8 @@
 namespace Brim.Parse.Green;
 
+delegate T ParseFunc<out T>(Parser p) where T : GreenNode;
+delegate GreenNode ParseFunc(Parser p);
+
 interface IParsable<out T> where T : GreenNode
 {
   static abstract T Parse(Parser p);

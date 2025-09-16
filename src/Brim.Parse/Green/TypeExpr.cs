@@ -7,56 +7,39 @@ public static class TypeExpr
 {
   public static GreenNode Parse(Parser p)
   {
-    // Primary by first token
-    GreenNode primary;
-    if (p.MatchRaw(RawKind.PercentLBrace))
+    Opt<ParseFunc> shapeParser = MapShapeParser(p.Current);
+    GreenNode primary = shapeParser.HasValue
+      ? shapeParser.Value(p)
+      : Fallback(p);
+
+    return p.Current.Kind switch
     {
-      primary = StructShape.Parse(p);
-    }
-    else if (p.MatchRaw(RawKind.PipeLBrace))
+      RawKind.Question => new OptionType(primary, p.ExpectSyntax(SyntaxKind.QuestionToken)),
+      RawKind.Bang => new ResultType(primary, p.ExpectSyntax(SyntaxKind.BangToken)),
+      _ => primary,
+    };
+
+    static Opt<ParseFunc> MapShapeParser(TokenView tok) => tok.Kind switch
     {
-      primary = UnionShape.Parse(p);
-    }
-    else if (p.MatchRaw(RawKind.HashLBrace))
+      RawKind.PercentLBrace => new(StructShape.Parse),
+      RawKind.PipeLBrace => new(UnionShape.Parse),
+      RawKind.HashLBrace => new(NamedTupleShape.Parse),
+      RawKind.Ampersand => new(FlagsShape.Parse),
+      RawKind.LParen => new(FunctionShape.Parse),
+      RawKind.StopLBrace => new(ProtocolShape.Parse),
+      RawKind.Hat => new(ServiceShape.Parse),
+      _ => Opt<ParseFunc>.None,
+    };
+
+    static GreenNode Fallback(Parser p)
     {
-      primary = NamedTupleShape.Parse(p);
-    }
-    else if (p.MatchRaw(RawKind.Ampersand))
-    {
-      primary = FlagsShape.Parse(p);
-    }
-    else if (p.MatchRaw(RawKind.LParen))
-    {
-      primary = FunctionType.Parse(p);
-    }
-    else if (p.MatchRaw(RawKind.StopLBrace))
-    {
-      primary = ProtocolShape.Parse(p);
-    }
-    else if (p.MatchRaw(RawKind.Hat))
-    {
-      primary = ServiceShape.Parse(p);
-    }
-    else
-    {
+      GreenNode primary;
       GreenToken head = p.ExpectSyntax(SyntaxKind.IdentifierToken);
       primary = head;
-      if (p.MatchRaw(RawKind.LBracket) && !p.MatchRaw(RawKind.LBracketLBracket))
+      if (p.MatchRaw(RawKind.LBracket))
         primary = GenericType.ParseAfterName(p, head);
-    }
 
-    // Single postfix operator: '?' or '!'
-    if (p.MatchRaw(RawKind.Question))
-    {
-      GreenToken q = p.ExpectSyntax(SyntaxKind.QuestionToken);
-      return new OptionType(primary, q);
+      return primary;
     }
-    if (p.MatchRaw(RawKind.Bang))
-    {
-      GreenToken b = p.ExpectSyntax(SyntaxKind.BangToken);
-      return new ResultType(primary, b);
-    }
-
-    return primary;
   }
 }

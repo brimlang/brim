@@ -45,7 +45,7 @@ public enum SyntaxKind
   FunctionDeclaration,
   ProtocolDeclaration,
   ServiceDeclaration,
-  FunctionType,
+  FunctionShape,
   MethodSignature,
   ExportDirective,
   ImportDeclaration,
