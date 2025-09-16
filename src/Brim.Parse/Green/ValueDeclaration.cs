@@ -1,3 +1,5 @@
+using Brim.Parse.Collections;
+
 namespace Brim.Parse.Green;
 
 public sealed record ValueDeclaration(
@@ -6,6 +8,7 @@ public sealed record ValueDeclaration(
   GreenToken Colon,
   GreenNode TypeNode,
   GreenToken Equal,
+  StructuralArray<GreenNode> Initializer,
   GreenToken Terminator)
   : GreenNode(SyntaxKind.ValueDeclaration, (Atmark ?? Name).Offset)
 {
@@ -18,6 +21,7 @@ public sealed record ValueDeclaration(
     yield return Colon;
     yield return TypeNode;
     yield return Equal;
+    foreach (GreenNode n in Initializer) yield return n;
     yield return Terminator;
   }
 
@@ -32,12 +36,13 @@ public sealed record ValueDeclaration(
     GreenNode typeExpr = TypeExpr.Parse(p);
     GreenToken eq = p.ExpectSyntax(SyntaxKind.EqualToken);
 
+    ImmutableArray<GreenNode>.Builder init = ImmutableArray.CreateBuilder<GreenNode>();
     // Consume initializer tokens structurally until a Terminator (structure-only phase)
     while (!p.MatchRaw(RawKind.Terminator) && !p.MatchRaw(RawKind.Eob))
-      _ = p.ExpectRaw(p.Current.Kind);
+      init.Add(new GreenToken(SyntaxKind.ErrorToken, p.ExpectRaw(p.Current.CoreToken.Kind)));
 
     GreenToken term = p.ExpectSyntax(SyntaxKind.TerminatorToken);
-    return new ValueDeclaration(at, name, colon, typeExpr, eq, term);
+    return new ValueDeclaration(at, name, colon, typeExpr, eq, init, term);
   }
 }
 

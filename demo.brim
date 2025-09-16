@@ -13,27 +13,22 @@ Reply[T] := |{ Good :T, Error :str }
 Perms    := &u8{ read, write, exec }
 Pair     := #{User, Perms}
 
--- syntax-only demo (parses; not a working program)
-
 -- function types and aliases
-FuncT := (A, B) C
+FuncT    := (A, B) C
 MaybeStr := str?
-ResI32 := i32!
+ResI32   := i32!
+
+-- constants and state
+pi     :f32       = 3.1416
+@lines :list[str] = list{}
 
 -- protocol with method signatures
-Proto := .{ get:(Key) Value, put:(Key, Value) unit, }
+Proto := .{ get :(Key) Value, put :(Key, Value) unit, }
 
 -- service type (protocol refs only)
 IntService[T] := ^{ Proto, }
 
-
-
 -- service implementation (syntax-only; bodies may error)
-
-^IntService<i>(){
-
-}
-
 ^IntService[T]<i>(seed :T) {
   @accum :T = seed
   @call_count :u64 = 0
@@ -56,8 +51,8 @@ IntService[T] := ^{ Proto, }
 -- non-generic service type + impl (parses structurally)
 SimpleSvc := ^{ Proto, }
 ^SimpleSvc<i>(){
-  ping() unit {}
   ~() unit { }
+  ping() unit {}
 }
 
 -- non-generic service with fields
