@@ -41,6 +41,7 @@ Rules:
 - Fields are only accessible through the receiver (e.g., `i.field`); bare field names are not in scope.
 - All writes require write‑intent: `@recv.field = expr` (including init and methods).
 - Fields declared with `@` are mutable after construction; non‑`@` fields are readonly after construction.
+- Init parameters are only in scope within the init section. Store any values needed later into fields during initialization.
 
 Example:
 ```brim

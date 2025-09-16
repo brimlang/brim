@@ -39,4 +39,26 @@ public class ServiceParseTests
     Assert.NotNull(impl);
     Assert.Empty(impl!.InitDecls);
   }
+  
+  [Fact]
+  public void ServiceImpl_Ignores_Destructor_After_Methods()
+  {
+    string src = "[[m]];\n^S<i>(){ name() T {} ~ { } }\n";
+    var m = Parse(src);
+    var impl = m.Members.OfType<ServiceImpl>().FirstOrDefault();
+    Assert.NotNull(impl);
+    Assert.DoesNotContain(impl!.Members, n => n is ServiceDtorHeader);
+    Assert.Contains(impl.Members, n => n is ServiceMethodHeader);
+  }
+
+  [Fact]
+  public void ServiceImpl_Only_One_Destructor_Recognized()
+  {
+    string src = "[[m]];\n^S<i>(){ ~ { } ~ { } name() T {} }\n";
+    var m = Parse(src);
+    var impl = m.Members.OfType<ServiceImpl>().FirstOrDefault();
+    Assert.NotNull(impl);
+    int dtorCount = impl!.Members.Count(n => n is ServiceDtorHeader);
+    Assert.Equal(1, dtorCount);
+  }
 }
