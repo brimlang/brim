@@ -37,12 +37,14 @@ public enum SyntaxKind
   ProtocolToken,
   StopToken,
   HatToken,
+  AtToken,
 
   // Nodes
   Module,
   // Declarations
   TypeDeclaration,
   FunctionDeclaration,
+  ValueDeclaration,
   ProtocolDeclaration,
   ServiceDeclaration,
   FunctionShape,

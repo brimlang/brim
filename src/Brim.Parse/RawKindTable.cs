@@ -45,7 +45,6 @@ public static class RawKindTable
       ]);
     _lookup['.'] = new(RawKind.Stop,
       [
-        (".=", RawKind.StopEqual),
         (".{", RawKind.StopLBrace)
       ]);
     _lookup['='] = new(RawKind.Equal, [("=>", RawKind.EqualGreater)]);

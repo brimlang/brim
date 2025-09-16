@@ -13,19 +13,16 @@
         - [ ] StateBlock field list: currently drops commas. `ServiceStateField` should carry optional `TrailingComma`.
 
 - [ ] **PRIORITY PHASE – Module-level typed value bindings**
-    - [ ] Surface: support `Ident ':' Type ('=' | '.=') Initializer Terminator` at module scope.
-    - [ ] Parser: add a Module member prediction for `Identifier ':'` followed by `=` or `.=`; parse header and capture initializer through the next Terminator.
-        - [ ] Phase 0 initializer: accept literals and aggregate constructors; otherwise token-skip to Terminator (structure-only, no expression layer yet).
-        - [ ] Phase 1: wire initializer to expression parser once available.
-    - [ ] AST: introduce a `ValueDeclaration` green node carrying `Name`, `Colon`, `Type`, `BindOp` (`=` or `.=`), `InitializerTokens`, and `Terminator`.
-    - [ ] Diagnostics:
-        - [ ] Missing initializer after `=`/`.=`.
-        - [ ] Reject exports of var-bound symbols; only const-bound (`=`) may be exported.
-        - [ ] Consistent error for stray `:` without a following `=`/`.=` at module scope.
+    - [x] Surface: support `Ident ':' Type '=' Initializer Terminator` and `'@' Ident ':' Type '=' Initializer Terminator` at module scope (init required).
+    - [x] Parser: add a Module member prediction for `Identifier ':'` (const) and `'@' Identifier ':'` (mutable); parse header and capture initializer through the next Terminator (structure-only for now).
+    - [x] AST: add `ValueDeclaration` node with optional `@` mutability, header tokens, `=` and `Terminator`.
+    - [ ] Diagnostics (future semantic pass):
+        - [ ] Reject exports of mutable symbols (or document semantics).
+        - [ ] Consistent error for stray `:` without a following `=` at module scope.
     - [ ] Tests:
-        - [ ] Parse: `pi :f32 = 3.14`, `limit :i32 .= 10`.
-        - [ ] Error: `x :i32` (no initializer), `<< varName` (exporting var), malformed operators.
-    - [ ] Docs: update Core Grammar (Module members), Fundamentals examples, and Expressions linkage once expression parsing lands.
+        - [ ] Parse: `pi :f32 = 3.14`, `@limit :i32 = 10`.
+        - [ ] Error: `x :i32` (no initializer), `<< @varName` (policy-dependent), malformed operators.
+    - [ ] Docs: expand Fundamentals/Grammar/Expressions once expression parsing lands.
 - [ ] **Phase 4 (Option/Result Type Postfix)**
     - [ ] Add type parser support for postfix `?` / `!` creating `OptionTypeNode` / `ResultTypeNode`.
     - [ ] Decide and document chaining precedence (likely restrict ambiguous multi-postfix chains).

@@ -175,6 +175,9 @@ public sealed record ServiceImpl(
     while (true)
     {
       Parser.StallGuard sg = p.GetStallGuard();
+      GreenToken? at = null;
+      if (p.MatchRaw(RawKind.Atmark))
+        at = new GreenToken(SyntaxKind.AtToken, p.ExpectRaw(RawKind.Atmark));
       GreenToken fname = p.ExpectSyntax(SyntaxKind.IdentifierToken);
       GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
       GreenNode ftype = TypeExpr.Parse(p);
@@ -183,7 +186,7 @@ public sealed record ServiceImpl(
       if (p.MatchRaw(RawKind.Comma))
         trailing = p.ExpectSyntax(SyntaxKind.CommaToken);
 
-      list.Add(new ServiceStateField(fname, colon, ftype, trailing));
+      list.Add(new ServiceStateField(at, fname, colon, ftype, trailing));
       if (trailing is null)
         break;
 
@@ -201,6 +204,7 @@ public sealed record ServiceImpl(
 }
 
 public sealed record ServiceStateField(
+  GreenToken? Atmark,
   GreenToken Name,
   GreenToken Colon,
   GreenNode Type,
@@ -210,6 +214,8 @@ public sealed record ServiceStateField(
   public override int FullWidth => (TrailingComma?.EndOffset ?? Type.EndOffset) - Name.Offset;
   public override IEnumerable<GreenNode> GetChildren()
   {
+    if (Atmark is not null)
+      yield return Atmark;
     yield return Name;
     yield return Colon;
     yield return Type;

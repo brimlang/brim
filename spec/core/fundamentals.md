@@ -38,8 +38,8 @@ What a new brimmian should know immediately.
 1. New declared symbols are always first on the line.
 2. Symbols are bound when declared:
   - type with `:=` (TypeExpr on RHS; nominal if a shape literal)
-  - const with `=`
-  - var with `.=`
+  - const with `=` (value bindings require an initializer)
+  - mutable with `@name :Type = expr` (initializer required; reassign later with `=`)
   - service with `~=`
 3. Value semantics (immutable-by-copy):
   - values copy
@@ -61,7 +61,7 @@ What a new brimmian should know immediately.
 
 io ::= std::io           -- import alias (module bind)
 
-limit :i32 .= 10        -- var binding (rebinding with .=)
+@limit :i32 = 10        -- mutable binding (reassignable with '=')
 answer :i32 = 42i32     -- const binding
 
 Point := %{ x :i32, y :i32 }
@@ -86,7 +86,7 @@ They are the compilation unit.
 [[acme::io::temp]]
 << TempFile
 io ::= std::io
-limit := 0
+@limit :i32 = 0
 ```
 
 -- **Header:** `[[pkg::ns::leaf]]` on line 1. Required.
@@ -95,7 +95,7 @@ limit := 0
   - There are no implicit exports, and no wildcard exports.
 -- **Imports:** `alias ::= pkg::ns::path` (module binding) anywhere at top level. Imports are required to use module members in term space; direct path calls like `pkg::ns.func()` are disallowed in core. Per‑item aliases use ordinary const binds: `write = io.write`.
   - Re-export is not allowed.
-- **State:** top‑level `.=` bindings with literal/aggregate initializers.
+- **State:** module supports const and mutable bindings. All module value bindings require initializers. Reassignment of module mutables occurs inside functions/impls.
 - **Shadowing**: const bound symbols cannot be shadowed.
   - var bound symbols may be shadowed in nested scopes.
 
@@ -107,8 +107,8 @@ limit := 0
 
 - `name ::= pkg::ns::path` → module bind (import).
 - `Name[T?] := TypeExpr` → type binding (nominal if RHS is a shape literal; alias otherwise).
-- `name = expr` → const; rebinding with `=` is error.
-- `name .= expr` → var; rebinding must use `.=`; using `=` is error.
+- `name :Type = expr` → const; initializer required; immutable.
+- `@name :Type = expr` → mutable; initializer required; reassign with `name = expr`.
 - `name ~= expr` → bound service; destructor runs at scope end.
 
 ## Statement Separator

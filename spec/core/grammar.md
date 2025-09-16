@@ -42,15 +42,16 @@ ImportDecl      ::= Ident '::=' ModulePath Terminator   -- top-level only
 ```ebnf
 TypeDecl        ::= Ident GenericParams? ':=' TypeExpr Terminator
 
-FunctionDecl    ::= BindingHeader ( '=' | '.=' ) FunctionExpr
+FunctionDecl    ::= BindingHeader '=' FunctionExpr
+                  | '@' Ident ':' FunctionType '=' FunctionExpr
                   | CombinedFuncHeader BlockExpr          -- const-only ergonomic form
 
 BindingHeader   ::= Ident ':' FunctionType
 CombinedFuncHeader ::= Ident ':' ParamDeclList ReturnType
 
--- General bindings inside blocks
-ConstBind       ::= Ident ':' TypeExpr '=' Expr
-VarBind         ::= Ident ':' TypeExpr '.=' Expr
+-- General value declarations
+ValueConstDecl  ::= Ident ':' TypeExpr '=' Expr
+ValueMutDecl    ::= '@' Ident ':' TypeExpr '=' Expr
 LifeBind        ::= Ident '~=' Expr
 
 GenericParams   ::= '[' (GenericParam (',' GenericParam)* (',')?)? ']'
@@ -71,7 +72,7 @@ SimpleExpr      ::= Ident
 
 BlockExpr       ::= '{' BlockBody '}'
 BlockBody       ::= (Statement StmtSep+)* Expr?      -- final expression optional
-Statement       ::= ConstBind | VarBind | LifeBind | Expr
+Statement       ::= ValueConstDecl | ValueMutDecl | LifeBind | Expr
 StmtSep         ::= Terminator
 
 MemberExpr      ::= NonLiteralPrimary '.' Ident ( '(' ArgList? ')' )?   -- field or method; no literal receiver
@@ -174,7 +175,7 @@ ImplBlock       ::= ServiceRef ReceiverBinder '{' StateBlock Member* '}'
 ServiceRef      ::= Ident GenericArgs?
 ReceiverBinder  ::= '<' (Ident | '_') '>'
 StateBlock      ::= '<' FieldDecl (',' FieldDecl)* (',')? '>' StmtSep
-FieldDecl       ::= Ident ':' TypeExpr
+FieldDecl       ::= ('@')? Ident ':' TypeExpr
 Member          ::= CtorImpl | MethodImpl | DtorImpl
 CtorImpl        ::= '^(' ParamDeclList? ')' BlockExpr
 MethodImpl      ::= Ident '(' ParamDeclList? ')' ReturnType BlockExpr
@@ -183,5 +184,6 @@ DtorImpl        ::= '~()' BlockExpr
 
 ## Prediction (Statement Start)
 At statement start (immediately after `{` or any Terminator):
-- If the next significant tokens are `Identifier ':'`, parse a binding header (const/var/function/type) according to the binding operator that follows (`=`, `.=` or `:=`).
+- If the next significant tokens are `Identifier ':'`, parse a const value declaration or function header.
+- If the next tokens are `'@' Identifier ':'`, parse a mutable value declaration.
 - Otherwise, parse an expression statement. Member/field access in expression space is `expr.member(...)` and does not compete with `:`.

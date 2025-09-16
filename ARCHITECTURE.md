@@ -44,7 +44,7 @@ SourceText
 - Future expression layer may use Pratt—still constrained by predictability.
 
 ## Tokens & Lexing Invariants
-- Greedy compound glyphs: operators and delimiters are lexed with longest-match semantics using a fixed table of ASCII sequences. Sequences up to 3 characters (e.g., `::=`, `<<`, `|{`, `*{`, `!!{`, `[[`, `]]`, `.=`, `??`) are matched greedily as single tokens. A future extension to 4 characters is acceptable, but never shorter-than-longest. Example: `[[` must lex as a single `LBracketLBracket` token, never two `LBracket` tokens.
+- Greedy compound glyphs: operators and delimiters are lexed with longest-match semantics using a fixed table of ASCII sequences. Sequences up to 3 characters (e.g., `::=`, `<<`, `|{`, `*{`, `!!{`, `[[`, `]]`, `.{`, `??`) are matched greedily as single tokens. A future extension to 4 characters is acceptable, but never shorter-than-longest. Example: `[[` must lex as a single `LBracketLBracket` token, never two `LBracket` tokens.
 - Single-run tokens: non-terminator whitespace runs lex to one `WhitespaceTrivia` token; newline/semicolon runs lex to one `Terminator` token.
 - Comments: `-- …\n` lex to a single `CommentTrivia` token.
 - Trivia shaping: SignificantProducer attaches all trivia as leading trivia to the following significant token (or to `Eob`). There is no trailing trivia.

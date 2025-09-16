@@ -11,6 +11,8 @@ public sealed partial class Parser
     new(ExportDirective.Parse, RawKind.LessLess),
     new(ImportDeclaration.Parse, (RawKind.Identifier, RawKind.ColonColonEqual, RawKind.Identifier)),
     new(ServiceDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.Hat)),
+    // Mutable value declaration: '@' Ident ':' Type '=' Initializer Terminator
+    new(ValueDeclaration.Parse, (RawKind.Atmark, RawKind.Identifier, RawKind.Colon)),
     new(ServiceImpl.Parse, RawKind.Less),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.Any)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.Identifier)),
@@ -21,6 +23,13 @@ public sealed partial class Parser
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.PipeLBrace)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.Ampersand)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.HashLBrace)),
+    // Const value declaration: Ident ':' Type '=' Initializer Terminator
+    new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.Identifier)),
+    new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.StopLBrace)),
+    new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.PercentLBrace)),
+    new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.PipeLBrace)),
+    new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.Ampersand)),
+    new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.HashLBrace)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.RBracket)), // empty generic param list
   ];
 
@@ -43,6 +52,7 @@ public sealed partial class Parser
     SyntaxKind.IdentifierToken => RawKind.Identifier,
     SyntaxKind.StopToken => RawKind.Stop,
     SyntaxKind.HatToken => RawKind.Hat,
+    SyntaxKind.AtToken => RawKind.Atmark,
     SyntaxKind.ProtocolToken => RawKind.StopLBrace,
     SyntaxKind.IntToken => RawKind.IntegerLiteral,
     SyntaxKind.DecimalToken => RawKind.DecimalLiteral,

@@ -19,14 +19,14 @@ Status: draft (informative). Canonical meaning is defined in accepted core specs
 | `-- comment` | comment | To end of line; single token |
 | Terminator (newline, `;`) | separator | Collapsed runs; single token |
 
-Greedy compound glyphs: operators and delimiters are lexed with longest-match semantics using an ASCII table. Sequences up to 3 characters (e.g., `::=`, `<<`, `|{`, `*{`, `!!{`, `[[`, `]]`, `.=`, `.{`, `??`) are matched as single tokens (a 4th char may be added in future). Example: `[[` is a single token and never two `[` tokens.
+Greedy compound glyphs: operators and delimiters are lexed with longest-match semantics using an ASCII table. Sequences up to 3 characters (e.g., `::=`, `<<`, `|{`, `*{`, `!!{`, `[[`, `]]`, `.{`, `??`) are matched as single tokens (a 4th char may be added in future). Example: `[[` is a single token and never two `[` tokens.
 
 ## Bindings & Modules
 | Surface | Category | Notes |
 |---|---|---|
 | `Name[T?] := TypeExpr` | type-binding | Nominal if shape literal; else alias |
-| `name :Type = expr` | const | Binding header in any scope |
-| `name :Type .= expr` | var | Rebinding uses `.=` |
+| `name :Type = expr` | const | Binding header in any scope; init required |
+| `@name :Type = expr` | mutable | Mutable binding; init required; reassign with `=` |
 | `name ~= expr` | lifecycle | Services only; destructor at scope exit |
 | `alias ::= pkg::ns` | module | Import alias (top-level only) |
 | `<< Name` | module | Export const-bound symbol |
@@ -37,7 +37,7 @@ Greedy compound glyphs: operators and delimiters are lexed with longest-match se
 | `(Type, ...) Ret` | type | Function type |
 | `(params) { ... }` | value | Function literal; names-only params |
 | `f :(Type, ...) Ret = (params) { ... }` | binding | Named const function |
-| `f :(Type, ...) Ret .= (params) { ... }` | binding | Named var function |
+| `@f :(Type, ...) Ret = (params) { ... }` | binding | Mutable function value; rebind with `f = (..){..}` |
 | `f :(x :T, ...) Ret { ... }` | binding | Combined header (const-only) |
 
 ## Member & Paths

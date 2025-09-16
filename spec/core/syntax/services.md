@@ -33,30 +33,30 @@ IntService[T] := ^{ Adder[T], Fmt, }
 
 State and members:
 - `StateBlock ::= '<' FieldDecl (',' FieldDecl)* (',')? '>' StmtSep` (empty `<>` allowed for stateless)
-- `FieldDecl  ::= Ident ':' TypeExpr` (no initializers; ctors must assign)
+- `FieldDecl  ::= ('@')? Ident ':' TypeExpr` (no initializers; ctors must assign)
 - `CtorImpl   ::= '^(' ParamDeclList? ')' BlockExpr`
 - `MethodImpl ::= Ident '(' ParamDeclList? ')' ReturnType BlockExpr`
 - `DtorImpl   ::= '~()' BlockExpr`
 
 Rules:
 - All declared fields must be assigned exactly once in every constructor before any read.
-- Field writes are allowed only inside service impls on the bound receiver: `recv.field .= expr`.
+- Field writes are allowed only inside service impls on the bound receiver: `recv.field = expr`. Fields declared with `@` are mutable post‑construction; non‑`@` fields are writable only in constructors.
 - Outside impls, the language remains whole‑value rebinding only (no field mutation).
 
 Example:
 ```brim
 IntService[T]<i>{
-  < accum :T, call_count :u64, >
+  < @accum :T, @call_count :u64, >
 
   ^(seed :T) {
-    i.accum .= seed
-    i.call_count .= 0u64
+    i.accum = seed
+    i.call_count = 0u64
   }
 
   add(x :T, y :T) T {
     r = x + y
-    i.accum .= i.accum + r
-    i.call_count .= i.call_count + 1
+    i.accum = i.accum + r
+    i.call_count = i.call_count + 1
     r
   }
 
