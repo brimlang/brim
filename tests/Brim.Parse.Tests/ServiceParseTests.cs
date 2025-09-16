@@ -21,7 +21,7 @@ public class ServiceParseTests
   [Fact]
   public void ServiceImpl_InitDecls_Parses_WithFields()
   {
-    string src = "[[m]];\n^IntService<i>(){\n  accum :T = seed\n  @call_count :u64 = 0u64\n  name() T {} ~ {}\n}\n";
+    string src = "[[m]];\n^IntService<i>(){\n  accum :T = seed\n  @call_count :u64 = 0u64\n  name() T {} ~() unit {}\n}\n";
     var m = Parse(src);
     var impl = m.Members.OfType<ServiceImpl>().FirstOrDefault();
     Assert.NotNull(impl);
@@ -43,7 +43,7 @@ public class ServiceParseTests
   [Fact]
   public void ServiceImpl_Ignores_Destructor_After_Methods()
   {
-    string src = "[[m]];\n^S<i>(){ name() T {} ~ { } }\n";
+    string src = "[[m]];\n^S<i>(){ name() T {} ~() unit { } }\n";
     var m = Parse(src);
     var impl = m.Members.OfType<ServiceImpl>().FirstOrDefault();
     Assert.NotNull(impl);
@@ -54,7 +54,7 @@ public class ServiceParseTests
   [Fact]
   public void ServiceImpl_Only_One_Destructor_Recognized()
   {
-    string src = "[[m]];\n^S<i>(){ ~ { } ~ { } name() T {} }\n";
+    string src = "[[m]];\n^S<i>(){ ~() unit { } ~() unit { } name() T {} }\n";
     var m = Parse(src);
     var impl = m.Members.OfType<ServiceImpl>().FirstOrDefault();
     Assert.NotNull(impl);

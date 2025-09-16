@@ -55,12 +55,19 @@ public sealed record ServiceMethodHeader(
 
 public sealed record ServiceDtorHeader(
   GreenToken Tilde,
+  GreenToken OpenParen,
+  GreenToken CloseParen,
+  GreenNode ReturnType,
   GreenToken BodyOpen)
   : GreenNode(SyntaxKind.FunctionDeclaration, Tilde.Offset)
 {
   public override int FullWidth => BodyOpen.EndOffset - Tilde.Offset;
   public override IEnumerable<GreenNode> GetChildren()
   {
-    yield return Tilde; yield return BodyOpen;
+    yield return Tilde;
+    yield return OpenParen;
+    yield return CloseParen;
+    yield return ReturnType;
+    yield return BodyOpen;
   }
 }

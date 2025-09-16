@@ -38,9 +38,8 @@ IntService[T] := ^{ Proto, }
   @accum :T = seed
   @call_count :u64 = 0
 
-  ~{
-    @i.accum = 0
-    @i.call_count = 0
+  ~() unit {
+    @i.call_count = 0u64
   }
 
   add(x :T, y :T) T {
@@ -58,13 +57,13 @@ IntService[T] := ^{ Proto, }
 SimpleSvc := ^{ Proto, }
 ^SimpleSvc<i>(){
   ping() unit {}
-  ~ { }
+  ~() unit { }
 }
 
 -- non-generic service with fields
 ^StatefulSvc<i>(){
   @a :i32 = 0i32
   @b :u64 = 0u64
-  ~ { }
+  ~() unit { }
   swap() unit { let tmp = i.a; @i.a = i.b; @i.b = tmp }
 }

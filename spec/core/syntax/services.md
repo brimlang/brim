@@ -34,7 +34,7 @@ IntService[T] := ^{ Adder[T], Fmt, }
 State and members:
 - `InitDecl    ::= ('@')? Ident ':' TypeExpr '=' Expr` — `@` marks mutable post‑ctor; init required
 - `MethodImpl  ::= Ident '(' ParamDeclList? ')' ReturnType BlockExpr`
-- `DtorImpl    ::= '~' BlockExpr` — simplified destructor (no params); if present, it must appear immediately after the init section and before any methods.
+- `DtorImpl    ::= '~()' ReturnType BlockExpr` — explicit destructor (no params): e.g., `~() unit { ... }`. If present, it must appear immediately after the init section and before any methods.
 
 Rules:
 - If any fields exist, they must be declared and initialized exactly once in the init section.
@@ -57,7 +57,7 @@ Example:
 
   to_str() str { sfmt.itoa(i.accum) }
   fmt(s :str) str { panic("not implemented") }
-  ~ { }
+  ~() unit { }
 }
 ```
 

@@ -179,7 +179,7 @@ InitDecl        ::= ('@')? Ident ':' TypeExpr '=' Expr
 Member          ::= MethodImpl
 DtorOpt         ::= /* empty */ | DtorImpl
 MethodImpl      ::= Ident '(' ParamDeclList? ')' ReturnType BlockExpr
-DtorImpl        ::= '~' BlockExpr
+DtorImpl        ::= '~' '(' ')' ReturnType BlockExpr
 ```
 
 ## Prediction (Statement Start)

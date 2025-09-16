@@ -130,9 +130,12 @@ public sealed record ServiceImpl(
   static ServiceDtorHeader ParseDtorHeaderAndSkipBody(Parser p)
   {
     GreenToken tilde = new(SyntaxKind.TildeToken, p.ExpectRaw(RawKind.Tilde));
+    GreenToken op = p.ExpectSyntax(SyntaxKind.OpenParenToken);
+    GreenToken cp = p.ExpectSyntax(SyntaxKind.CloseParenToken);
+    GreenNode ret = TypeExpr.Parse(p);
     GreenToken bodyOpen = p.ExpectSyntax(SyntaxKind.OpenBraceToken);
     SkipBlock(p);
-    return new ServiceDtorHeader(tilde, bodyOpen);
+    return new ServiceDtorHeader(tilde, op, cp, ret, bodyOpen);
   }
 
   static StructuralArray<ServiceParam> ParseParamDeclList(Parser p)
