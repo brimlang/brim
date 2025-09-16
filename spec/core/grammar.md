@@ -171,15 +171,14 @@ MethodSig       ::= Ident GenericParams? ':(' TypeList? ')' TypeExpr
 --   Svc[T?] := ^{ ProtoRef (, ProtoRef)* (',')? }
 
 -- Implementation blocks (term space) — structure only (bodies elided here):
-ImplBlock       ::= ServiceRef ReceiverBinder '{' StateBlock Member* '}'
+ImplBlock       ::= '^' ServiceRef ReceiverBinder CtorParamsOpt '{' InitDecl* Member* '}'
 ServiceRef      ::= Ident GenericArgs?
 ReceiverBinder  ::= '<' (Ident | '_') '>'
-StateBlock      ::= '<' FieldDecl (',' FieldDecl)* (',')? '>' StmtSep
-FieldDecl       ::= ('@')? Ident ':' TypeExpr
-Member          ::= CtorImpl | MethodImpl | DtorImpl
-CtorImpl        ::= '^(' ParamDeclList? ')' BlockExpr
+CtorParamsOpt   ::= /* empty */ | '(' ParamDeclList? ')'
+InitDecl        ::= ('@')? Ident ':' TypeExpr '=' Expr
+Member          ::= MethodImpl | DtorImpl
 MethodImpl      ::= Ident '(' ParamDeclList? ')' ReturnType BlockExpr
-DtorImpl        ::= '~()' BlockExpr
+DtorImpl        ::= '~' BlockExpr
 ```
 
 ## Prediction (Statement Start)

@@ -13,7 +13,7 @@ public sealed partial class Parser
     new(ServiceDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.Hat)),
     // Mutable value declaration: '@' Ident ':' Type '=' Initializer Terminator
     new(ValueDeclaration.Parse, (RawKind.Atmark, RawKind.Identifier, RawKind.Colon)),
-    new(ServiceImpl.Parse, RawKind.Less),
+    new(ServiceImpl.Parse, RawKind.Hat),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.Any)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.Identifier)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.StopLBrace)),
@@ -54,6 +54,7 @@ public sealed partial class Parser
     SyntaxKind.HatToken => RawKind.Hat,
     SyntaxKind.AtToken => RawKind.Atmark,
     SyntaxKind.AttributeOpenToken => RawKind.AtLess,
+    SyntaxKind.TildeToken => RawKind.Tilde,
     SyntaxKind.ProtocolToken => RawKind.StopLBrace,
     SyntaxKind.IntToken => RawKind.IntegerLiteral,
     SyntaxKind.DecimalToken => RawKind.DecimalLiteral,

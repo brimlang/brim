@@ -39,7 +39,7 @@ public static class GreenNodeFormatter
       case ServiceImpl si:
         _ = sb.Append(" svc=").Append(Escape(si.ServiceRef.GetText(source)));
         _ = sb.Append(" recv=").Append(Escape(si.ReceiverIdent.GetText(source)));
-        _ = sb.Append($" fields={si.State.Fields.Count} members={si.Members.Count}");
+        _ = sb.Append($" init_fields={si.InitDecls.Count} members={si.Members.Count}");
         break;
       case TypeDeclaration td:
         _ = sb.Append(" name=").Append(Escape(td.Name.Identifier.GetText(source)));

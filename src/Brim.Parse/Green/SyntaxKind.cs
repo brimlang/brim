@@ -39,6 +39,7 @@ public enum SyntaxKind
   HatToken,
   AtToken,
   AttributeOpenToken,
+  TildeToken,
 
   // Nodes
   Module,

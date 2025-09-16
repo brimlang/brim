@@ -26,13 +26,21 @@ Proto := .{ get:(Key) Value, put:(Key, Value) unit, }
 -- service type (protocol refs only)
 IntService[T] := ^{ Proto, }
 
--- service implementation (syntax-only; bodies may error)
-<IntService[T], i>{
-  < @accum :T, @call_count :u64, >
 
-  ^(seed :T) {
-    @i.accum = seed
-    @i.call_count = 0u64
+
+-- service implementation (syntax-only; bodies may error)
+
+^IntService<i>(){
+
+}
+
+^IntService[T]<i>(seed :T) {
+  @accum :T = seed
+  @call_count :u64 = 0
+
+  ~{
+    @i.accum = 0
+    @i.call_count = 0
   }
 
   add(x :T, y :T) T {
@@ -43,22 +51,20 @@ IntService[T] := ^{ Proto, }
   }
 
   to_str() str { sfmt.itoa(i.accum) }
-  ~() { }
+
 }
 
 -- non-generic service type + impl (parses structurally)
 SimpleSvc := ^{ Proto, }
-<SimpleSvc, i>{
-  <>
-  ^(){}
+^SimpleSvc<i>(){
   ping() unit {}
-  ~(){}
+  ~ { }
 }
 
 -- non-generic service with fields
-<StatefulSvc, i>{
-  < @a :i32, @b :u64, >
-  ^(){ @i.a = 0i32; @i.b = 0u64 }
+^StatefulSvc<i>(){
+  @a :i32 = 0i32
+  @b :u64 = 0u64
   swap() unit { let tmp = i.a; @i.a = i.b; @i.b = tmp }
-  ~(){}
+  ~ { }
 }

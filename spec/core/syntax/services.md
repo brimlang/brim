@@ -26,43 +26,37 @@ Fmt      := .{ to_str :() str, fmt :(str) str, }
 IntService[T] := ^{ Adder[T], Fmt, }
 ```
 
-### Implementation block
-- **Form:** `Service[T?] <recv> { StateBlock Member* }`
+### Implementation block (combined)
+- **Form:** `^Service[T?] <recv> (params)? { InitDecl* Member* }`
 - Receiver binder is explicit and mandatory; use `<_>` if intentionally unused.
-- Exactly one `StateBlock`, and it must be the first item.
+- Initialization comes first and contains field declarations with initializers. Zero‑state services omit the section entirely.
 
 State and members:
-- `StateBlock ::= '<' FieldDecl (',' FieldDecl)* (',')? '>' StmtSep` (empty `<>` allowed for stateless)
-- `FieldDecl  ::= ('@')? Ident ':' TypeExpr` (no initializers; ctors must assign)
-- `CtorImpl   ::= '^(' ParamDeclList? ')' BlockExpr`
-- `MethodImpl ::= Ident '(' ParamDeclList? ')' ReturnType BlockExpr`
-- `DtorImpl   ::= '~()' BlockExpr`
+- `InitDecl    ::= ('@')? Ident ':' TypeExpr '=' Expr` — `@` marks mutable post‑ctor; init required
+- `MethodImpl  ::= Ident '(' ParamDeclList? ')' ReturnType BlockExpr`
+- `DtorImpl    ::= '~' BlockExpr` — simplified destructor (no params)
 
 Rules:
-- All declared fields must be assigned exactly once in every constructor before any read.
-- Field writes are allowed only inside service impls on the bound receiver: `recv.field = expr`. Fields declared with `@` are mutable post‑construction; non‑`@` fields are writable only in constructors.
-- Outside impls, the language remains whole‑value rebinding only (no field mutation).
+- If any fields exist, they must be declared and initialized exactly once in the init section.
+- Fields are only accessible through the receiver (e.g., `i.field`); bare field names are not in scope.
+- All writes require write‑intent: `@recv.field = expr` (including init and methods).
+- Fields declared with `@` are mutable after construction; non‑`@` fields are readonly after construction.
 
 Example:
 ```brim
-IntService[T]<i>{
-  < @accum :T, @call_count :u64, >
-
-  ^(seed :T) {
-    @i.accum = seed
-    @i.call_count = 0u64
-  }
+^IntService[T]<i>(seed :T) {
+  accum :T = seed
+  @call_count :u64 = 0u64
 
   add(x :T, y :T) T {
     r = x + y
-    @i.accum = i.accum + r
     @i.call_count = i.call_count + 1
     r
   }
 
   to_str() str { sfmt.itoa(i.accum) }
   fmt(s :str) str { panic("not implemented") }
-  ~() { }
+  ~ { }
 }
 ```
 
@@ -92,9 +86,11 @@ Box[T :Show] := %{ value : T }
 Fmt := .{ to_string : () str }
 
 Logger :^log{ target :str } :Fmt = {
-  ^(to :str) = { log.target = to }
-  to_string :() str { log.target }
-  ~() unit = { }
+  ^Logger<_>(to :str) {
+    target :str = to
+  }
+  to_string :() str { target }
+  ~ { }
 }
 
 main :() str = {

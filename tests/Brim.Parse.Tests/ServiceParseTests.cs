@@ -19,24 +19,24 @@ public class ServiceParseTests
   }
 
   [Fact]
-  public void ServiceImpl_StateBlock_Parses_WithFields()
+  public void ServiceImpl_InitDecls_Parses_WithFields()
   {
-    string src = "[[m]];\n<IntService, i>{\n  < accum :T, call_count :u64, >\n  ^(){} name() T {} ~(){}\n}\n";
+    string src = "[[m]];\n^IntService<i>(){\n  accum :T = seed\n  @call_count :u64 = 0u64\n  name() T {} ~ {}\n}\n";
     var m = Parse(src);
     var impl = m.Members.OfType<ServiceImpl>().FirstOrDefault();
     Assert.NotNull(impl);
     Assert.Contains("IntService", impl!.ServiceRef.GetText(src));
     Assert.Equal("i", impl.ReceiverIdent.GetText(src));
-    Assert.Equal(2, impl.State.Fields.Count);
+    Assert.Equal(2, impl.InitDecls.Count);
   }
 
   [Fact]
-  public void ServiceImpl_StateBlock_Empty_Allows_Stateless()
+  public void ServiceImpl_ZeroState_Allows_Stateless()
   {
-    string src = "[[m]];\n<S, _>{\n  <>\n  ^(){}\n}\n";
+    string src = "[[m]];\n^S<_>(){ name() T {} }\n";
     var m = Parse(src);
     var impl = m.Members.OfType<ServiceImpl>().FirstOrDefault();
     Assert.NotNull(impl);
-    Assert.Empty(impl!.State.Fields);
+    Assert.Empty(impl!.InitDecls);
   }
 }
