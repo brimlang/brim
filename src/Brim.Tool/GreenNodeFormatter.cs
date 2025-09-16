@@ -167,7 +167,7 @@ public static class GreenNodeFormatter
     SyntaxKind.Module => "[bold blue]",
     SyntaxKind.ModuleHeader or SyntaxKind.ModulePath => "[blue]",
     SyntaxKind.FieldList => "[teal]",
-    SyntaxKind.Block or SyntaxKind.ParameterList  => "[purple]",
+    SyntaxKind.Block or SyntaxKind.ParameterList => "[purple]",
     SyntaxKind.GenericParameterList or SyntaxKind.GenericArgumentList => "[purple]",
 
     SyntaxKind.ConstraintList or SyntaxKind.MethodSignature => "[purple3]",
