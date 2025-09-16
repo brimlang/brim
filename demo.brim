@@ -65,5 +65,5 @@ SimpleSvc := ^{ Proto, }
   @a :i32 = 0i32
   @b :u64 = 0u64
   ~() unit { }
-  swap() unit { let tmp = i.a; @i.a = i.b; @i.b = tmp }
+  swap() unit { tmp :i32 = i.a; @i.a = i.b; @i.b = tmp }
 }
