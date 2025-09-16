@@ -54,7 +54,10 @@ public static class RawKindTable
     _lookup['%'] = new(RawKind.Percent, [("%{", RawKind.PercentLBrace)]);
     _lookup['['] = new(RawKind.LBracket, [("[[", RawKind.LBracketLBracket)]);
     _lookup[']'] = new(RawKind.RBracket, [("]]", RawKind.RBracketRBracket)]);
-    _lookup['@'] = new(RawKind.Atmark, []);
+    _lookup['@'] = new(RawKind.Atmark,
+      [
+        ("@<", RawKind.AtLess)
+      ]);
     _lookup['-'] = new(RawKind.Minus, []);
     _lookup['&'] = new(RawKind.Ampersand, []);
     _lookup['('] = new(RawKind.LParen, []);

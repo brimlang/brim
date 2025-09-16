@@ -53,6 +53,7 @@ public sealed partial class Parser
     SyntaxKind.StopToken => RawKind.Stop,
     SyntaxKind.HatToken => RawKind.Hat,
     SyntaxKind.AtToken => RawKind.Atmark,
+    SyntaxKind.AttributeOpenToken => RawKind.AtLess,
     SyntaxKind.ProtocolToken => RawKind.StopLBrace,
     SyntaxKind.IntToken => RawKind.IntegerLiteral,
     SyntaxKind.DecimalToken => RawKind.DecimalLiteral,

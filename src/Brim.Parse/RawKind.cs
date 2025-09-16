@@ -24,6 +24,7 @@ public enum RawKind : short
   Slash, // /
   Backslash, // \
   Atmark, // @
+  AtLess, // @< (attribute open)
 
   // Possible compound glyph runs
   Less, LessLess, // < <<

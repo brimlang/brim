@@ -38,6 +38,7 @@ public enum SyntaxKind
   StopToken,
   HatToken,
   AtToken,
+  AttributeOpenToken,
 
   // Nodes
   Module,

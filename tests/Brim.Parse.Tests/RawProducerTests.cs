@@ -77,14 +77,28 @@ public class RawProducerTests
   [Fact]
   public void TokenizesMultiCharSymbolsGreedily()
   {
-    var toks = Lex("=> *{ ~= .{ % { %{ # { #{ ??");
+    var toks = Lex("=> *{ ~= .{ @< % { %{ # { #{ ??");
     Assert.Contains(toks, static t => t.Kind == RawKind.EqualGreater);
     Assert.Contains(toks, static t => t.Kind == RawKind.StarLBrace);
     Assert.Contains(toks, static t => t.Kind == RawKind.TildeEqual);
     Assert.Contains(toks, static t => t.Kind == RawKind.StopLBrace);
+    Assert.Contains(toks, static t => t.Kind == RawKind.AtLess);
     Assert.Contains(toks, static t => t.Kind == RawKind.PercentLBrace);
     Assert.Contains(toks, static t => t.Kind == RawKind.HashLBrace);
     Assert.Contains(toks, static t => t.Kind == RawKind.QuestionQuestion);
+  }
+
+  [Fact]
+  public void TokenizesAttributeOpenAsCompound()
+  {
+    const string src = "@<id(56)>";
+    var toks = Lex(src);
+    Assert.Contains(toks, static t => t.Kind == RawKind.AtLess);
+    Assert.Contains(toks, t => t.Kind == RawKind.Identifier && t.Value(src).SequenceEqual("id"));
+    Assert.Contains(toks, static t => t.Kind == RawKind.LParen);
+    Assert.Contains(toks, static t => t.Kind == RawKind.IntegerLiteral);
+    Assert.Contains(toks, static t => t.Kind == RawKind.RParen);
+    Assert.Contains(toks, static t => t.Kind == RawKind.Greater);
   }
 
   [Fact]
