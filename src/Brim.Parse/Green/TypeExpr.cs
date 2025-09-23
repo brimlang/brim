@@ -24,10 +24,10 @@ public static class TypeExpr
       RawKind.PercentLBrace => new(StructShape.Parse),
       RawKind.PipeLBrace => new(UnionShape.Parse),
       RawKind.HashLBrace => new(NamedTupleShape.Parse),
+      RawKind.StopLBrace => new(ProtocolShape.Parse),
+      RawKind.AtmarkLBrace => new(ServiceShape.Parse),
       RawKind.Ampersand => new(FlagsShape.Parse),
       RawKind.LParen => new(FunctionShape.Parse),
-      RawKind.StopLBrace => new(ProtocolShape.Parse),
-      RawKind.Hat => new(ServiceShape.Parse),
       _ => Opt<ParseFunc>.None,
     };
 

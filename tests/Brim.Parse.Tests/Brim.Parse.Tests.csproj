@@ -22,4 +22,8 @@
     <ProjectReference Include="..\..\src\Brim.Parse\Brim.Parse.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="TestCorpus\**\*.brim" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

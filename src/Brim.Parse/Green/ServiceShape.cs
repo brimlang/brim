@@ -3,7 +3,7 @@ using Brim.Parse.Collections;
 namespace Brim.Parse.Green;
 
 public sealed record ServiceShape(
-  GreenToken HatToken,
+  GreenToken AtToken,
   GreenToken OpenToken,
   StructuralArray<ProtocolRef> Protocols,
   GreenToken CloseBrace)
@@ -12,7 +12,7 @@ public sealed record ServiceShape(
   public override int FullWidth => CloseBrace.EndOffset - OpenToken.Offset;
   public override IEnumerable<GreenNode> GetChildren()
   {
-    yield return HatToken;
+    yield return AtToken;
     yield return OpenToken;
     foreach (ProtocolRef p in Protocols) yield return p;
     yield return CloseBrace;
@@ -20,8 +20,8 @@ public sealed record ServiceShape(
 
   public static ServiceShape Parse(Parser p)
   {
-    // Expect '^' then '{'
-    GreenToken hat = p.ExpectSyntax(SyntaxKind.HatToken);
+    // Expect '@' then '{'
+    GreenToken at = p.ExpectSyntax(SyntaxKind.ServiceImplToken);
     GreenToken open = p.ExpectSyntax(SyntaxKind.OpenBraceToken);
 
     StructuralArray<ProtocolRef> list =
@@ -37,7 +37,7 @@ public sealed record ServiceShape(
         },
         static (n, c) => new ProtocolRef(n, c),
         RawKind.RBrace);
-    GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBraceToken);
-    return new ServiceShape(hat, open, list, close);
+    GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
+    return new ServiceShape(at, open, list, close);
   }
 }

@@ -19,7 +19,7 @@ public class ProtocolServiceHeaderTests
   [Fact]
   public void Service_Header_EmptyBody_Parses()
   {
-    string src = "[[m]];\nSvc :^ recv {}\n";
+    string src = "[[m]];\nSvc :@ recv {}\n";
     var m = Parse(src);
     var decl = Assert.IsType<ServiceDeclaration>(m.Members.First());
     Assert.Equal("Svc", decl.Name.Identifier.GetText(src));
@@ -40,7 +40,7 @@ public class ProtocolServiceHeaderTests
   [Fact]
   public void Service_With_Implements_List_Parses()
   {
-    string src = "[[m]];\nSvc :^ recv {} : P + Q[R]\n";
+    string src = "[[m]];\nSvc :@ recv {} : P + Q[R]\n";
     var m = Parse(src);
     var decl = Assert.IsType<ServiceDeclaration>(m.Members.First());
     Assert.Equal(2, decl.Implements.Count);

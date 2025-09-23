@@ -29,8 +29,7 @@ ITokenProducer<RawToken>
       return false;
     }
 
-    ReadOnlySpan<char> span = _source.Span;
-    if (_pos >= span.Length)
+    if (_pos >= _source.Length)
     {
       tok = new(RawKind.Eob, _source.Length, Length: 0, _line, _col);
       _emittedEob = true;
@@ -87,23 +86,23 @@ ITokenProducer<RawToken>
       int startLine = _line;
       int startCol = _col;
 
-      if (c == '-' && PeekChar(1) == '-')
-        return LexLineComment(startOffset, startLine, startCol);
+      if (BrimChars.IsTerminator(c))
+        return LexTerminator(startOffset, startLine, startCol);
 
       if (BrimChars.IsNonTerminalWhitespace(c))
         return LexWhitespace(startOffset, startLine, startCol);
 
-      if (BrimChars.IsTerminator(c))
-        return LexTerminator(startOffset, startLine, startCol);
+      if (c == '-' && PeekChar(1) == '-')
+        return LexLineComment(startOffset, startLine, startCol);
 
       if (c == '"')
         return LexString(startOffset, startLine, startCol, _source.Span);
 
-      if (BrimChars.IsIdentifierStart(c))
-        return LexIdentifier(startOffset, startLine, startCol);
-
       if (char.IsDigit(c))
         return LexNumber(startOffset, startLine, startCol);
+
+      if (BrimChars.IsIdentifierStart(c))
+        return LexIdentifier(startOffset, startLine, startCol);
 
       if (RawKindTable.TryMatch(span[_pos..], out RawKind kind, out int matchedLength))
         return MakeToken(kind, matchedLength, startOffset, startLine, startCol);
@@ -194,7 +193,15 @@ ITokenProducer<RawToken>
       }
     }
 
-    if (!isDecimal)
+    if (isDecimal)
+    {
+      char c = PeekChar(0);
+      if (c is 'f')
+        AdvanceChar(); // consume f
+      if (PeekChar(0) == '3' && PeekChar(1) == '2') { AdvanceChar(); AdvanceChar(); }
+      else if (PeekChar(0) == '6' && PeekChar(1) == '4') { AdvanceChar(); AdvanceChar(); }
+    }
+    else
     {
       char c = PeekChar(0);
       if (c is 'i' or 'u')
@@ -219,7 +226,7 @@ ITokenProducer<RawToken>
   {
     AdvanceChar();
     AdvanceChar();
-    AdvanceCharWhile(static c => c is not BrimChars.NewLine);
+    AdvanceCharWhile(static c => !BrimChars.IsTerminator(c));
     return new RawToken(RawKind.CommentTrivia, startOffset, _pos - startOffset, line, col);
   }
 

@@ -10,19 +10,23 @@ public sealed partial class Parser
   [
     new(ExportDirective.Parse, RawKind.LessLess),
     new(ImportDeclaration.Parse, (RawKind.Identifier, RawKind.ColonColonEqual, RawKind.Identifier)),
-    new(ServiceDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.Hat)),
-    // Mutable value declaration: '@' Ident ':' Type '=' Initializer Terminator
-    new(ValueDeclaration.Parse, (RawKind.Atmark, RawKind.Identifier, RawKind.Colon)),
-    new(ServiceImpl.Parse, RawKind.Hat),
-    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.Any)),
+
+    // Mutable value declaration: '^' Ident ':' Type '=' Initializer Terminator
+    new(ValueDeclaration.Parse, (RawKind.Hat, RawKind.Identifier, RawKind.Colon)),
+    new(ServiceImpl.Parse, RawKind.Atmark),
+
+    // Type shape declaration: Ident ':=' Shape
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.Identifier)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.StopLBrace)),
-    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.Hat)),
+    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.Atmark)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.LParen)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.PercentLBrace)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.PipeLBrace)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.Ampersand)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.HashLBrace)),
+    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.Any)),
+    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.RBracket)), // empty generic param list
+
     // Const value declaration: Ident ':' Type '=' Initializer Terminator
     new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.Identifier)),
     new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.StopLBrace)),
@@ -30,7 +34,6 @@ public sealed partial class Parser
     new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.PipeLBrace)),
     new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.Ampersand)),
     new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.HashLBrace)),
-    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.RBracket)), // empty generic param list
   ];
 
   internal static readonly PredictionTable ModuleMembersTable = PredictionTable.Build(ModuleMemberPredictions);
@@ -52,27 +55,27 @@ public sealed partial class Parser
     SyntaxKind.IdentifierToken => RawKind.Identifier,
     SyntaxKind.StopToken => RawKind.Stop,
     SyntaxKind.HatToken => RawKind.Hat,
-    SyntaxKind.AtToken => RawKind.Atmark,
-    SyntaxKind.AttributeOpenToken => RawKind.AtLess,
     SyntaxKind.TildeToken => RawKind.Tilde,
-    SyntaxKind.ProtocolToken => RawKind.StopLBrace,
     SyntaxKind.IntToken => RawKind.IntegerLiteral,
     SyntaxKind.DecimalToken => RawKind.DecimalLiteral,
     SyntaxKind.StrToken => RawKind.StringLiteral,
     SyntaxKind.EqualToken => RawKind.Equal,
-    SyntaxKind.StructToken => RawKind.PercentLBrace,
-    SyntaxKind.UnionToken => RawKind.PipeLBrace,
     SyntaxKind.AmpersandToken => RawKind.Ampersand,
     SyntaxKind.OpenBraceToken => RawKind.LBrace,
-    SyntaxKind.CloseBraceToken => RawKind.RBrace,
+    SyntaxKind.CloseBlockToken => RawKind.RBrace,
     SyntaxKind.EobToken => RawKind.Eob,
     SyntaxKind.ColonToken => RawKind.Colon,
-    SyntaxKind.TypeBindToken => RawKind.ColonEqual,
     SyntaxKind.LessToken => RawKind.Less,
     SyntaxKind.GreaterToken => RawKind.Greater,
     SyntaxKind.PlusToken => RawKind.Plus,
     SyntaxKind.CommaToken => RawKind.Comma,
     SyntaxKind.ErrorToken => RawKind.Error,
+    SyntaxKind.ServiceImplToken => RawKind.Atmark,
+    SyntaxKind.TypeBindToken => RawKind.ColonEqual,
+    SyntaxKind.StructToken => RawKind.PercentLBrace,
+    SyntaxKind.UnionToken => RawKind.PipeLBrace,
+    SyntaxKind.ProtocolToken => RawKind.StopLBrace,
+    SyntaxKind.ServiceToken => RawKind.AtmarkLBrace,
     SyntaxKind.NamedTupleToken => RawKind.HashLBrace,
     _ => RawKind.Error
   };

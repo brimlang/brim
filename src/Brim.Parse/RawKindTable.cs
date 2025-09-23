@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Brim.Parse.Collections;
 
@@ -28,10 +27,6 @@ public static class RawKindTable
         ("!{", RawKind.BangLBrace),
         ("!=", RawKind.BangEqual)
       ]);
-    _lookup['<'] = new(RawKind.Less,
-      [
-        ("<<", RawKind.LessLess)
-      ]);
     _lookup['?'] = new(RawKind.Question,
       [
         ("??", RawKind.QuestionQuestion),
@@ -43,20 +38,45 @@ public static class RawKindTable
         ("#{", RawKind.HashLBrace),
         ("#(", RawKind.HashLParen)
       ]);
+    _lookup['<'] = new(RawKind.Less,
+      [
+        ("<<", RawKind.LessLess)
+      ]);
     _lookup['.'] = new(RawKind.Stop,
       [
         (".{", RawKind.StopLBrace)
       ]);
-    _lookup['='] = new(RawKind.Equal, [("=>", RawKind.EqualGreater)]);
-    _lookup['*'] = new(RawKind.Star, [("*{", RawKind.StarLBrace)]);
-    _lookup['~'] = new(RawKind.Tilde, [("~=", RawKind.TildeEqual)]);
-    _lookup['|'] = new(RawKind.Pipe, [("|{", RawKind.PipeLBrace)]);
-    _lookup['%'] = new(RawKind.Percent, [("%{", RawKind.PercentLBrace)]);
-    _lookup['['] = new(RawKind.LBracket, [("[[", RawKind.LBracketLBracket)]);
-    _lookup[']'] = new(RawKind.RBracket, [("]]", RawKind.RBracketRBracket)]);
     _lookup['@'] = new(RawKind.Atmark,
       [
-        ("@<", RawKind.AtLess)
+        ("@{", RawKind.AtmarkLBrace)
+      ]);
+    _lookup['='] = new(RawKind.Equal,
+      [
+        ("=>", RawKind.EqualGreater)
+      ]);
+    _lookup['*'] = new(RawKind.Star,
+      [
+        ("*{", RawKind.StarLBrace)
+      ]);
+    _lookup['~'] = new(RawKind.Tilde,
+      [
+        ("~=", RawKind.TildeEqual)
+      ]);
+    _lookup['|'] = new(RawKind.Pipe,
+      [
+        ("|{", RawKind.PipeLBrace)
+      ]);
+    _lookup['%'] = new(RawKind.Percent,
+      [
+        ("%{", RawKind.PercentLBrace)
+      ]);
+    _lookup['['] = new(RawKind.LBracket,
+      [
+        ("[[", RawKind.LBracketLBracket)
+      ]);
+    _lookup[']'] = new(RawKind.RBracket,
+      [
+        ("]]", RawKind.RBracketRBracket)
       ]);
     _lookup['-'] = new(RawKind.Minus, []);
     _lookup['&'] = new(RawKind.Ampersand, []);
@@ -96,7 +116,7 @@ public static class RawKindTable
     if (c < MaxEntries)
     {
       entry = _lookup[c];
-      return entry.SingleKind != RawKind.Default;
+      return entry.SingleKind != RawKind._SentinelDefault;
     }
 
     entry = default;
@@ -111,7 +131,7 @@ public static class RawKindTable
   public static RawKind GetSingleKind(char c) =>
     TryGetEntry(c, out Entry entry)
     ? entry.SingleKind
-    : RawKind.Default;
+    : RawKind._SentinelDefault;
 
   /// <summary>
   /// Determines whether <paramref name="c"/> corresponds to a single-character token with no multi-character continuations.
@@ -133,7 +153,7 @@ public static class RawKindTable
   {
     if (span.Length == 0 || !TryGetEntry(span[0], out Entry entry))
     {
-      kind = RawKind.Default;
+      kind = RawKind._SentinelDefault;
       matchedLength = 0;
       return false;
     }

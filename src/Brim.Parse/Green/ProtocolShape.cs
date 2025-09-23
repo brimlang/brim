@@ -18,25 +18,23 @@ public sealed record ProtocolShape(
 
   public static ProtocolShape Parse(Parser p)
   {
-    GreenToken open = new(SyntaxKind.ProtocolToken, p.ExpectRaw(RawKind.StopLBrace));
+    GreenToken open = p.ExpectSyntax(SyntaxKind.ProtocolToken);
     ImmutableArray<MethodSignature>.Builder methods = ImmutableArray.CreateBuilder<MethodSignature>();
 
     if (!p.MatchRaw(RawKind.RBrace) && !p.MatchRaw(RawKind.Eob))
     {
       while (true)
       {
-        int before = p.Current.CoreToken.Offset;
+        Parser.StallGuard sg = p.GetStallGuard();
         MethodSignature m = MethodSignature.Parse(p);
         methods.Add(m);
         if (m.TrailingComma is null) break;
         if (p.MatchRaw(RawKind.RBrace) || p.MatchRaw(RawKind.Eob)) break;
-        if (p.Current.CoreToken.Offset == before) break;
+        if (sg.Stalled) break;
       }
     }
 
-    StructuralArray<MethodSignature> list = [.. methods];
-    GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBraceToken);
-    return new ProtocolShape(open, list, close);
+    GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
+    return new ProtocolShape(open, methods, close);
   }
 }
-

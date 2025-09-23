@@ -18,4 +18,3 @@ IParsable<ModuleDirective>
     p.ExpectSyntax(SyntaxKind.TerminatorToken)
   );
 }
-

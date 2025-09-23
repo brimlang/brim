@@ -2,62 +2,79 @@
 id: core.services
 title: Services, Protocols, and Constraints
 layer: core
-authors: ['trippwill']
-updated: 2025-09-13
+authors: ['trippwill', 'assistant']
+updated: 2025-09-22
 status: accepted
-version: 0.1.0
+version: 0.2.0
 ---
 
 # Services, Protocols, and Constraints
 
 ## Services
 
-Services are nominal types that implement one or more protocols. The service type declaration lists protocol references only. Private state and behavior are defined in a separate implementation block.
+Services are nominal handles that combine private state with protocol implementations. Each service declaration names its state layout explicitly; behavior is supplied through a lifecycle block plus one or more protocol method blocks.
 
-### Type declaration (protocol refs only)
-- **Form:** `Service[T?] := ^{ ProtoRef (',' ProtoRef)* (',')? }`
-- `ProtoRef ::= Ident GenericArgs?`
+### Type declaration (state layout)
+- **Form:** `Service[T?] := @{ Field (',' Field)* (',')? }`
+- `Field ::= Ident ':' TypeExpr`
+- Every field is instance-private and currently mutable. For immutable values, lift them to module-level bindings and reference them from the service.
 
 Example:
 ```brim
-Adder[T] := .{ add :(T, T) T }
-Fmt      := .{ to_str :() str, fmt :(str) str, }
-
-IntService[T] := ^{ Adder[T], Fmt, }
+AuthService[T] := @{ foo :u32; bar :bool; xtra :T }
 ```
 
-### Implementation block (combined)
-- **Form:** `^Service[T?] <recv> (params)? { InitDecl* DtorOpt Method* }`
-- Receiver binder is explicit and mandatory; use `<_>` if intentionally unused.
-- Initialization comes first and contains field declarations with initializers. Zero‑state services omit the section entirely.
+### Lifecycle block
+- **Form:** `Service[T?] { LifecycleMember* }`
+- Members:
+  - Constructor: `(ParamList) @! FunctionBody`
+  - Destructor:  `~(alias :@) unit FunctionBody`
+- Exactly one constructor is required; at most one destructor may appear. Constructors are always fallible (`@!`) and must return exactly one `@{ ... }` literal on every successful path, covering each declared field once. Destructors are infallible and run whenever construction succeeded; the bound alias gives read/write access to the service handle during teardown.
+- Constructors operate before any handle exists—they can only compute and return the literal. Destructors receive the concrete handle as their parameter; no other code can observe the handle until construction completes.
 
-State and members:
-- `InitDecl    ::= ('@')? Ident ':' TypeExpr '=' Expr` — `@` marks mutable post‑ctor; init required
-- `MethodImpl  ::= Ident '(' ParamDeclList? ')' ReturnType BlockExpr`
-- `DtorImpl    ::= '~()' ReturnType BlockExpr` — explicit destructor (no params): e.g., `~() unit { ... }`. If present, it must appear immediately after the init section and before any methods.
+### Protocol method blocks
+- **Form:** `Service[T?]<ProtoList>(alias :@) { MethodDecl* }`
+- `ProtoList ::= ProtoRef (',' ProtoRef)*` and the angle brackets are mandatory; use `< >` for helper blocks that publish no protocol. `ProtoRef` is any protocol type reference (`Ident` plus optional generic arguments).
+- Each method follows the ordinary declaration form `name :(ParamTypes) ReturnType FunctionBody`, and may read or write state through the aliased handle (`alias.field`).
+- Multiple blocks may target distinct protocol sets for the same service. Helper blocks with `< >` expose internals only to code holding the concrete service handle; protocol-typed callers never see those members.
+- Method names across all blocks must be unique for a given service type.
 
-Rules:
-- If any fields exist, they must be declared and initialized exactly once in the init section.
-- Fields are only accessible through the receiver (e.g., `i.field`); bare field names are not in scope.
-- All writes require write‑intent: `@recv.field = expr` (including init and methods).
-- Fields declared with `@` are mutable after construction; non‑`@` fields are readonly after construction.
-- Init parameters are only in scope within the init section. Store any values needed later into fields during initialization.
+### State access and invariants
+- State fields can only be accessed through the aliased handle inside lifecycle and method blocks; there is no dotless access and no visibility outside these blocks.
+- Since fields are mutable, method code must re-establish invariants after every write. The spec may later add field-level immutability; until then, prefer module-level constants for read-only data.
+- The compiler verifies that constructor success paths match the declared field list; missing or duplicate assignments are rejected.
 
-Example:
+### Example
 ```brim
-^IntService[T]<i>(seed :T) {
-  accum :T = seed
-  @call_count :u64 = 0u64
+AuthService[T] := @{ foo :u32; bar :bool; xtra :T }
 
-  add(x :T, y :T) T {
-    r = x + y
-    @i.call_count = i.call_count + 1
-    r
+AuthService[T] {
+  (a :u32, b :bool, c :T) @! {
+    start(c) =>
+      !(_)  => @{ foo = a, bar = b, xtra = c }
+      !!(e) => !!{ e }
   }
 
-  to_str() str { sfmt.itoa(i.accum) }
-  fmt(s :str) str { panic("not implemented") }
-  ~() unit { }
+  ~(svc :@) unit {
+    started(svc.xtra) =>
+      true  => stop(svc.xtra)
+      false => unit
+  }
+}
+
+AuthService[T]<Auth>(svc :@) {
+  login :(user :str, pass :str) User! {
+    svc.bar = !svc.bar
+    std::atoi(pass) == svc.foo =>
+      true  => User%{ id = user, auth = svc.bar }
+      false => !!{ mkerr("Not Authorized") }
+  }
+}
+
+AuthService[T]<>(svc :@) {
+  reset :() unit {
+    svc.bar = false
+  }
 }
 ```
 
@@ -84,18 +101,19 @@ Box[T :Show] := %{ value : T }
 ## Examples
 
 ```brim
-Fmt := .{ to_string : () str }
+Fmt := .{ to_string :() str }
 
-Logger :^log{ target :str } :Fmt = {
-  ^Logger<_>(to :str) {
-    target :str = to
+Logger := @{ target :str }
+
+Logger {
+  (sink :str) @! { @{ target = sink } }
+
+  ~(svc :@) unit {
+    std::log::release(svc.target)
   }
-  to_string :() str { target }
-  ~ { }
 }
 
-main :() str = {
-  logger ~= Logger("stdout")
-  logger.to_string()
+Logger<Fmt>(svc :@) {
+  to_string :() str { svc.target }
 }
 ```

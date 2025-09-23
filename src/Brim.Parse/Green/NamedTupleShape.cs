@@ -37,7 +37,7 @@ public sealed record NamedTupleShape(
     if (elems.Count == 0)
       p.AddDiagEmptyNamedTupleElementList();
 
-    GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBraceToken);
+    GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
     return new NamedTupleShape(open, elems, close);
   }
 }

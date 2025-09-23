@@ -28,7 +28,7 @@ Parameter list forms allowed today:
 
 ## Named Functions
 
-Named functions are declared via const (`=`) or mutable (`@name ... =`) binding, or via the combined const form. Only const-bound functions may be exported.
+Named functions are declared via const (`=`) or mutable (`^name ... =`) binding, or via the combined const form. Only const-bound functions may be exported.
 
 Examples:
 ```brim
@@ -44,7 +44,7 @@ sum = (xs) {
 }
 
 -- Mutable function value (allows rebinding)
-@now :() i64 = () { host_clock.now() }
+^now :() i64 = () { host_clock.now() }
 now = () { 1_700_000_000i64 }  -- test override
 
 -- Combined header with parameter names & types (const only)
@@ -59,7 +59,7 @@ map[T, U] :((T) U, list[T]) list[U] = (f, xs) {
 ```
 
 Rules:
-- Named binding: `name :(Type, ...) Ret = (params) { ... }` (const) or `@name :(Type, ...) Ret = (params) { ... }` (mutable; rebind later with `name = ...`).
+- Named binding: `name :(Type, ...) Ret = (params) { ... }` (const) or `^name :(Type, ...) Ret = (params) { ... }` (mutable; rebind later with `name = ...`).
 - Split header form: declare `name :(Type, ...) Ret` then later bind with `=` (const) or use the mutable form above.
 - Combined header (const only): `name :(x :T, y :U, ...) Ret { body }` — ergonomic; const-only.
 - Only const-bound functions may be exported.

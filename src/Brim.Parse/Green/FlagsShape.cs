@@ -55,7 +55,7 @@ IParsable<FlagsShape>
       }
     }
 
-    GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBraceToken);
+    GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
     return new FlagsShape(amp, underlying, open, members, close);
   }
 }

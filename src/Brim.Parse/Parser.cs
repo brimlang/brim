@@ -37,7 +37,6 @@ public sealed partial class Parser(
 
   public BrimModule ParseModule()
   {
-    // Required first construct: ModuleDirective
     ModuleDirective header = ModuleDirective.Parse(this);
 
     ImmutableArray<GreenNode>.Builder members = ImmutableArray.CreateBuilder<GreenNode>();

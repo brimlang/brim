@@ -3,20 +3,20 @@ using Brim.Parse.Collections;
 namespace Brim.Parse.Green;
 
 public sealed record ValueDeclaration(
-  GreenToken? Atmark,
+  GreenToken? Mutator,
   GreenToken Name,
   GreenToken Colon,
   GreenNode TypeNode,
   GreenToken Equal,
   StructuralArray<GreenNode> Initializer,
   GreenToken Terminator)
-  : GreenNode(SyntaxKind.ValueDeclaration, (Atmark ?? Name).Offset)
+  : GreenNode(SyntaxKind.ValueDeclaration, (Mutator ?? Name).Offset)
 {
-  public bool IsMutable => Atmark is not null;
-  public override int FullWidth => Terminator.EndOffset - (Atmark ?? Name).Offset;
+  public bool IsMutable => Mutator is not null;
+  public override int FullWidth => Terminator.EndOffset - (Mutator ?? Name).Offset;
   public override IEnumerable<GreenNode> GetChildren()
   {
-    if (Atmark is not null) yield return Atmark;
+    if (Mutator is not null) yield return Mutator;
     yield return Name;
     yield return Colon;
     yield return TypeNode;
@@ -27,9 +27,9 @@ public sealed record ValueDeclaration(
 
   public static ValueDeclaration Parse(Parser p)
   {
-    GreenToken? at = null;
-    if (p.MatchRaw(RawKind.Atmark))
-      at = new GreenToken(SyntaxKind.AtToken, p.ExpectRaw(RawKind.Atmark));
+    GreenToken? mutator = null;
+    if (p.MatchRaw(RawKind.Hat))
+      mutator = new GreenToken(SyntaxKind.HatToken, p.ExpectRaw(RawKind.Hat));
 
     GreenToken name = p.ExpectSyntax(SyntaxKind.IdentifierToken);
     GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
@@ -39,10 +39,9 @@ public sealed record ValueDeclaration(
     ImmutableArray<GreenNode>.Builder init = ImmutableArray.CreateBuilder<GreenNode>();
     // Consume initializer tokens structurally until a Terminator (structure-only phase)
     while (!p.MatchRaw(RawKind.Terminator) && !p.MatchRaw(RawKind.Eob))
-      init.Add(new GreenToken(SyntaxKind.ErrorToken, p.ExpectRaw(p.Current.CoreToken.Kind)));
+      init.Add(new GreenToken(SyntaxKind.Undefined, p.ExpectRaw(p.Current.CoreToken.Kind)));
 
     GreenToken term = p.ExpectSyntax(SyntaxKind.TerminatorToken);
-    return new ValueDeclaration(at, name, colon, typeExpr, eq, init, term);
+    return new ValueDeclaration(mutator, name, colon, typeExpr, eq, init, term);
   }
 }
-

@@ -3,7 +3,7 @@ using Brim.Parse.Collections;
 namespace Brim.Parse.Green;
 
 public sealed record ServiceImpl(
-  GreenToken Hat,
+  GreenToken Sigil,
   GreenNode ServiceRef,
   GreenToken ReceiverOpen,
   GreenToken ReceiverIdent,
@@ -15,12 +15,12 @@ public sealed record ServiceImpl(
   StructuralArray<ServiceFieldInit> InitDecls,
   StructuralArray<GreenNode> Members,
   GreenToken CloseBrace)
-  : GreenNode(SyntaxKind.Block, Hat.Offset)
+  : GreenNode(SyntaxKind.Block, Sigil.Offset)
 {
-  public override int FullWidth => CloseBrace.EndOffset - Hat.Offset;
+  public override int FullWidth => CloseBrace.EndOffset - Sigil.Offset;
   public override IEnumerable<GreenNode> GetChildren()
   {
-    yield return Hat;
+    yield return Sigil;
     yield return ServiceRef;
     yield return ReceiverOpen;
     yield return ReceiverIdent;
@@ -36,8 +36,8 @@ public sealed record ServiceImpl(
 
   public static ServiceImpl Parse(Parser p)
   {
-    // '^' ServiceRef '<' recv '>' CtorParamsOpt '{' InitDecl* Member* '}'
-    GreenToken hat = new(SyntaxKind.HatToken, p.ExpectRaw(RawKind.Hat));
+    // '@' ServiceRef '<' recv '>' CtorParamsOpt '{' InitDecl* Member* '}'
+    GreenToken sigil = p.ExpectSyntax(SyntaxKind.ServiceImplToken);
     GreenToken head = p.ExpectSyntax(SyntaxKind.IdentifierToken);
     GreenNode sref = head;
     if (p.MatchRaw(RawKind.LBracket) && !p.MatchRaw(RawKind.LBracketLBracket))
@@ -59,7 +59,7 @@ public sealed record ServiceImpl(
 
     GreenToken ob = p.ExpectSyntax(SyntaxKind.OpenBraceToken);
 
-    // Init declarations: (('@')? Ident ':' Type '=' ... Terminator)+
+    // Init declarations: ('^'? Ident ':' Type '=' ... Terminator)+
     ImmutableArray<ServiceFieldInit>.Builder inits = ImmutableArray.CreateBuilder<ServiceFieldInit>();
     while (true)
     {
@@ -69,13 +69,13 @@ public sealed record ServiceImpl(
 
       // Optional attributes would be handled here (future)
 
-      bool looksLikeInit = p.MatchRaw(RawKind.Atmark) && p.MatchRaw(RawKind.Identifier, 1) && p.MatchRaw(RawKind.Colon, 2)
+      bool looksLikeInit = p.MatchRaw(RawKind.Hat) && p.MatchRaw(RawKind.Identifier, 1) && p.MatchRaw(RawKind.Colon, 2)
         || (p.MatchRaw(RawKind.Identifier) && p.MatchRaw(RawKind.Colon, 1));
       if (!looksLikeInit) break;
 
-      GreenToken? at = null;
-      if (p.MatchRaw(RawKind.Atmark))
-        at = new GreenToken(SyntaxKind.AtToken, p.ExpectRaw(RawKind.Atmark));
+      GreenToken? mutator = null;
+      if (p.MatchRaw(RawKind.Hat))
+        mutator = new GreenToken(SyntaxKind.HatToken, p.ExpectRaw(RawKind.Hat));
 
       GreenToken fname = p.ExpectSyntax(SyntaxKind.IdentifierToken);
       GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
@@ -87,7 +87,7 @@ public sealed record ServiceImpl(
         _ = p.ExpectRaw(p.Current.Kind);
 
       GreenToken term = p.ExpectSyntax(SyntaxKind.TerminatorToken);
-      inits.Add(new ServiceFieldInit(at, fname, colon, ftype, eq, term));
+      inits.Add(new ServiceFieldInit(mutator, fname, colon, ftype, eq, term));
     }
 
     // Optional destructor immediately after init section
@@ -111,8 +111,8 @@ public sealed record ServiceImpl(
       _ = p.ExpectRaw(p.Current.Kind);
     }
 
-    GreenToken cb = p.ExpectSyntax(SyntaxKind.CloseBraceToken);
-    return new ServiceImpl(hat, sref, recvOpen, rid, recvClose, ctorOpen, ctorParams, ctorClose, ob, [.. inits], memb.ToImmutable(), cb);
+    GreenToken cb = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
+    return new ServiceImpl(sigil, sref, recvOpen, rid, recvClose, ctorOpen, ctorParams, ctorClose, ob, [.. inits], memb.ToImmutable(), cb);
   }
 
   static ServiceMethodHeader ParseMethodHeaderAndSkipBody(Parser p)
@@ -169,28 +169,28 @@ public sealed record ServiceImpl(
     while (!p.MatchRaw(RawKind.Eob) && depth > 0)
     {
       if (p.MatchRaw(RawKind.LBrace)) { _ = p.ExpectSyntax(SyntaxKind.OpenBraceToken); depth++; continue; }
-      if (p.MatchRaw(RawKind.RBrace)) { depth--; if (depth == 0) break; _ = p.ExpectSyntax(SyntaxKind.CloseBraceToken); continue; }
+      if (p.MatchRaw(RawKind.RBrace)) { depth--; if (depth == 0) break; _ = p.ExpectSyntax(SyntaxKind.CloseBlockToken); continue; }
       _ = p.ExpectRaw(p.Current.Kind);
     }
-    _ = p.ExpectSyntax(SyntaxKind.CloseBraceToken);
+    _ = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
   }
 
   // Removed old state block parsing in favor of init decls
 }
 
 public sealed record ServiceFieldInit(
-  GreenToken? Atmark,
+  GreenToken? Mutator,
   GreenToken Name,
   GreenToken Colon,
   GreenNode Type,
   GreenToken Equal,
   GreenToken Terminator)
-  : GreenNode(SyntaxKind.FieldDeclaration, (Atmark ?? Name).Offset)
+  : GreenNode(SyntaxKind.FieldDeclaration, (Mutator ?? Name).Offset)
 {
-  public override int FullWidth => Terminator.EndOffset - (Atmark ?? Name).Offset;
+  public override int FullWidth => Terminator.EndOffset - (Mutator ?? Name).Offset;
   public override IEnumerable<GreenNode> GetChildren()
   {
-    if (Atmark is not null) yield return Atmark;
+    if (Mutator is not null) yield return Mutator;
     yield return Name;
     yield return Colon;
     yield return Type;

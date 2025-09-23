@@ -35,7 +35,7 @@ public sealed record StructShape(
     }
 
     StructuralArray<FieldDeclaration> arr = [.. fields];
-    GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBraceToken);
+    GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
     return new StructShape(open, arr, close);
   }
 }

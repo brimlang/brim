@@ -19,7 +19,7 @@ public class ParserPredictionTests
     bool proto = Parser.ModuleMemberPredictions.Any(p =>
       p.Sequence[0] == RawKind.Identifier && p.Sequence[1] == RawKind.ColonEqual && p.Sequence[2] == RawKind.StopLBrace);
     bool svc = Parser.ModuleMemberPredictions.Any(p =>
-      p.Sequence[0] == RawKind.Identifier && p.Sequence[1] == RawKind.Colon && p.Sequence[2] == RawKind.Hat);
+      p.Sequence[0] == RawKind.Identifier && p.Sequence[1] == RawKind.Colon && p.Sequence[2] == RawKind.Atmark);
     Assert.True(proto);
     Assert.True(svc);
   }

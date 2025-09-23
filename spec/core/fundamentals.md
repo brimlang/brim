@@ -39,7 +39,7 @@ What a new brimmian should know immediately.
 2. Symbols are bound when declared:
   - type with `:=` (TypeExpr on RHS; nominal if a shape literal)
   - const with `=` (value bindings require an initializer)
-  - mutable with `@name :Type = expr` (initializer required; reassign later with `@name = expr`)
+  - mutable with `^name :Type = expr` (initializer required; reassign later with `^name = expr`)
   - service with `~=`
 3. Value semantics (immutable-by-copy):
   - values copy
@@ -61,7 +61,7 @@ What a new brimmian should know immediately.
 
 io ::= std::io           -- import alias (module bind)
 
-@limit :i32 = 10        -- mutable binding (writes use '@limit = …')
+^limit :i32 = 10        -- mutable binding (writes use '^limit = …')
 answer :i32 = 42i32     -- const binding
 
 Point := %{ x :i32, y :i32 }
@@ -86,7 +86,7 @@ They are the compilation unit.
 [[acme::io::temp]]
 << TempFile
 io ::= std::io
-@limit :i32 = 0
+^limit :i32 = 0
 ```
 
 -- **Header:** `[[pkg::ns::leaf]]` on line 1. Required.
@@ -108,7 +108,7 @@ io ::= std::io
 - `name ::= pkg::ns::path` → module bind (import).
 - `Name[T?] := TypeExpr` → type binding (nominal if RHS is a shape literal; alias otherwise).
 - `name :Type = expr` → const; initializer required; immutable.
-- `@name :Type = expr` → mutable; initializer required; reassign with `@name = expr`.
+- `^name :Type = expr` → mutable; initializer required; reassign with `^name = expr`.
 - `name ~= expr` → bound service; destructor runs at scope end.
 
 ## Statement Separator

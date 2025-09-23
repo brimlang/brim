@@ -1,3 +1,7 @@
+- [ ] PRIORITY PHASE - SERVICE IMPL GRAMMAR
+  - [ ] CTOR/State
+  - [ ] DTOR
+
 - [ ] **PRIORITY PHASE - PRESERVE ALL SIGNIFICANT TOKENS IN ORDER IN GREEN NODES**
     - [x] Current state and gaps
         - [x] Already preserved as trailing commas on list elements:
@@ -20,7 +24,7 @@
         - [ ] Reject exports of mutable symbols (or document semantics).
         - [ ] Consistent error for stray `:` without a following `=` at module scope.
     - [ ] Tests:
-        - [ ] Parse: `pi :f32 = 3.14`, `@limit :i32 = 10`.
+        - [ ] Parse: `pi :f32 = 3.14`, `^limit :i32 = 10`.
         - [ ] Error: `x :i32` (no initializer), `<< @varName` (policy-dependent), malformed operators.
     - [ ] Docs: expand Fundamentals/Grammar/Expressions once expression parsing lands.
 - [ ] **Phase 4 (Option/Result Type Postfix)**

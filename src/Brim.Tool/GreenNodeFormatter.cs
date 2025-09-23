@@ -45,10 +45,6 @@ public static class GreenNodeFormatter
         _ = sb.Append(" name=").Append(Escape(td.Name.Identifier.GetText(source)));
         _ = sb.Append(" type=").Append(td.TypeNode.Kind.ToString());
         break;
-      case GreenToken t:
-        _ = sb.Append(' ').Append(TokenSummary(t, source));
-        tokenForComments = t;
-        break;
       case ModuleDirective md:
         _ = sb.Append(" path=").Append(Escape(md.ModuleHeader.GetText(source)));
         break;
@@ -77,6 +73,10 @@ public static class GreenNodeFormatter
       case ServiceShape svs:
         _ = sb.Append($" protos={svs.Protocols.Count}");
         break;
+      case GreenToken t:
+        _ = sb.Append(' ').Append(TokenSummary(t, source));
+        tokenForComments = t;
+        break;
       default:
         break;
     }
@@ -95,14 +95,13 @@ public static class GreenNodeFormatter
 
   static string TokenSummary(GreenToken t, string source)
   {
-    if (t.Token.Kind == RawKind.Error) return "[red]<error>[/]";
+    // if (t.Token.Kind == RawKind.Error) return "[red]<error>[/]";
     string text = t.GetText(source);
     if (t.SyntaxKind == SyntaxKind.TerminatorToken)
     {
       // visualize newline(s)
       text = text.Replace("\r", "\\r").Replace("\n", "\\n");
     }
-    if (text.Length > 16) text = text[..16] + "…";
     text = Escape(text);
     return $"'{text}'"; // line:col now shown with the node header
   }
@@ -158,6 +157,7 @@ public static class GreenNodeFormatter
     SyntaxKind.FieldDeclaration or
     SyntaxKind.UnionVariantDeclaration or
     SyntaxKind.FlagMemberDeclaration or
+    SyntaxKind.ValueDeclaration or
     SyntaxKind.ImportDeclaration => "[magenta]",
 
     // Directive node (module header) green

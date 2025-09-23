@@ -3,14 +3,30 @@ namespace Brim.Parse;
 /// <summary>
 /// Kinds of tokens in Brim source code.
 /// </summary>
-public enum RawKind : short
+public enum RawKind : sbyte
 {
-  // Special
+  /// <summary>
+  /// Sentinel value indicating the start of the range
+  /// of special kinds that are not real tokens.
+  /// </summary>
+  _SentinelSpecial = sbyte.MinValue,
   Any = -1, // Wildcard for parsing
-  Default = 0, // Uninitialized
+
+  /// <summary>
+  /// Sentinel value indicating the start of the range
+  /// of "normal" token kinds. Doubles as uninitialized.
+  /// </summary>
+  _SentinelDefault = 0,
+
+  Error,
   Identifier,
   Terminator,
-  Error,
+
+  /// <summary>
+  /// Sentinel value indicating the start of the range
+  /// of glyph token kinds.
+  /// </summary>
+  _SentinelGlyphs = 5,
 
   // Single glyphs -- no compound forms
   LParen, // (
@@ -20,38 +36,55 @@ public enum RawKind : short
   Comma, // ,
   Hat, //^
   Plus, // +
+  Minus, // -
   Greater, // >
   Slash, // /
   Backslash, // \
-  Atmark, // @
-  AtLess, // @< (attribute open)
+  Ampersand, // &   --TODO &[u8]{read, write}
 
   // Possible compound glyph runs
+  Atmark, AtmarkLBrace, // @ @{
   Less, LessLess, // < <<
   Equal, EqualGreater, // = =>
-  Minus, CommentTrivia, // - --
   Star, StarLBrace, // * *{
   Tilde, TildeEqual, // ~ ~=
   LBracket, LBracketLBracket, // [ [[
   RBracket, RBracketRBracket, // ] ]]
-  Colon, ColonStar, ColonEqual, ColonColon, // : :* := ::
-  ColonColonEqual, // ::= (module bind)
+  Colon, ColonColonEqual, ColonStar, ColonEqual, ColonColon, // : ::= :* := ::
   Pipe, PipeLBrace, // | |{
   Hash, HashLParen, HashLBrace, // # #( #{
-  Ampersand, // &
   Percent, PercentLBrace, // % %{
   Stop, StopLBrace, StopEqual, // . .{ .=
   Question, QuestionLParen, QuestionLBrace, QuestionQuestion, // ? ?( ?{ ??
   Bang, BangEqual, BangLBrace, BangBangLBrace,  // ! != !{ !!{
 
-  // Literals
+  /// <summary>
+  /// Sentinel value indicating the start of the range
+  /// of literal token kinds.
+  /// </summary>
+  _SentinelLiteral = 115,
+
   IntegerLiteral,
   DecimalLiteral,
   StringLiteral,
 
-  // Trivia
+  /// <summary>
+  /// Sentinel value indicating the start of the range
+  /// of trivia token kinds.
+  /// </summary>
+  _SentinelTrivia = 120,
+
+  CommentTrivia,
   WhitespaceTrivia,
 
-  // Synthesized end-of-file (always emitted exactly once by new producers)
-  Eob = short.MaxValue,
+  /// <summary>
+  /// Sentinel value indicating the start of the range
+  /// of synthetic token kinds.
+  /// </summary>
+  _SentinelSynthetic = sbyte.MaxValue - 2,
+
+  /// <summary>
+  /// End of buffer/input. Emitted once at the end of the token stream.
+  /// </summary>
+  Eob = sbyte.MaxValue,
 }

@@ -26,7 +26,7 @@ Greedy compound glyphs: operators and delimiters are lexed with longest-match se
 |---|---|---|
 | `Name[T?] := TypeExpr` | type-binding | Nominal if shape literal; else alias |
 | `name :Type = expr` | const | Binding header in any scope; init required |
-| `@name :Type = expr` | mutable | Mutable binding; init required; reassign with `@name = expr` |
+| `^name :Type = expr` | mutable | Mutable binding; init required; reassign with `^name = expr` |
 | `name ~= expr` | lifecycle | Services only; destructor at scope exit |
 | `alias ::= pkg::ns` | module | Import alias (top-level only) |
 | `<< Name` | module | Export const-bound symbol |
@@ -37,7 +37,7 @@ Greedy compound glyphs: operators and delimiters are lexed with longest-match se
 | `(Type, ...) Ret` | type | Function type |
 | `(params) { ... }` | value | Function literal; names-only params |
 | `f :(Type, ...) Ret = (params) { ... }` | binding | Named const function |
-| `@f :(Type, ...) Ret = (params) { ... }` | binding | Mutable function value; rebind with `@f = (..){..}` |
+| `^f :(Type, ...) Ret = (params) { ... }` | binding | Mutable function value; rebind with `^f = (..){..}` |
 | `f :(x :T, ...) Ret { ... }` | binding | Combined header (const-only) |
 
 ## Member & Paths
@@ -65,6 +65,7 @@ Greedy compound glyphs: operators and delimiters are lexed with longest-match se
 | `Type|{ V }` / `Type|{ V = e }` | ctor | Union ctors |
 | `Type := &uN{ a, ... }` | type | Flags |
 | `Type&{ a, ... }` | ctor | Flags ctor |
+| `Type := @{ Proto, ... }` | type | Service (protocol list) |
 | `list[T]` | type | List type |
 | `list{e, ...}` | ctor | List ctor |
 

@@ -59,7 +59,7 @@ public sealed class SignificantProducer<TProducer>(in TProducer inner) :
     RawToken next = PeekRaw();
     if (next.Kind == RawKind.Eob)
     {
-      if (_coreToken.Kind > RawKind.Default)
+      if (_coreToken.Kind is > RawKind._SentinelDefault and < RawKind._SentinelTrivia)
       {
         tok = EmitCore();
         return true;

@@ -35,7 +35,7 @@ public sealed record UnionShape(
     }
 
     StructuralArray<UnionVariantDeclaration> arr = [.. vars];
-    GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBraceToken);
+    GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
     return new UnionShape(open, arr, close);
   }
 }

@@ -1,0 +1,61 @@
+[[corpus::core]]
+
+<<
+Perms
+User
+ServiceA
+>>
+
+Perms := &{
+  read
+  write
+}
+
+Role := |{
+  Admin :Perms
+  Guest
+}
+
+User := %{
+  name :str
+  role :Role
+}
+
+AuthProtocol := .{
+  login :(str, str) User?
+  logout :(unit) unit!
+}
+
+ServiceA := @{
+  AuthProtocol
+}
+
+^count :u64 = 0
+
+make_user :(name :str, perms :Perms) User {
+  User%{
+    name = name,
+    role = Role|{Admin = perms}
+  }
+}
+
+@ServiceA<i>(){
+  ~() {}
+  login:(username :str, password :str) User? {
+    make_user(username, Perms&{
+      read
+      write
+    })
+  }
+  logout:(token :unit) unit! {
+    panic("logouts not implemented")
+  }
+}
+
+propagate :(svc :ServiceA, username :str, password :str) User? {
+  svc.login(username, password)?
+}
+
+try_logout :(svc :ServiceA) unit {
+  svc.logout()!
+}

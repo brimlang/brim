@@ -2,8 +2,9 @@ namespace Brim.Parse.Green;
 
 public enum SyntaxKind
 {
+  Undefined = -1,
   // Tokens
-  ErrorToken,
+  ErrorToken = 0,
   ModulePathOpenToken,
   ModulePathCloseToken,
   ModulePathSepToken,
@@ -18,11 +19,10 @@ public enum SyntaxKind
   TypeBindToken,
   LessToken,
   GreaterToken,
-  StructToken,
   UnionToken,
   AmpersandToken,
   OpenBraceToken,
-  CloseBraceToken,
+  CloseBlockToken,
   ExportMarkerToken,
   ColonToken,
   CommaToken,
@@ -32,17 +32,18 @@ public enum SyntaxKind
   OpenParenToken,
   CloseParenToken,
   TerminatorToken,
-  EobToken,
-  NamedTupleToken,
-  ProtocolToken,
   StopToken,
   HatToken,
-  AtToken,
-  AttributeOpenToken,
   TildeToken,
+  NamedTupleToken,
+  ProtocolToken,
+  StructToken,
+  ServiceToken,
+  EobToken,
 
   // Nodes
   Module,
+
   // Declarations
   TypeDeclaration,
   FunctionDeclaration,
@@ -59,15 +60,13 @@ public enum SyntaxKind
   GenericParameter,
   ConstraintList,
   ConstraintRef,
-  FieldList,
   Block,
   ModuleHeader,
   ModulePath,
   ModuleDirective,
-  FieldDeclaration,
   UnionVariantDeclaration,
-  FlagMemberDeclaration,
   GenericType,
+
   // Type expression nodes
   StructShape,
   UnionShape,
@@ -78,6 +77,10 @@ public enum SyntaxKind
   DeclarationName,
   GenericArgument,
   NamedTupleElement,
+  FlagMemberDeclaration,
   ImplementsRef,
   FunctionParameter,
+  FieldDeclaration,
+  FieldList,
+  ServiceImplToken,
 }

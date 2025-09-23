@@ -20,45 +20,52 @@ ResI32   := i32!
 
 -- constants and state
 pi     :f32       = 3.1416
-@lines :list[str] = list{}
+^lines :list[str] = list{}
 
 -- protocol with method signatures
-Proto := .{ get :(Key) Value, put :(Key, Value) unit, }
+Proto := .{
+  get :(Key) Value,
+  put :(Key, Value) unit,
+}
 
 -- service type (protocol refs only)
-IntService[T] := ^{ Proto, }
+IntService[T] := @{ Proto, }
 
 -- service implementation (syntax-only; bodies may error)
-^IntService[T]<i>(seed :T) {
-  @accum :T = seed
-  @call_count :u64 = 0
+@IntService[T]<i>(seed :T, name :str) {
+  ^accum      :T   = seed
+  ^call_count :u64 = 0
+  name        :str = str.concact(name, "isvc")
+
+  init() unit {
+    -- post-ctor init
+  }
 
   ~() unit {
-    @i.call_count = 0u64
+    ^i.call_count = 0u64
   }
 
   add(x :T, y :T) T {
     r = x + y
-    @i.accum = i.accum + r
-    @i.call_count = i.call_count + 1
-    r
+    ^i.accum = i.accum + r
+    ^i.call_count = i.call_count + 1
+    r :> T
   }
 
   to_str() str { sfmt.itoa(i.accum) }
-
 }
 
 -- non-generic service type + impl (parses structurally)
-SimpleSvc := ^{ Proto, }
-^SimpleSvc<i>(){
+SimpleSvc := @{ Proto, }
+@SimpleSvc<i>(){
   ~() unit { }
   ping() unit {}
 }
 
 -- non-generic service with fields
-^StatefulSvc<i>(){
-  @a :i32 = 0i32
-  @b :u64 = 0u64
+@StatefulSvc<i>(){
+  ^a :i32 = 0i32
+  ^b :u64 = 0u64
   ~() unit { }
-  swap() unit { tmp :i32 = i.a; @i.a = i.b; @i.b = tmp }
+  swap() unit { tmp :i32 = i.a; ^i.a = i.b; ^i.b = tmp }
 }
