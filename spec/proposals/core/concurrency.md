@@ -37,7 +37,7 @@ spawn = (fn :() T) Fut[T] { /* host-backed task */ }
 // Wait for completion; suspends current task cooperatively
 await = (ft :Fut[T]) T { /* blocks/suspends until ready */ }
 
-join_all = (xs :list[Fut[T]]) T { /* returns list[T] or folds in place */ }
+join_all = (xs :seq[Fut[T]]) T { /* returns seq[T] or folds in place */ }
 
 // Multi-wait over futures/channels (see §4)
 select = (...) unit { /* see signature in §4 */ }
@@ -195,10 +195,10 @@ run :() res[unit] {
 
 ### Fan-in with `select`
 ```brim
-merge :(a :Receiver[str], b :Receiver[str]) Fut[list[str]] {
+merge :(a :Receiver[str], b :Receiver[str]) Fut[seq[str]] {
   acc := []
   std::task::spawn(() {
-    loop :() list[str] = () {
+    loop :() seq[str] = () {
       std::task::select(
         case a.recv() =>
         | opt:has(v) |> { acc := acc + [v]; loop() }

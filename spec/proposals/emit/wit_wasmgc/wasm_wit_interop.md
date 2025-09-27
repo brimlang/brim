@@ -10,7 +10,7 @@ This document is not authoritative with respect to the brim syntax.
 ## Core Principles
 
 - **GC required.** Modules assume a WASM GC host.
-- **No linear-memory strings or lists.** Brim values map directly to GC reference types.
+- **No linear-memory strings or sequences.** Brim values map directly to GC reference types.
 - **No fallback.** There is no linear-memory mode.
 
 ## Surface → WIT Mapping
@@ -39,7 +39,7 @@ This document is not authoritative with respect to the brim syntax.
 ## Mapping of Core Types
 
 - `str` → `string`
-- `list[T]` → `(array T)`
+- `seq[T]` → `(array T)`
 - `struct` → `struct { ... }`
 - `unions` → GC reference variants
 - `services` → WIT resources with constructors and ABI destructor
@@ -55,7 +55,7 @@ This document is not authoritative with respect to the brim syntax.
 Brim adheres to the canonical ABI with GC extensions. Example:
 
 ```brim
-add = (xs :list<u8>) i32 { ... }
+add = (xs :seq<u8>) i32 { ... }
 ```
 
 Lowers to WIT:
@@ -101,4 +101,3 @@ world math {
 ```
 
 The destructor is emitted in the component’s ABI, not as textual WIT.
-

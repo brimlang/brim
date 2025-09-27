@@ -25,7 +25,7 @@ Target properties:
 - Prefer explicit accumulator passing (clarity over hidden mutation)
 - Separate generation (producer) from consumption (fold / map)
 - Expose early termination via sum types (`T?`, `T!`) rather than control statements
-- Avoid baking in laziness: start with strict list-returning forms; allow streaming variants later
+- Avoid baking in laziness: start with strict sequence-returning forms; allow streaming variants later
 
 ## Proposed Initial Set
 Names are illustrative; final names to follow stdlib naming conventions.
@@ -47,58 +47,58 @@ res = tail_rec(0i32, (n) { n < 10i32 => ?{ n + 1i32 } | ?{} })
 ```
 
 ### 2. iterate
-Generate a list by repeated stepping with bounded count or predicate.
+Generate a sequence by repeated stepping with bounded count or predicate.
 ```
-iterate[T] :(seed :T, step :(T) T, count :i32) list[T]
+iterate[T] :(seed :T, step :(T) T, count :i32) seq[T]
 ```
 - Produces `count` states: `[seed, step(seed), step(step(seed)), ...]`.
 - Variant with predicate could stop when predicate fails (not both forms initially to keep surface minimal).
 
 ### 3. unfold
-Dual of fold: build a list from a seed until the function signals completion.
+Dual of fold: build a sequence from a seed until the function signals completion.
 ```
-unfold[S, T] :(seed :S, next :(S) (S, T)?) list[T]
+unfold[S, T] :(seed :S, next :(S) (S, T)?) seq[T]
 ```
 - `next(seed)` returns `?{ (s', value) }` to continue, or `?{}` to stop.
 
 ### 4. fold
-Left fold over a list.
+Left fold over a sequence.
 ```
-fold[T, U] :(xs :list[T], acc :U, f :(U, T) U) U
+fold[T, U] :(xs :seq[T], acc :U, f :(U, T) U) U
 ```
 - Standard catamorphism; tail-recursive.
 
 ### 5. fold_while
 Fold with early termination.
 ```
-fold_while[T, U] :(xs :list[T], acc :U, f :(U, T) (U?)) U
+fold_while[T, U] :(xs :seq[T], acc :U, f :(U, T) (U?)) U
 ```
 - `f` returns `?{}` to stop (yield current acc), or `?{nextAcc}` to continue.
 
 ### 6. find
 Return first element matching predicate.
 ```
-find[T] :(xs :list[T], pred :(T) bool) T?
+find[T] :(xs :seq[T], pred :(T) bool) T?
 ```
 
 ### 7. any / all
 Boolean summary predicates (can short-circuit via fold_while).
 ```
-any[T] :(xs :list[T], pred :(T) bool) bool
-all[T] :(xs :list[T], pred :(T) bool) bool
+any[T] :(xs :seq[T], pred :(T) bool) bool
+all[T] :(xs :seq[T], pred :(T) bool) bool
 ```
 
 ### 8. map
 Standard map (already showable via recursion; included for completeness & guidance).
 ```
-map[T, U] : ((T) U, list[T]) list[U]
+map[T, U] : ((T) U, seq[T]) seq[U]
 ```
 (Existing example in Fundamentals; ensure consistent signature.)
 
 ### 9. range
 Finite integer range construction.
 ```
-range :(start :i32, end_exclusive :i32, step :i32) list[i32]
+range :(start :i32, end_exclusive :i32, step :i32) seq[i32]
 ```
 - Preconditions: `step != 0`; sign of `step` must move toward end; violations produce `error` in a future Result-returning variant.
 
@@ -141,7 +141,7 @@ result = tail_rec((0i32, 0i32), (state) {
 1. Should `tail_rec` return the last state or allow a projection `(T) U`? (Variant: `tail_rec_result`.)
 2. Is `fold_while` necessary initially, or do we expect users to encode early stop via Option in a combined fold? (Tradeoff: discoverability.)
 3. Provide infix / pipeline sugar later vs relying on prefix calls now.
-4. Naming: prefer concise (`fold`, `unfold`) vs namespaced (`list::fold`). Decision couples to module organization of stdlib.
+4. Naming: prefer concise (`fold`, `unfold`) vs namespaced (`seq::fold`). Decision couples to module organization of stdlib.
 5. Should `iterate` and `unfold` both exist initially, or can one desugar to the other? (`iterate(seed, step, count)` can be an `unfold` special case.)
 6. Error signaling: stick to Option now; introduce Result variants later when domain errors (not structural termination) needed.
 
@@ -157,5 +157,5 @@ No legacy surface: previous loop syntax already purged. Users write direct recur
 1. Gather feedback on helper set & naming.
 2. Validate recursion depth characteristics on representative workloads.
 3. Prototype implementations in stdlib module (`std::iter` placeholder).
-4. Add tests for edge cases (empty lists, early termination, negative steps in `range`).
+4. Add tests for edge cases (empty sequences, early termination, negative steps in `range`).
 5. Consider adding benchmarking harness to evaluate tail recursion elimination once optimizer exists.

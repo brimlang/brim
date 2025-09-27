@@ -100,10 +100,10 @@ h(f(E, a))
 
 ### Data‑first with forward pipe
 ```brim
-sum_evens = (xs :list[i32]) i32 {
-  xs /> std::list::filter(is_even)
-     /> std::list::map(double)
-     /> std::list::sum()
+sum_evens = (xs :seq[i32]) i32 {
+  xs /> std::seq::filter(is_even)
+     /> std::seq::map(double)
+     /> std::seq::sum()
 }
 ```
 
@@ -117,10 +117,10 @@ log_then_write = (data :str) res[unit] {
 
 ### Mixed
 ```brim
-normalize = (xs :list[str]) list[str] {
-  xs /> std::list::map(trim)
-     /> std::list::filter(not_empty)
-     </ std::list::dedupe    // pass result as last arg
+normalize = (xs :seq[str]) seq[str] {
+  xs /> std::seq::map(trim)
+     /> std::seq::filter(not_empty)
+     </ std::seq::dedupe    // pass result as last arg
 }
 ```
 
@@ -162,4 +162,3 @@ load_profile = (id :str) res[Profile] {
 ---
 
 **Governance:** As S0 sugar, follows the S0 charter: proposal → experiment → `std.s0` inclusion → versioned release. No impact on C0 or emitter.
-

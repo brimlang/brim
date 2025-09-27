@@ -18,5 +18,4 @@ W<domain><number>
 
 EBND001 - const/var/service binding error
 EPAT001 - non-exhaustive pattern match
-ELST001 - could not infer list element type
-
+ESEQ001 - could not infer sequence element type
