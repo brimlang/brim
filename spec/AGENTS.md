@@ -5,6 +5,7 @@
 - Place runtime/ABI details in `spec/runtime/` and tooling documentation in `spec/tools/`; syntactic sugar belongs in `spec/sugar/`.
 - When editing both syntax and semantics, touch the relevant documents in the same change set and keep examples in sync.
 - Draft proposals live under `spec/proposals/` in a directory structure that mirrors `spec/`. Keep them there until fully accepted; once accepted, merge the content into `grammar.md` and the relevant semantic file, then delete the proposal copy.
+- When doing broad language design work, you may ignore `spec/proposals/` unless specifically asked to evaluate a proposal; focus on the accepted core specs.
 - Avoid cross-file duplication. Link by path reference when necessary, but rely on the directory structure to communicate scope.
 - Before writing new spec text, skim `spec/README.md` and `spec/template.md` to align with existing conventions (headings, front matter, tone).
 - Do not run code or tests expecting the specs to be executable—they are documentation only.
