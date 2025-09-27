@@ -61,7 +61,7 @@ What a new brimmian should know immediately.
 
 io ::= std::io           -- import alias (module bind)
 
-^limit :i32 = 10        -- mutable binding (writes use '^limit = …')
+^limit :i32 = 10        -- mutable binding (writes use 'limit = …')
 answer :i32 = 42i32     -- const binding
 
 Point := %{ x :i32, y :i32 }
@@ -70,7 +70,7 @@ Reply[T] := |{ Good :T, Error :str }
 inc :(i32) i32 = (x) { x + 1 }
 
 main :() i32 = {
-  pt = Point%{ x = 1, y = 2 }           -- struct ctor
+  pt = Point%{ x = 1, y = 2 }          -- struct ctor
   ok :Reply[i32] = Reply|{ Good = 5 }  -- union ctor
   ok =>
     Good(v) => inc(v)
@@ -90,7 +90,7 @@ io ::= std::io
 ```
 
 -- **Header:** `[[pkg::ns::leaf]]` on line 1. Required.
--- **Exports:** `<< Symbol` per line exports the symbol’s entire surface.
+-- **Exports:** wrap exported names in a block: `<<` … `>>`, one const-bound symbol per line.
   - Only const bound symbols may be exported.
   - There are no implicit exports, and no wildcard exports.
 -- **Imports:** `alias ::= pkg::ns::path` (module binding) anywhere at top level. Imports are required to use module members in term space; direct path calls like `pkg::ns.func()` are disallowed in core. Per‑item aliases use ordinary const binds: `write = io.write`.
@@ -129,20 +129,21 @@ Primitive & built-in:
 - `i8, i16, i32, i64`, `u8, u16, u32, u64`
 - `rune` — Unicode scalar
 - `str` — UTF‑8 string
-- `list[T]` — homogeneous sequence
+- `seq[T]` — growable homogeneous sequence (append, concat)
+- `buf[T; N]` — fixed-length contiguous buffer
 - Option `T?` / Result `T!`
-- `error` — `%{ module: str, domain: str, code: u32 }`
+- `err` — `%{ module: str, domain: str, code: u32 }`
 
 Nominal aggregates (declared elsewhere):
 - Named tuples: `Type := #{T1, T2, ...}`
 - Structs: `Type := %{ field: Type, ... }`
 - Unions:  `Type := |{ Variant: Type?, ... }`
-- Flags:   `Type := &uN{ a, b, c }`
+- Flags:   `Type := &{ a, b, c }`
 - Functions: `Type : (Type, ...) Ret`
 
 Option / Result constructors:
 - `?{}` (nil), `?{x}` (has)
-- `!{x}` (ok), `!!{e}` (err) where `e : error`
+- `!{x}` (ok), `!!{e}` (err) where `e : err`
 Postfix propagation: `expr?` / `expr!` in matching return contexts.
 
 Runes:
@@ -178,9 +179,9 @@ Runes:
 
 ## Spec Map
 
-- Expressions: `spec/core/syntax/expressions.md` — simple forms, constructors, grammar.
-- Functions: `spec/core/syntax/functions.md` — types, values, named functions.
-- Aggregate Types: `spec/core/syntax/aggregates.md` — structs, unions, named tuples, flags, lists.
-- Generics: `spec/core/syntax/generics.md` — parameters, constraints, use sites.
-- Option/Result & Propagation: `spec/core/syntax/option_result.md` — `T?`/`T!`, constructors, postfix.
-- Services & Protocols: `spec/core/syntax/services.md` — protocols and service declarations.
+- Expressions: `spec/core/expressions.md` — evaluation forms and composition.
+- Functions: `spec/core/functions.md` — types, values, named functions.
+- Aggregate Types: `spec/core/aggregates.md` — structs, unions, named tuples, flags, sequences.
+- Generics: `spec/core/generics.md` — parameters, constraints, use sites.
+- Option/Result & Propagation: `spec/core/option_result.md` — `T?`/`T!`, constructors, postfix.
+- Services & Protocols: `spec/core/services.md` — service handles, protocol blocks.
