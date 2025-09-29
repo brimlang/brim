@@ -1,11 +1,16 @@
 ---
-id: core.fundamentals
+id: canon.fundamentals
 title: Fundamentals
-layer: core
+layer: canon
 authors: ['trippwill']
 updated: 2025-09-14
 status: accepted
 version: 0.1.0
+canon:
+  - spec/grammar.md
+  - spec/unicode.md
+  - spec/fundamentals.md
+  - spec/sample.brim
 ---
 
 # Fundamentals
@@ -39,7 +44,7 @@ What a new brimmian should know immediately.
 2. Symbols are bound when declared:
   - type with `:=` (TypeExpr on RHS; nominal if a shape literal)
   - const with `=` (value bindings require an initializer)
-  - mutable with `^name :Type = expr` (initializer required; reassign later with `^name = expr`)
+  - mutable with `^name :Type = expr` (initializer required; reassign later with `name = expr`)
   - service with `~=`
 3. Value semantics (immutable-by-copy):
   - values copy
@@ -62,6 +67,7 @@ What a new brimmian should know immediately.
 io ::= std::io           -- import alias (module bind)
 
 ^limit :i32 = 10        -- mutable binding (writes use 'limit = …')
+limit = limit + 10      -- mutable update
 answer :i32 = 42i32     -- const binding
 
 Point := %{ x :i32, y :i32 }
@@ -108,11 +114,11 @@ io ::= std::io
 - `name ::= pkg::ns::path` → module bind (import).
 - `Name[T?] := TypeExpr` → type binding (nominal if RHS is a shape literal; alias otherwise).
 - `name :Type = expr` → const; initializer required; immutable.
-- `^name :Type = expr` → mutable; initializer required; reassign with `^name = expr`.
+- `^name :Type = expr` → mutable; initializer required; reassign with `name = expr`.
 - `name ~= expr` → bound service; destructor runs at scope end.
 
 ## Statement Separator
-- `\n` and `;` are **statement separators**.
+- A single newline (`\n`) acts as the statement separator. Semicolons are not recognized in canonical Brim source.
 
 ## Comments
 - **Form:** `--` to end of line.
@@ -167,15 +173,14 @@ Runes:
 
 - Use `expr :> Type` for explicit, compile‑time checked conversions.
 - If the conversion cannot be proven viable (per the type system’s rules for coercion/narrowing/widening), a diagnostic is emitted. There are no runtime casts in core.
-- Expression‑level ascription `:Type` is allowed to assert/check the type without conversion. Ascriptions and member access are unambiguous: member access uses `.` (e.g., `expr.member`), while general ascription, when used, should parenthesize the operand `(expr) : Type`.
+- Expression‑level ascription `:Type` is allowed to assert/check the type without conversion.
 
 ## Member Access & Ascription
 
 - Member access uses a dot in expression space: `expr.member(args?)`. Member access on literals is not allowed.
-- Paths use double colon: `pkg::ns::Name`.
+- Paths use double colon: `pkg::ns::Name` for module and type references; term-space access must go through an explicit import binding.
 - Type ascription:
   - In headers: `Ident :Type` (one space before colon, none after).
-  - In expressions: parenthesize the operand `(expr) : Type`.
 
 ## Spec Map
 

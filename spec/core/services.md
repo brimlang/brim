@@ -21,7 +21,11 @@ Services are nominal handles that combine private state with protocol implementa
 
 Example:
 ```brim
-AuthService[T] := @{ foo :u32; bar :bool; xtra :T }
+AuthService[T] := @{
+  foo :u32,
+  bar :bool,
+  xtra :T,
+}
 ```
 
 ### Lifecycle block
@@ -33,7 +37,7 @@ AuthService[T] := @{ foo :u32; bar :bool; xtra :T }
 - Constructors operate before any handle exists—they can only compute and return the literal. Destructors receive the concrete handle as their parameter; no other code can observe the handle until construction completes.
 
 ### Protocol method blocks
-- **Form:** `Service[T?]<ProtoList>(alias :@) { MethodDecl* }`
+- **Form:** `Service[T?]<ProtoList>(alias :@) { MethodDecl* }` or `Service[T?]<ProtoList> { MethodDecl* }` for no receiver.
 - `ProtoList ::= ProtoRef (',' ProtoRef)*` and the angle brackets are mandatory; use `< >` for helper blocks that publish no protocol. `ProtoRef` is any protocol type reference (`Ident` plus optional generic arguments).
 - Each method follows the ordinary declaration form `name :(ParamTypes) ReturnType FunctionBody`, and may read or write state through the aliased handle (`alias.field`).
 - Multiple blocks may target distinct protocol sets for the same service. Helper blocks with `< >` expose internals only to code holding the concrete service handle; protocol-typed callers never see those members.
@@ -46,12 +50,20 @@ AuthService[T] := @{ foo :u32; bar :bool; xtra :T }
 
 ### Example
 ```brim
-AuthService[T] := @{ foo :u32; bar :bool; xtra :T }
+AuthService[T] := @{
+  foo  :u32,
+  bar  :bool,
+  xtra :T,
+}
 
 AuthService[T] {
   (a :u32, b :bool, c :T) @! {
     start(c) =>
-      !(_)  => @{ foo = a, bar = b, xtra = c }
+      !(_)  => @{
+        foo  = a,
+        bar  = b,
+        xtra = c,
+      }
       !!(e) => !!{ e }
   }
 
@@ -66,7 +78,10 @@ AuthService[T]<Auth>(svc :@) {
   login :(user :str, pass :str) User! {
     svc.bar = !svc.bar
     std::atoi(pass) == svc.foo =>
-      true  => User%{ id = user, auth = svc.bar }
+      true  => User%{
+        id   = user,
+        auth = svc.bar,
+      }
       false => !!{ mkerr("Not Authorized") }
   }
 }
@@ -74,6 +89,12 @@ AuthService[T]<Auth>(svc :@) {
 AuthService[T]<>(svc :@) {
   reset :() unit {
     svc.bar = false
+  }
+}
+
+AuthService[T]<log.Logger> {
+  log :(msg :str) unit {
+    log.write(msg)
   }
 }
 ```
@@ -103,10 +124,16 @@ Box[T :Show] := %{ value : T }
 ```brim
 Fmt := .{ to_string :() str }
 
-Logger := @{ target :str }
+Logger := @{
+  target :str,
+}
 
 Logger {
-  (sink :str) @! { @{ target = sink } }
+  (sink :str) @! {
+    @{
+      target = sink,
+    }
+  }
 
   ~(svc :@) unit {
     std::log::release(svc.target)

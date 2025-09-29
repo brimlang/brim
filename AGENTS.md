@@ -7,10 +7,10 @@
 3. Lint (verify): `mise run lint`; Auto-format: `mise run format` (CI fails on unformatted code).
 4. Test all: `mise run test`; Single test project: `dotnet test tests/Brim.Parse.Tests -c Release -f net9.0 --filter FullyQualifiedName~ParserPredictionTests`.
 5. Fast inner-loop examples: lex `mise rx lex ./demo.brim`; parse `mise rx parse ./demo.brim`; diagnostics `mise rx parse --diagnostics ./demo.brim`.
-6. Language/Compiler rules: grammar must remain LL(k≤4); no lookahead >4; prefer table-driven predictions over nested switches.
+6. Language/Compiler rules: grammar must remain LL(k≤4); no lookahead >4; prefer table-driven predictions over nested switches. Keep `spec/sample.brim`, `spec/grammar.md`, `spec/fundamentals.md`, and `spec/unicode.md` in agreement; review the entire set whenever one changes, and if you find a mismatch or unclear direction, stop and ask the requester which version to follow before continuing.
 6.1 Lexer policy (for prediction stability):
     - Greedy matching of compound glyphs using an ASCII table; longest-match wins. Sequences up to 3 characters (e.g., `::=`, `<<`, `|{`, `*{`, `!!{`, `[[`, `]]`, `.{`, `??`) are single tokens. A 4th char may be added in future; never regress to shorter fragments. Example: `[[` is a single token, never two `[` tokens.
-    - Runs collapse to one token: non-terminator whitespace → one `WhitespaceTrivia`; newline/semicolon sequences → one `Terminator`.
+    - Runs collapse to one token: non-terminator whitespace → one `WhitespaceTrivia`; newline runs → one `Terminator`.
     - Identifiers lex as single tokens (Unicode-aware start/part rules). Comments (`-- …\n`) lex as single `CommentTrivia`.
     - SignificantProducer attaches all trivia as leading only; there is no trailing trivia; `Eob` is synthesized exactly once.
     - Design predictions against these stable first tokens (e.g., `<<`, `::=`, `:=`, `.[{]`, `^{`, `[[`, etc.) and ignore trivia — this keeps LL(k) small and tables robust.

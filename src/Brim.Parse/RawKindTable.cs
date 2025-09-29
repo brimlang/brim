@@ -18,8 +18,8 @@ public static class RawKindTable
       [
         ("::=", RawKind.ColonColonEqual),
         ("::", RawKind.ColonColon),
-        (":=", RawKind.ColonEqual),
-        (":*", RawKind.ColonStar)
+        (":>", RawKind.ColonGreater),
+        (":=", RawKind.ColonEqual)
       ]);
     _lookup['!'] = new(RawKind.Bang,
       [
@@ -30,21 +30,21 @@ public static class RawKindTable
     _lookup['?'] = new(RawKind.Question,
       [
         ("??", RawKind.QuestionQuestion),
-        ("?(", RawKind.QuestionLParen),
         ("?{", RawKind.QuestionLBrace)
       ]);
     _lookup['#'] = new(RawKind.Hash,
       [
-        ("#{", RawKind.HashLBrace),
-        ("#(", RawKind.HashLParen)
+        ("#{", RawKind.HashLBrace)
       ]);
     _lookup['<'] = new(RawKind.Less,
       [
+        ("<=", RawKind.LessEqual),
         ("<<", RawKind.LessLess)
       ]);
     _lookup['.'] = new(RawKind.Stop,
       [
-        (".{", RawKind.StopLBrace)
+        (".{", RawKind.StopLBrace),
+        ("..", RawKind.StopStop)
       ]);
     _lookup['@'] = new(RawKind.Atmark,
       [
@@ -52,6 +52,7 @@ public static class RawKindTable
       ]);
     _lookup['='] = new(RawKind.Equal,
       [
+        ("==", RawKind.EqualEqual),
         ("=>", RawKind.EqualGreater)
       ]);
     _lookup['*'] = new(RawKind.Star,
@@ -64,6 +65,7 @@ public static class RawKindTable
       ]);
     _lookup['|'] = new(RawKind.Pipe,
       [
+        ("||", RawKind.PipePipe),
         ("|{", RawKind.PipeLBrace)
       ]);
     _lookup['%'] = new(RawKind.Percent,
@@ -79,7 +81,10 @@ public static class RawKindTable
         ("]]", RawKind.RBracketRBracket)
       ]);
     _lookup['-'] = new(RawKind.Minus, []);
-    _lookup['&'] = new(RawKind.Ampersand, []);
+    _lookup['&'] = new(RawKind.Ampersand,
+      [
+        ("&&", RawKind.AmpersandAmpersand)
+      ]);
     _lookup['('] = new(RawKind.LParen, []);
     _lookup[')'] = new(RawKind.RParen, []);
     _lookup['{'] = new(RawKind.LBrace, []);
@@ -87,7 +92,11 @@ public static class RawKindTable
     _lookup[','] = new(RawKind.Comma, []);
     _lookup['^'] = new(RawKind.Hat, []);
     _lookup['+'] = new(RawKind.Plus, []);
-    _lookup['>'] = new(RawKind.Greater, []);
+    _lookup['>'] = new(RawKind.Greater,
+      [
+        (">>", RawKind.GreaterGreater),
+        (">=", RawKind.GreaterEqual)
+      ]);
     _lookup['/'] = new(RawKind.Slash, []);
     _lookup['\\'] = new(RawKind.Backslash, []);
 

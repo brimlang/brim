@@ -90,7 +90,7 @@ Example:
 ```brim
 map[T, U] :((T) U, seq[T]) seq[U] = (f, xs) {
   xs =>
-    (h, ..t) => seq{ f(h) } ++ map(f, t)
+    (h, ..t) => seq.concat(seq{ f(h) }, map(f, t))
     ()       => seq{}
 }
 res = map((x) { x + 1 }, seq{1,2,3})

@@ -116,14 +116,14 @@ handle :(r :Reply[i32]) i32 = {
 
 ## Flags — bitset aggregates
 
-- **Declaration (type):** `Name := &uN{ a, b, ... }`
+- **Declaration (type):** `Name := &{ a, b, ... }`
 - **Construction (term):** `Name&{ a, ... }`
 - **Pattern:** Two explicit modes (no bitwise operators):
   - Exact set: `(a, b, ...)` — matches exactly the listed flags (no extras, no missing). `()` matches the empty set.
   - Require/forbid: `(+a, -b, ...)` — all `+` flags must be present; all `-` flags must be absent; others unconstrained. Do not mix bare and signed names.
 
 ```brim
-Perms := &u8{ read, write, exec }
+Perms := &{ read, write, exec }
 mask  = Perms&{ read, exec }
 
 check : (p : Perms) bool = {

@@ -14,3 +14,7 @@ Brim language specs are organized by layer:
   - `spec/runtime/`, `spec/tools/` — implementations and CLI guidance.
 
 Each spec file includes front matter describing status and version; accepted specs represent the canonical behaviour.
+
+## Canonical Sync Set
+
+`spec/sample.brim`, `spec/grammar.md`, `spec/fundamentals.md`, and `spec/unicode.md` must describe the same language at all times. When you update one, audit the others in the same change set and refresh examples so they stay aligned. If you discover a mismatch, treat it as a bug report and reconcile the four files before landing any other spec work.

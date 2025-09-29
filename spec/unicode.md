@@ -1,11 +1,16 @@
 ---
-id: core.unicode
-layer: core
+id: canon.unicode
+layer: canon
 title: Unicode & Encoding Rules
-authors: ['assistant']
+authors: ['trippwill', 'assistant']
 updated: 2025-09-27
-status: draft
+status: accepted
 version: 0.1.0
+canon:
+  - spec/grammar.md
+  - spec/unicode.md
+  - spec/fundamentals.md
+  - spec/sample.brim
 ---
 
 # Unicode & Encoding Rules
@@ -50,12 +55,12 @@ Defines the canonical treatment of Unicode code points across tokens, literals, 
 - Recognized whitespace outside literals/comments:
   - ASCII space (`U+0020`), horizontal tab (`U+0009`), carriage return (`U+000D`), line feed (`U+000A`).
   - `\r\n` is collapsed to a single newline terminator.
-- Statement terminators: newline or semicolon `;`.
+- Statement terminator: newline only. Source code that relies on semicolons must emit an explicit newline instead.
 - Any other Unicode whitespace character (NBSP `U+00A0`, zero-width spaces, `U+2028`, etc.) is rejected with diagnostic `ULEX001` unless it appears inside a literal or comment.
 
 ## 6. Comments
 
-- Line comments start with `--` and run to the next recognized terminator (newline or `;`).
+- Line comments start with `--` and run to the next newline terminator.
 - Comment bodies may contain arbitrary Unicode scalars; malformed UTF-8 remains an error earlier in the pipeline.
 
 ## 7. Diagnostics & Rendering
@@ -75,11 +80,10 @@ Defines the canonical treatment of Unicode code points across tokens, literals, 
 ## 8. Interop & ABI Notes
 
 - Brim `str` values handed to WIT bindings are guaranteed to be well-formed UTF-8; bindings must validate inbound host strings before constructing Brim `str` values.
-- Ill-formed host inputs should surface as `res[err]` (or equivalent) rather than propagating malformed data into user code.
+- Ill-formed host inputs should surface as `str!` (or equivalent) rather than propagating malformed data into user code.
 
 ## 9. Deferrals
 
 - Confusable detection / security profiles (e.g., restricting identifiers to mixed scripts) are deferred.
 - Additional comment forms (block comments) remain out of scope for now.
 - Byte-level primitives (raw string literals, explicit encoding literals) will be addressed separately if needed.
-

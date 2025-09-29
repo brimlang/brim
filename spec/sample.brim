@@ -1,0 +1,195 @@
+[[acme::hello]]
+
+-- canon:
+-- spec/grammar.md
+-- spec/unicode.md
+-- spec/fundamentals.md
+-- spec/sample.brim
+
+<<
+Perms
+User
+UserProtocol
+AuthProtocol
+add_user
+>>
+
+log     ::= std::log
+runtime ::= std::runtime
+stdlib  ::= std
+seqops  ::= std::seq
+text    ::= std::text
+
+rocket :rune = '🚀'
+
+launch :str = "Ready to launch... 🚀"
+
+panic :(str?) void = (msg) => {
+  -- print msg and crash
+}
+
+Name  := str
+Perms := &{ read, write, exec }
+Area  := |{
+  Admin  :Perms,
+  Client :Perms,
+  Banned,
+}
+
+User := %{
+  name  :Name,
+  perms :Area,
+}
+
+AuthProtocol := .{
+  login  :(str, str) User!,
+  logout :(User) unit,
+}
+
+UserProtocol := .{
+  add :(str, bool) User!,
+  ban :(User) unit,
+}
+
+UserService := @{
+  perms :Perms,
+  audit :seq[str],
+}
+
+UserService {
+  (seed :Perms) @! {
+    @{
+      perms = seed,
+      audit = seq{},
+    }
+  }
+
+  ~(svc :@) unit {
+    log.flush(svc.audit)
+  }
+}
+
+UserService<UserProtocol,AuthProtocol>(svc :@) {
+  add :(name :str, is_admin :bool) User! {
+    svc.perms = is_admin =>
+      true  => Perms&{ read, write, exec }
+      false => Perms&{ read }
+    svc.audit = seqops.concat(svc.audit, seq{
+      text.concat("add:", name)
+    })
+    User%{
+      name  = name,
+      perms = Area|{
+        Admin = svc.perms,
+      },
+    }
+  }
+
+  ban :(user :User) unit {
+    svc.audit = seqops.concat(svc.audit, seq{
+      text.concat("ban:", user.name)
+    })
+  }
+
+  login :(uname :str, pass :str) User! {
+    check(uname, pass, svc.perms) =>
+      true  => User%{
+        name  = uname,
+        perms = Area|{
+          Client = svc.perms,
+        },
+      }
+      false => !!{ mkerr("Not Authorized") }
+  }
+
+  logout :(user :User) unit {
+    svc.audit = seqops.concat(svc.audit, seq{
+      text.concat("logout:", user.name)
+    })
+  }
+}
+
+adder := (i32, i32) i32
+add_a :adder = (a, b) => a + b
+add_b :(a :i32, b :i32) i32 => a + b
+add_d :(a :i32, b :i32) i32 {
+  a + b
+}
+
+fold :(xs :seq[i32], seed :i32, f :(i32, i32) i32) i32 {
+  ^acc = seed
+  acc
+}
+
+AuthService := @{
+  foo :u32,
+  bar :bool,
+}
+
+AuthService {
+  (a :u32, b :bool) @! {
+    start()
+    @{
+      foo = a,
+      bar = b,
+    }
+  }
+
+  ~(svc :@) unit {
+    if runtime.armed(svc.foo) {
+      end(svc.foo)
+    }
+  }
+}
+
+AuthService<Auth>(svc :@) {
+  login :(uname :str, pass :str) User! {
+    stdlib.atoi(pass) == svc.foo =>
+      true  => User%{
+        id   = uname,
+        auth = svc.bar,
+      }
+      false => !!{ mkerr("Not Authorized") }
+  }
+}
+
+-- These expressions should parse
+parse_pass :() unit {
+  opt?
+  res!
+
+  ^limit :i8 = 10
+  limit = limit + 10
+
+  pi :f32 = 3.14159
+
+  value :> A :> B?
+  value :> A :> B!
+
+  (value :> A)?
+  (value :> A :> B)!
+
+  svc.login(user, pass)?
+  data.normalize().encode()!
+
+  get() :> Intermediate :> Final?
+
+  -foo?
+  !maybeVal?
+  -!result!
+
+  ServiceA@{ }.start()?
+
+  x :> A :> B :> C
+
+  ( (foo) )?
+}
+
+-- These expressions should fail to parse
+fail :() unit {
+  expr? :> T
+  expr! :> T
+  svc.method()?.next()
+  foo()? :> T?
+  x ?
+}
