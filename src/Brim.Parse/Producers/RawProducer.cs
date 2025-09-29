@@ -23,29 +23,43 @@ public sealed class RawProducer(
   /// <summary>
   /// Keywords that should be recognized as specific tokens instead of identifiers.
   /// </summary>
-  static readonly Dictionary<string, RawKind> _keywords = new()
+  static bool TryGetKeyword(ReadOnlySpan<char> span, out RawKind kind)
   {
-    ["true"] = RawKind.True,
-    ["false"] = RawKind.False,
-    ["void"] = RawKind.Void,
-    ["unit"] = RawKind.Unit,
-    ["bool"] = RawKind.Bool,
-    ["str"] = RawKind.Str,
-    ["rune"] = RawKind.Rune,
-    ["err"] = RawKind.Err,
-    ["seq"] = RawKind.Seq,
-    ["buf"] = RawKind.Buf,
-    ["i8"] = RawKind.I8,
-    ["i16"] = RawKind.I16,
-    ["i32"] = RawKind.I32,
-    ["i64"] = RawKind.I64,
-    ["u8"] = RawKind.U8,
-    ["u16"] = RawKind.U16,
-    ["u32"] = RawKind.U32,
-    ["u64"] = RawKind.U64,
-    ["f32"] = RawKind.F32,
-    ["f64"] = RawKind.F64,
-  };
+    // Keywords are all ASCII, so we can do a quick check before allocating a string
+    if (span.Length == 0 || !BrimChars.IsAsciiLetter(span[0]))
+    {
+      kind = RawKind._SentinelDefault;
+      return false;
+    }
+
+    (RawKind, bool) result = span switch
+    {
+      "true" => (RawKind.True, true),
+      "false" => (RawKind.False, true),
+      "void" => (RawKind.Void, true),
+      "unit" => (RawKind.Unit, true),
+      "bool" => (RawKind.Bool, true),
+      "str" => (RawKind.Str, true),
+      "rune" => (RawKind.Rune, true),
+      "err" => (RawKind.Err, true),
+      "seq" => (RawKind.Seq, true),
+      "buf" => (RawKind.Buf, true),
+      "i8" => (RawKind.I8, true),
+      "i16" => (RawKind.I16, true),
+      "i32" => (RawKind.I32, true),
+      "i64" => (RawKind.I64, true),
+      "u8" => (RawKind.U8, true),
+      "u16" => (RawKind.U16, true),
+      "u32" => (RawKind.U32, true),
+      "u64" => (RawKind.U64, true),
+      "f32" => (RawKind.F32, true),
+      "f64" => (RawKind.F64, true),
+      _ => (RawKind._SentinelDefault, false)
+    };
+
+    kind = result.Item1;
+    return result.Item2;
+  }
 
   public bool IsEndOfSource(in RawToken item) => Tokens.IsEob(item);
 
@@ -177,17 +191,16 @@ public sealed class RawProducer(
 
     // Get the identifier text and normalize it
     ReadOnlySpan<char> identifierSpan = _source.Span.Slice(startOffset, length);
-    string normalized = BrimChars.NormalizeIdentifier(identifierSpan);
 
-    // Check if this normalized identifier is a keyword
-    RawKind kind = _keywords.TryGetValue(normalized, out RawKind keywordKind)
+    // Normalize the identifier and check if it's a keyword using TryGetKeyword
+    string normalized = BrimChars.NormalizeIdentifier(identifierSpan);
+    RawKind kind = TryGetKeyword(normalized, out RawKind keywordKind)
       ? keywordKind
       : RawKind.Identifier;
 
     return new RawToken(kind, startOffset, length, line, col);
   }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   RawToken LexNumber(int startOffset, int line, int col)
   {
     bool isDecimal = false;
