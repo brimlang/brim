@@ -5,8 +5,6 @@ namespace Brim.Parse;
 /// <summary>
 /// Immutable backing store for source characters.
 /// Holds a <see cref="ReadOnlyMemory{T}"/> so copies of this value type are cheap and share the same text.
-/// Does not precompute line start indices; callers needing line/column mapping should build that separately.
-/// Use <see cref="GetCursor"/> to obtain a lightweight forward-only character cursor suitable for lexing.
 /// </summary>
 public readonly partial struct SourceText
 {

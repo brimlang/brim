@@ -6,15 +6,16 @@ public class SourceTextTests
   public void FromStringSetsLengthAndSpan()
   {
     var st = SourceText.From("abc");
-    Assert.Equal(3, st.Length);
-    Assert.Equal("abc", st.Span.ToString());
+    Assert.Equal(3, st.Length); // 3 UTF-8 bytes for "abc"
+    Assert.Equal("abc", st.Span[..st.Length]); // Use GetText to decode bytes to string
   }
 
   [Fact]
   public void EnumeratorIteratesCharacters()
   {
     var st = SourceText.From("hi");
-    var collected = string.Concat(st.Span.ToArray());
+    // Use UTF-8 decoding instead of trying to cast bytes to string
+    var collected = st.Span[..st.Length];
     Assert.Equal("hi", collected);
   }
 

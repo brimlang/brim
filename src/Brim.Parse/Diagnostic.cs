@@ -5,7 +5,19 @@ public enum DiagCode
   UnexpectedToken,
   MissingToken,
   UnterminatedString,
+  UnterminatedRune,
   InvalidCharacter,
+
+  // Unicode-specific diagnostics (UENC*, USTR*, URUN*, UIDENT*, ULEX*)
+  InvalidUtf8Encoding,     // UENC001
+  InvalidStringUtf8,       // USTR001  
+  InvalidUnicodeEscape,    // USTR002
+  UnknownEscapeSequence,   // USTR003
+  InvalidRuneScalar,       // URUN001
+  MultipleRunesInLiteral,  // URUN002
+  InvalidIdentifierStart,  // UIDENT001
+  InvalidIdentifierChar,   // UIDENT002
+  UnsupportedWhitespace,   // ULEX001
   EmptyGenericParamList,
   UnexpectedGenericBody,
   EmptyGenericArgList,
@@ -68,6 +80,37 @@ public readonly struct Diagnostic(
 
   public static Diagnostic UnterminatedString(in RawToken tok) =>
     new(DiagCode.UnterminatedString, tok.Offset, tok.Length, tok.Line, tok.Column, (ushort)tok.Kind, 0, 0, 0, 0, 0, 0, DiagPhase.Lex, DiagSeverity.Error);
+
+  public static Diagnostic UnterminatedRune(in RawToken tok) =>
+    new(DiagCode.UnterminatedRune, tok.Offset, tok.Length, tok.Line, tok.Column, (ushort)tok.Kind, 0, 0, 0, 0, 0, 0, DiagPhase.Lex, DiagSeverity.Error);
+
+  // Unicode-specific diagnostics
+  public static Diagnostic InvalidUtf8Encoding(int offset, int line, int column) =>
+    new(DiagCode.InvalidUtf8Encoding, offset, 1, line, column, 0, 0, 0, 0, 0, 0, 0, DiagPhase.Lex, DiagSeverity.Error);
+
+  public static Diagnostic InvalidStringUtf8(in RawToken tok) =>
+    new(DiagCode.InvalidStringUtf8, tok.Offset, tok.Length, tok.Line, tok.Column, (ushort)tok.Kind, 0, 0, 0, 0, 0, 0, DiagPhase.Lex, DiagSeverity.Error);
+
+  public static Diagnostic InvalidUnicodeEscape(int offset, int line, int column, int length, uint codePoint) =>
+    new(DiagCode.InvalidUnicodeEscape, offset, length, line, column, 0, 0, 0, 0, 0, 0, codePoint, DiagPhase.Lex, DiagSeverity.Error);
+
+  public static Diagnostic UnknownEscapeSequence(int offset, int line, int column, int length) =>
+    new(DiagCode.UnknownEscapeSequence, offset, length, line, column, 0, 0, 0, 0, 0, 0, 0, DiagPhase.Lex, DiagSeverity.Error);
+
+  public static Diagnostic InvalidRuneScalar(in RawToken tok) =>
+    new(DiagCode.InvalidRuneScalar, tok.Offset, tok.Length, tok.Line, tok.Column, (ushort)tok.Kind, 0, 0, 0, 0, 0, 0, DiagPhase.Lex, DiagSeverity.Error);
+
+  public static Diagnostic MultipleRunesInLiteral(in RawToken tok) =>
+    new(DiagCode.MultipleRunesInLiteral, tok.Offset, tok.Length, tok.Line, tok.Column, (ushort)tok.Kind, 0, 0, 0, 0, 0, 0, DiagPhase.Lex, DiagSeverity.Error);
+
+  public static Diagnostic InvalidIdentifierStart(int offset, int line, int column, uint codePoint) =>
+    new(DiagCode.InvalidIdentifierStart, offset, 1, line, column, 0, 0, 0, 0, 0, 0, codePoint, DiagPhase.Lex, DiagSeverity.Error);
+
+  public static Diagnostic InvalidIdentifierChar(int offset, int line, int column, int length, uint codePoint) =>
+    new(DiagCode.InvalidIdentifierChar, offset, length, line, column, 0, 0, 0, 0, 0, 0, codePoint, DiagPhase.Lex, DiagSeverity.Error);
+
+  public static Diagnostic UnsupportedWhitespace(int offset, int line, int column, uint codePoint) =>
+    new(DiagCode.UnsupportedWhitespace, offset, 1, line, column, 0, 0, 0, 0, 0, 0, codePoint, DiagPhase.Lex, DiagSeverity.Error);
 
   public static Diagnostic EmptyGenericParamList(in RawToken open) =>
     new(DiagCode.EmptyGenericParamList, open.Offset, open.Length, open.Line, open.Column, 0, 0, 0, 0, 0, 0, 0, DiagPhase.Parse, DiagSeverity.Error);

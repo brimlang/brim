@@ -83,7 +83,8 @@ public static class RawKindTable
     _lookup['-'] = new(RawKind.Minus, []);
     _lookup['&'] = new(RawKind.Ampersand,
       [
-        ("&&", RawKind.AmpersandAmpersand)
+        ("&&", RawKind.AmpersandAmpersand),
+        ("&{", RawKind.AmpersandLBrace)
       ]);
     _lookup['('] = new(RawKind.LParen, []);
     _lookup[')'] = new(RawKind.RParen, []);
@@ -217,5 +218,4 @@ public static class RawKindTable
     /// </summary>
     public bool IsMulti => !Sequences.IsDefaultOrEmpty;
   }
-
 }

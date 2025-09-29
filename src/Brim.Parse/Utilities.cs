@@ -16,7 +16,7 @@ public static class Utilities
 
     for (int i = 1; i < ident.Length; i++)
     {
-      if (!BrimChars.IsIdentifierPart(ident[i]))
+      if (!BrimChars.IsIdentifierContinue(ident[i]))
         return false;
     }
 

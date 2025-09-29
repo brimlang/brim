@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 namespace Brim.Parse;
 
 /// <summary>

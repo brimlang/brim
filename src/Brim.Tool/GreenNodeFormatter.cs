@@ -134,7 +134,8 @@ public static class GreenNodeFormatter
           _ = sb.Append("│   ");
 
         _ = sb.Append("└── [grey]# ");
-        string txt = new string(trivia.Value(source)).Trim();
+        SourceText sourceText = SourceText.From(source);
+        string txt = trivia.Value(sourceText.Span).Trim().ToString();
         txt = Escape(txt);
         _ = sb.Append(txt).Append($"[/] [dim]@{trivia.Line}:{trivia.Column}[/]\n");
       }

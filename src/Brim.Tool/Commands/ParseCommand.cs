@@ -12,7 +12,7 @@ class ParseCommand : Command
 {
   static readonly Argument<string> _fileArgument = new("file")
   {
-    Description = "Brim source file to parse",
+    Description = "Brim source file to parse (use '-' for stdin)",
     Arity = ArgumentArity.ExactlyOne,
   };
 
@@ -42,13 +42,24 @@ class ParseCommand : Command
     string file = parseResult.GetValue(_fileArgument)!;
     bool showDiagnostics = parseResult.GetValue(_diagnosticsOption);
     bool showSource = parseResult.GetValue(_showSourceOption);
-    if (!File.Exists(file))
+
+    string source;
+    if (file == "-")
     {
-      AnsiConsole.MarkupLine($"[red]File not found:[/] {file}");
-      return -1;
+      // Read from stdin
+      source = Console.In.ReadToEnd();
+    }
+    else
+    {
+      // Read from file
+      if (!File.Exists(file))
+      {
+        AnsiConsole.MarkupLine($"[red]File not found:[/] {file}");
+        return -1;
+      }
+      source = File.ReadAllText(file);
     }
 
-    string source = File.ReadAllText(file);
     SourceText st = SourceText.From(source);
     BrimModule module = Parser.ModuleFrom(st);
 

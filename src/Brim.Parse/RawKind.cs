@@ -21,12 +21,40 @@ public enum RawKind : sbyte
   Error,
   Identifier,
   Terminator,
+  _Reserved4 = 4,
+
+  // <summary>
+  // Sentinel value indicating the start of the range
+  // of keyword token kinds.
+  // </summary>
+  _SentinelKeyword = 5,
+
+  True,
+  False,
+  Void,
+  Unit,
+  Bool,
+  Str,
+  Rune,
+  Err,
+  Seq,
+  Buf,
+  I8,
+  I16,
+  I32,
+  I64,
+  U8,
+  U16,
+  U32,
+  U64,
+  F32,
+  F64,
 
   /// <summary>
   /// Sentinel value indicating the start of the range
   /// of glyph token kinds.
   /// </summary>
-  _SentinelGlyphs = 5,
+  _SentinelGlyphs = 30,
 
   // Single glyphs -- no compound forms
   LParen, // (
@@ -37,26 +65,39 @@ public enum RawKind : sbyte
   Hat, //^
   Plus, // +
   Minus, // -
-  Greater, // >
   Slash, // /
   Backslash, // \
-  Ampersand, // &   --TODO &[u8]{read, write}
 
   // Possible compound glyph runs
   Atmark, AtmarkLBrace, // @ @{
   Less, LessLess, // < <<
+  Greater, GreaterGreater, // > >>
   Equal, EqualGreater, // = =>
   Star, StarLBrace, // * *{
   Tilde, TildeEqual, // ~ ~=
   LBracket, LBracketLBracket, // [ [[
   RBracket, RBracketRBracket, // ] ]]
-  Colon, ColonColonEqual, ColonStar, ColonEqual, ColonColon, // : ::= :* := ::
+  Colon, ColonColonEqual, ColonEqual, ColonColon, // : ::= := ::
   Pipe, PipeLBrace, // | |{
-  Hash, HashLParen, HashLBrace, // # #( #{
+  Hash, HashLBrace, // # #{
   Percent, PercentLBrace, // % %{
-  Stop, StopLBrace, StopEqual, // . .{ .=
-  Question, QuestionLParen, QuestionLBrace, QuestionQuestion, // ? ?( ?{ ??
+  Stop, StopLBrace, // . .{
+  Question, QuestionLBrace, QuestionQuestion, // ? ?{ ??
   Bang, BangEqual, BangLBrace, BangBangLBrace,  // ! != !{ !!{
+  Ampersand, AmpersandAmpersand, AmpersandLBrace, // & && &{
+
+  // Additional compound operators based on character sequences
+  ColonGreater, // :> (cast operator)
+  StopStop, // .. (rest pattern)
+  LessEqual, // <=
+  GreaterEqual, // >=
+  EqualEqual, // ==
+  PipePipe, // ||
+
+  /// <summary>
+  /// Sentinel value indicating unused range for future glyphs.
+  _SentinelUnusedRange90 = 90,
+  _SentinelUnusedRange114 = 114,
 
   /// <summary>
   /// Sentinel value indicating the start of the range
@@ -67,6 +108,7 @@ public enum RawKind : sbyte
   IntegerLiteral,
   DecimalLiteral,
   StringLiteral,
+  RuneLiteral,
 
   /// <summary>
   /// Sentinel value indicating the start of the range
@@ -81,7 +123,8 @@ public enum RawKind : sbyte
   /// Sentinel value indicating the start of the range
   /// of synthetic token kinds.
   /// </summary>
-  _SentinelSynthetic = sbyte.MaxValue - 2,
+  _SentinelSynthetic = 125,
+  _Reserved126 = 126,
 
   /// <summary>
   /// End of buffer/input. Emitted once at the end of the token stream.
