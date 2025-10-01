@@ -15,6 +15,26 @@ canon:
 
 # Core Grammar
 
+<!--toc:start-->
+- [Core Grammar](#core-grammar)
+  - [Grammar Rules](#grammar-rules)
+  - [Notation & Conventions](#notation-conventions)
+  - [Lexical Overview](#lexical-overview)
+    - [Binding & Module Surfaces](#binding-module-surfaces)
+    - [Function & Member Surfaces](#function-member-surfaces)
+    - [Control, Aggregates, and Patterns](#control-aggregates-and-patterns)
+  - [Operator Tokens & Precedence](#operator-tokens-precedence)
+  - [Token Groups](#token-groups)
+  - [Structural Templates](#structural-templates)
+  - [Trivia](#trivia)
+  - [Module Structure](#module-structure)
+  - [Block Structure](#block-structure)
+  - [Types](#types)
+  - [Declarations](#declarations)
+  - [Expressions](#expressions)
+  - [Pattern Grammar](#pattern-grammar)
+<!--toc:end-->
+
 This document captures the canonical grammar for the Brim language.
 
 NOTE: The grammar uses a very custom variant of EBNF called HGF (hinky grammar format). See the [Notations & Conventions](#notation-conventions) section below.
@@ -63,14 +83,14 @@ See `spec/unicode.md` for UTF‑8 handling, identifier normalization, and allowe
 ### Binding & Module Surfaces
 
 
-| Surface               | Category          | Notes                                                 |
-| ----------------------| ----------------- | ------------------------------------------------------|
-| `Name[T?] := TypeExpr`| type declaration  | Nominal when the right-hand side is a shape literal.  |
-| `name :Type = expr`   | value binding     | Immutable binding; initialization required.           |
-| `^name :Type = expr`  | mutable binding   | Mutable binding; initialization required.             |
-| `name ~= expr`        | lifecycle bind    | Service handle binding with destructor on scope exit. |
-| `alias ::= pkg::ns`   | module alias      | Top-level only import binding.                        |
-| `<< Name >>`          | export list       | Module-level export of previously bound symbol.       |
+| Surface                | Category         | Notes                                                 |
+| ---------------------- | ---------------- | ----------------------------------------------------- |
+| `Name[T?] := TypeExpr` | type declaration | Nominal when the right-hand side is a shape literal.  |
+| `name :Type = expr`    | value binding    | Immutable binding; initialization required.           |
+| `^name :Type = expr`   | mutable binding  | Mutable binding; initialization required.             |
+| `name :Type ~= expr`   | lifecycle bind   | Service handle binding with destructor on scope exit. |
+| `alias ::= pkg::ns`    | module alias     | Top-level only import binding.                        |
+| `<< Name, Other >>`    | export list      | Module-level export of previously bound symbol.       |
 
 
 ### Function & Member Surfaces
@@ -82,29 +102,30 @@ See `spec/unicode.md` for UTF‑8 handling, identifier normalization, and allowe
 | `(params) => expr` / `(params) => { ... }` | expression   | Function literal with optional block body. |
 | `f :(Type, ...) Ret = ...`                 | declaration  | Named function/value binding.              |
 | `expr.member(args?)`                       | expression   | Member access or method invocation.        |
-| `pkg::ns::Name`                            | path         | Namespace-qualified identifier.            |
 | `[[pkg::ns]]`                              | module       | Module header; must be first declaration.  |
 
 
 ### Control, Aggregates, and Patterns
 
 
-| Surface                             | Category   | Notes                                                                   |
-| ----------------------------------- | ---------- | ----------------------------------------------------------------------- |
-| `scrutinee =>`                      | control    | Starts a `MatchExpr`; see match productions.                            |
-| `?? expr`                           | control    | Pattern guard following `MatchArm`.                                     |
-| `expr :> Type`                      | conversion | Checked cast; see semantics for errors.                                 |
-| `Type := %{ field :Type, ... }`     | type       | Struct shape declaration.                                               |
-| `Type%{ field = expr, ... }`        | construct  | Struct construction literal.                                            |
-| `Type := \|{ Variant :Type?, ... }` | type       | Union shape declaration.                                                |
-| `Type\|{ Variant (= expr)? }`       | construct  | Union construction (with optional payload).                             |
-| `seq[T]{ expr, ... }`               | construct  | Growable sequence literal (element type inferred or via `seq[T]{...}`). |
-| `buf[T; N]{ expr, ... }`            | construct  | Fixed-length buffer literal; element count must equal `N`.              |
-| `Type := @{ field :Type, ... }`     | type       | Service field layout declaration.                                       |
-| --                                  | pattern    | See pattern grammar for allowed forms.                                  |
+| Surface                                 | Category   | Notes                                                                   |
+| --------------------------------------- | ---------- | ----------------------------------------------------------------------- |
+| `scrutinee =>`                          | control    | Starts a `MatchExpr`; see match productions.                            |
+| `?? expr`                               | control    | Pattern guard following `MatchArm`.                                     |
+| `expr :> Type`                          | conversion | Checked cast; see semantics for errors.                                 |
+| `Type := %{ field :Type, ... }`         | type       | Struct shape declaration.                                               |
+| `Type%{ field = expr, ... }`            | construct  | Struct construction literal.                                            |
+| `Type := <PIPE>{ Variant :Type?, ... }` | type       | Union shape declaration.                                                |
+| `Type<PIPE>{ Variant (= expr)? }`       | construct  | Union construction (with optional payload).                             |
+| `seq[T]{ expr, ... }`                   | construct  | Growable sequence literal (element type inferred or via `seq[T]{...}`). |
+| `buf[T; N]{ expr, ... }`                | construct  | Fixed-length buffer literal; element count must equal `N`.              |
+| `Type := @{ field :Type, ... }`         | type       | Service field layout declaration.                                       |
+| --                                      | pattern    | See pattern grammar for allowed forms.                                  |
 
 
 ## Operator Tokens & Precedence
+
+The `BinaryExpr` production is intentionally flat. Precedence and associativity are defined in the table below, and enforced in parsing.
 
 Infix Tokens:
 
@@ -237,7 +258,7 @@ ParenListOpt<T>      : '(' CommaListOpt<T> ')'
                      | '(' TERM CommaLineList<T> TERM ')'
 
 Terminated<T>        : T TERM
-TerminatedList<T>    : Terminated<T> [Terminated<T>]*
+TerminatedListOpt<T> : Terminated<T>*
 
 ModuleRef            : IDENT [MOD_PATH_SEP IDENT]*
 ```
@@ -253,13 +274,15 @@ LineCommentTrivia : LINE_COMMENT [^TERM]* TERM
 ```hgf
 Module            : ModuleHeader [TERM ModuleBody]?
 ModuleHeader      : MOD_PATH_OPEN ModuleRef MOD_PATH_CLOSE
-ModuleBody        : TerminatedList<Declaration>?
+ModuleBody        : TerminatedListOpt<Declaration>
 ```
 
 ## Block Structure
 
+Note: Blocks always contain at least one expression, which is the block's value. It may be `unit{}` if there are no other expressions.
+
 ```hgf
-Block          : '{' TerminatedList<BlockEntry>? Expr '}'
+Block          : '{' TerminatedListOpt<BlockEntry>? Expr '}'
 
 BlockEntry     : BindingDecl
                | Expr
@@ -298,7 +321,7 @@ TypeRef           : IDENT GenericArgs?
 
 FunctionTypeExpr   : '(' CommaListOpt<TypeExpr> ')' TypeExpr
 SeqTypeExpr        : { SEQ_KW '[' } TypeExpr ']'
-BufTypeExpr        : { BUF_KW '[' } TypeExpr [',' INTEGER]? ']'
+BufTypeExpr        : { BUF_KW '[' } TypeExpr [';' INTEGER]? ']'
 
 AggregateTypeExpr  : AggregateShape<STRUCT_SHAPE, FieldDeclaration>
                    | AggregateShape<UNION_SHAPE, UnionVariantDeclaration>
@@ -313,8 +336,9 @@ MethodSignature         : IDENT ':' ParamList TypeExpr
 NamedTupleElement       : IDENT ':' TypeExpr
 FieldDeclaration        : IDENT ':' TypeExpr
 
-GenericArgs        : '<' CommaListOpt<TypeExpr> '>'
-GenericParams      : '<' CommaListOpt<GenericParam> '>'
+BufTypeArgs        : '[' TypeExpr [';' INTEGER]? ']'
+GenericArgs        : '[' CommaListOpt<TypeExpr> ']'
+GenericParams      : '[' CommaListOpt<GenericParam> ']'
 GenericParam       : IDENT [':' ConstraintList]?
 ConstraintList     : TypeRef ['+' TypeRef]*
 ```
@@ -324,14 +348,14 @@ ConstraintList     : TypeRef ['+' TypeRef]*
 ```hgf
 Declaration  : ImportDecl
              | TypeDecl
-             | FuncDecl
+             | FunctionDef
              | ExportDecl
              | ServiceDecl
              | BindingDecl
 
 ImportDecl   : IDENT BIND_MODULE ModuleRef
-TypeDecl     : TypeRef BIND_TYPE TypeExpr
-FuncDecl     : IDENT GenericParams? ':' ParamList TypeExpr FunctionBody
+TypeDecl     : IDENT GenericParams? BIND_TYPE TypeExpr
+FunctionDef  : IDENT GenericParams? ':' ParamList TypeExpr FunctionBody
 
 ParamList    : ParenListOpt<ParamDecl>
 ParamDecl    : IDENT ':' TypeExpr
@@ -345,9 +369,10 @@ BindingDecl  : LocalBinding
 
 LocalBinding : IDENT ':' TypeExpr BIND_VALUE Expr
              | MUTABLE IDENT ':' TypeExpr BIND_VALUE Expr
+             | IDENT ':' TypeExpr BIND_SERVICE Expr
 
 MutAssign    : AssignTarget BIND_VALUE Expr
-AssignTarget : IDENT ('.' IDENT)*
+AssignTarget : IDENT ['.' IDENT]*
 
 -- Service Declarations
 ServiceDecl   : ProtocolDecl
@@ -370,28 +395,24 @@ ServiceDtorDecl : '~' ParamList TypeExpr Block
 ## Expressions
 
 ```hgf
-Expr             : Literal
-                 | IDENT
-                 | CallOrAccessExpr
-                 | ConstructExpr
-                 | '(' Expr ')'
-                 | Block
+Expr             : BinaryExpr
                  | MatchExpr
                  | FunctionLiteral
+                 | Block
 
 FunctionLiteral  : LambdaParams FunctionBody
 LambdaParams     : ParenListOpt<IDENT>
 FunctionBody     : ARROW Expr
                  | Block
 
-OperatorExpr     : PrefixOp* BinaryExpr
-MatchExpr        : OperatorExpr ARROW MatchArmList
+MatchExpr        : BinaryExpr ARROW MatchArmList
 MatchArmList     : FieldList<MatchArm>
 MatchArm         : Pattern GuardExpr? ARROW MatchTarget
 MatchTarget      : Expr
-GuardExpr        : GUARD OperatorExpr
+GuardExpr        : GUARD BinaryExpr
 
-BinaryExpr       : CallOrAccessExpr [InfixOp PrefixOp* CallOrAccessExpr]*
+UnaryExpr        : PrefixOp* CallOrAccessExpr
+BinaryExpr       : UnaryExpr [InfixOp UnaryExpr]*
 
 PrefixOp         : OP_NEG | OP_NOT
 InfixOp          : OP_MULT | OP_DIV | OP_MOD
@@ -401,13 +422,13 @@ InfixOp          : OP_MULT | OP_DIV | OP_MOD
                  | OP_AND
                  | OP_OR
 
-CallOrAccessExpr : PrimaryExpr AccessTail* PropagationOp?
+CallOrAccessExpr : PrimaryExpr [AccessTail | PropagationOp]*
 AccessTail       : '.' IDENT
                  | CallArgs
                  | CAST TypeExpr
+
+PropagationOp    : OPTIONAL | FALLIBLE
 CallArgs         : ParenListOpt<Expr>
-PropagationOp    : OPTIONAL
-                 | FALLIBLE
 
 PrimaryExpr      : IDENT
                  | Literal
@@ -435,7 +456,7 @@ ConstructExpr    : TypedConstruct<TUPLE_SHAPE, Expr>
                  | { BUF_KW BufTypeArgs? } [ CommaListOpt<Expr> '}'
                                            | TERM CommaLineList<Expr> TERM '}']
 
-UnionExpr        : TypeRef UNION_SHAPE VariantInit '}'
+UnionExpr        : { TypeRef UNION_SHAPE } VariantInit '}'
 
 ServiceExpr      : TypedConstruct<SERVICE_SHAPE, FieldInit>
                  | AggregateShape<SERVICE_SHAPE, FieldInit>
@@ -445,6 +466,9 @@ VariantInit      : IDENT [BIND_VALUE Expr]?
 ```
 
 ## Pattern Grammar
+
+Patterns are type-directed based on the match scrutinee.
+See [pattern semantics](/spec/core/match.md).
 
 ```hgf
 Pattern          : WildcardPattern
