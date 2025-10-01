@@ -95,9 +95,9 @@ public enum RawKind : sbyte
   PipePipe, // ||
 
   /// <summary>
-  /// Sentinel value indicating unused range for future glyphs.
-  _SentinelUnusedRange90 = 90,
-  _SentinelUnusedRange114 = 114,
+  /// Sentinel values indicating unused range for future use.
+  _SentinelUnusedRangeStart = 85,
+  _SentinelUnusedRangeEnd = 114,
 
   /// <summary>
   /// Sentinel value indicating the start of the range

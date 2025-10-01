@@ -114,13 +114,13 @@ public static class RawKindTable
 #endif
   }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   /// <summary>
   /// Attempts to retrieve the table entry for the ASCII character <paramref name="c"/>.
   /// </summary>
   /// <param name="c">The character to look up.</param>
   /// <param name="entry">The resulting table entry when the lookup succeeds.</param>
   /// <returns><c>true</c> if the character is registered; otherwise <c>false</c>.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool TryGetEntry(char c, out Entry entry)
   {
     if (c < MaxEntries)
