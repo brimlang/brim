@@ -118,9 +118,9 @@ A match evaluates a scrutinee then selects the first arm whose pattern matches a
 ```brim
 handle :(r :Reply[i32]) i32 = (r) {
   r =>
-    Good(v) ?? v > 0 => v
-    Good(_)          => 0
-    Error(e)         => { log(e); -1 }
+    |(Good(v)) ?? v > 0 => v
+    |(Good(_))          => 0
+    |(Error(e))         => { log(e); -1 }
 }
 ```
 

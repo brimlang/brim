@@ -79,9 +79,16 @@ main :() i32 = {
   pt = Point%{ x = 1, y = 2 }          -- struct ctor
   ok :Reply[i32] = Reply|{ Good = 5 }  -- union ctor
   ok =>
-    Good(v) => inc(v)
+    |(Good(v)) => inc(v)
+    |(Error(msg)) => {
+      io.write("Error: " + msg)
+      -1
+    }
 }
 ```
+
+Semicolons (`;`) are interchangeable with newlines when terminating statements; mixed runs collapse to a single terminator token.
+
 
 ## Modules
 
@@ -166,8 +173,8 @@ Runes:
 - Unit pattern is `()`.
 - Result carrying unit matches with `!()` for the ok case.
 - Flags patterns:
-- - Exact set: `(read, write)`; empty: `()`
-- - Require/forbid: `(+read, -exec)` (others unconstrained)
+  - Exact set: `&(read, write)`; empty: `&()`
+  - Require/forbid: `&(+read, -exec)` (others unconstrained)
 
 ## Casts & Assertions (Compile‑Time)
 

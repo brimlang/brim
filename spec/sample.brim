@@ -7,14 +7,14 @@
 -- spec/sample.brim
 
 <<
-Perms
-User
-UserProtocol
-AuthProtocol
-add_user
+Perms,
+User,
+UserProtocol,
+AuthProtocol,
+add_user,
 >>
 
-log     ::= std::log
+log     ::= std::log;
 runtime ::= std::runtime
 stdlib  ::= std
 seqops  ::= std::seq
@@ -34,12 +34,14 @@ Area  := |{
   Admin  :Perms,
   Client :Perms,
   Banned,
-}
+};
 
 User := %{
   name  :Name,
   perms :Area,
 }
+
+
 
 AuthProtocol := .{
   login  :(str, str) User!,
@@ -107,6 +109,12 @@ UserService<UserProtocol,AuthProtocol>(svc :@) {
       text.concat("logout:", user.name)
     })
   }
+}
+
+check :(uname :str, pass :str, perms :Perms) bool {
+  perms =>
+    &(+exec) => true
+    _        => false
 }
 
 adder := (i32, i32) i32

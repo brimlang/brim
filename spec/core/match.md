@@ -26,15 +26,16 @@ Reply[T] := |{ Good :T, Error :str }
 
 handle :(r :Reply[i32]) i32 = (r) => {
   r =>
-    Good(v) ?? v > 0 => v
-    Good(_)          => 0
-    Error(e)         => { log(e); -1 }
+    |(Good(v)) ?? v > 0 => v
+    |(Good(_))          => 0
+    |(Error(e))         => { log(e); -1 }
 }
 ```
 
 ## Notes
 
-- Union variant patterns omit the leading `|` and use parentheses: `Variant(p?)`.
-- Struct patterns bind by name: `(field = pat, ...)` with order-insensitivity; shorthand `(f1, f2)` binds by field name.
+- Union variant patterns use `|(`: `|(Variant(p?))`.
+- Struct patterns bind by name with `%(...)`; shorthand `%(f1, f2)` binds by field name.
 - List patterns use parentheses and support rest: `(h, ..t)`, `(h)`, `()`.
+- Service patterns expose protocol bindings: `@(auth : AuthProtocol, log : Logger)`.
 - Option/Result patterns are available; see the Option/Result spec.

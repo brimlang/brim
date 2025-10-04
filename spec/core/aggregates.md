@@ -20,12 +20,12 @@ Principle: Construction (term formation) for every aggregate uses the aggregate�
 
 - **Declaration (type):** `Pair[T, U] := #{T, U}`
 - **Construction:** `Pair#{e1, e2}`
-- **Pattern:** `(p1, p2)`
+- **Pattern:** `#(p1, p2)`
 
 ```brim
 Pair[T, U] := #{T, U}
 pair :Pair[i32, i32] = Pair#{1, 2}
-pair => (a, b) => a + b
+pair => #(a, b) => a + b
 ```
 
 ## Sequences — growable homogeneous aggregates
@@ -76,7 +76,7 @@ empty_bytes :buf[u8; 0] = buf[u8; 0]{}
 
 - **Declaration (type):** `Type := %{ field :Type, ... }`
 - **Construction (term):** `Type%{field = expr, ... }`
-- **Pattern:** `(field = pat, ...)` (order-insensitive; shorthand `(f1, f2)` binds by field name)
+- **Pattern:** `%(field = pat, ...)` (order-insensitive; shorthand `%(f1, f2)` binds by field name)
 
 ```brim
 User := %{ id :str, age :i32 }
@@ -87,8 +87,8 @@ mk :(id :str, age :i32) User = {
 
 show :(u :User) str = {
   u =>
-    (id = i, age = a) ?? a > 18 => { "($i), ($a)" }
-    (id = _, age = a)           => "underage"
+    %(id = i, age = a) ?? a > 18 => { "($i), ($a)" }
+    %(id = _, age = a)           => "underage"
 }
 ```
 
@@ -96,7 +96,7 @@ show :(u :User) str = {
 
 - **Declaration (type):** `Name := |{ Variant : Type?, ... }`
 - **Construction (term):** `Type|{ Variant }` or `Type|{ Variant = Expr }`
-- **Pattern:** `Variant(pat?)` (no leading `|` in pattern space)
+- **Pattern:** `|(Variant(pat?))`
 
 Parse-time shape: Union constructor terms use the union sigil at the type head followed by a single-brace body containing exactly one variant entry. The body must contain exactly one element; multiple elements or a trailing comma are syntax errors and are rejected by the parser. The single element may be either a bare variant identifier (no payload) — `Type|{ Variant }` — or a variant with an explicit payload expression supplied via `=` — `Type|{ Variant = Expr }`.
 
@@ -108,9 +108,9 @@ Reply[T] := |{ Good :T, Error :str }
 emit : () Reply[i32] = Reply|{ Good = 42 }
 handle :(r :Reply[i32]) i32 = {
   r =>
-    Good(v) ?? v > 0 => v
-    Good(_)          => 0
-    Error(e)         => -1
+    |(Good(v)) ?? v > 0 => v
+    |(Good(_))          => 0
+    |(Error(_))         => -1
 }
 ```
 
@@ -119,8 +119,8 @@ handle :(r :Reply[i32]) i32 = {
 - **Declaration (type):** `Name := &{ a, b, ... }`
 - **Construction (term):** `Name&{ a, ... }`
 - **Pattern:** Two explicit modes (no bitwise operators):
-  - Exact set: `(a, b, ...)` — matches exactly the listed flags (no extras, no missing). `()` matches the empty set.
-  - Require/forbid: `(+a, -b, ...)` — all `+` flags must be present; all `-` flags must be absent; others unconstrained. Do not mix bare and signed names.
+  - Exact set: `&(a, b, ...)` — matches exactly the listed flags (no extras, no missing). `&()` matches the empty set.
+  - Require/forbid: `&(+a, -b, ...)` — all `+` flags must be present; all `-` flags must be absent; others unconstrained. Do not mix bare and signed names.
 
 ```brim
 Perms := &{ read, write, exec }
@@ -128,11 +128,11 @@ mask  = Perms&{ read, exec }
 
 check : (p : Perms) bool = {
   p =>
-    (read)             => true        -- exact: only 'read'
-    (+write, +exec)    => true        -- require: both present (others allowed)
-    _                  => false
+    &(read)             => true        -- exact: only 'read'
+    &(+write, +exec)    => true        -- require: both present (others allowed)
+    _                   => false
 }
 ```
 
 Flags are fixed enumerated bitsets chosen for efficient embedding in numeric fields.
-Patterns do not use bitwise operators. Do not mix bare and signed names; duplicate names or contradictory constraints like `(+read, -read)` are rejected.
+Patterns do not use bitwise operators. Do not mix bare and signed names; duplicate names or contradictory constraints like `&(+read, -read)` are rejected.

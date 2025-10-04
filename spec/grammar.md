@@ -22,7 +22,7 @@ canon:
   - [Lexical Overview](#lexical-overview)
     - [Binding & Module Surfaces](#binding-module-surfaces)
     - [Function & Member Surfaces](#function-member-surfaces)
-    - [Control, Aggregates, and Patterns](#control-aggregates-and-patterns)
+    - [Control, Aggregates & Construction](#control-aggregates-construction)
   - [Operator Tokens & Precedence](#operator-tokens-precedence)
   - [Token Groups](#token-groups)
   - [Structural Templates](#structural-templates)
@@ -39,9 +39,12 @@ This document captures the canonical grammar for the Brim language.
 
 NOTE: The grammar uses a very custom variant of EBNF called HGF (hinky grammar format). See the [Notations & Conventions](#notation-conventions) section below.
 
+See `spec/unicode.md` for UTF‑8 handling, identifier normalization, and allowed whitespace characters.
+
 ## Grammar Rules
 
 1. **Binary termination**: Every construct has exactly two forms: single-line with explicit newline terminator, or multi-line ending with structural delimiter.
+   - A semicolon (`;`) is equivalent to a newline terminator; runs of `;` and newlines collapse to a single `TERM` token.
 2. **Whitespace is not significant** unless contained in a terminal literal.
 3. **Rules are written for clarity** to contributors, not generators.
 
@@ -50,35 +53,31 @@ NOTE: The grammar uses a very custom variant of EBNF called HGF (hinky grammar f
 Fences labeled hgf are in 'hinky grammar format', a highly custom variant of EBNF.
 
 
-| Form            | Meaning / Style                                | Example                   |
-| --------------- | ---------------------------------------------- | ------------------------- |
-| `"..."`         | Prose description                              | "identifier"              |
-| `NAME = ...`    | Token rule (ALL_CAPS)                          | `LINE_COMMENT = '--'`     |
-| `'...'`         | Literal token                                  | `'{'`                     |
-| `<NAME>`        | Character Name (avoid markdown escaping)       | `<PIPE>`                  |
-| `Name : ...`    | Production rule (PascalCase noun)              | `FunctionLiteral : …`     |
-| `{...}`         | Adjacency required                             | `{TypeRef SERVICE_SHAPE}` |
-| `[...]`         | Grouping                                       | `[Declaration TERM]+`     |
-| `<PIPE>`        | Alternation                                    | `Expr <PIPE> Block`       |
-| `-`             | Character-class subtraction                    | `[Letter - Digit]`        |
-| `*` / `+` / `?` | Quantifiers (zero-or-more / one-or-more / opt) | `T*`                      |
-| Templates       | PascalCase `Template<A, B>`                    | `CommaList<Expr>`         |
-| `^`             | Exclusion                                      | `[^TERM]*`                |
+| Form            | Meaning / Style                          | Example                   |
+| --------------- | ---------------------------------------- | ------------------------- |
+| `"..."`         | Prose description                        | "identifier"              |
+| `NAME = ...`    | Token rule (ALL_CAPS)                    | `LINE_COMMENT = '--'`     |
+| `'...'`         | Literal token                            | `'{'`                     |
+| `<NAME>`        | Character Name (avoid markdown escaping) | `<PIPE>`                  |
+| `Name : ...`    | Production rule (PascalCase noun)        | `FunctionLiteral : …`     |
+| `{...}`         | Adjacency required                       | `{TypeRef SERVICE_SHAPE}` |
+| `[...]`         | Grouping                                 | `[Declaration TERM]+`     |
+| `-`             | Character-class subtraction              | `[Letter - Digit]`        |
+| `*` / `+` / `?` | Quantifiers 0+ 1+ 0/1                    | `T*`                      |
+| Templates       | PascalCase `Template<A, B>`              | `CommaList<Expr>`         |
+| `^`             | Exclusion                                | `[^TERM]*`                |
 
 
 ## Lexical Overview
 
 
-| Surface                           | Category      | Notes                                                                         |
-| -----------------------------     | ------------- | -------                                                                       |
-| Identifier                        | lexical       | Unicode identifier; normalized once rules land.                               |
-| Integer / Decimal / String / Rune | literal       | Standard literal forms; see `spec/core/numeric_literals.md` for typing rules. |
-| `-- comment`                      | trivia        | Runs to end of line; collapses into a single trivia token.                    |
-| Terminator (`\n`)                 | separator     | Consecutive newlines collapse to one `TERM`.                                  |
+| Surface                           | Category  | Notes                                           |
+| --------------------------------- | --------- | ----------------------------------------------- |
+| Identifier                        | lexical   | Unicode identifier; normalized once rules land. |
+| Integer / Decimal / String / Rune | literal   | Standard literal forms                          |
+| `-- comment`                      | trivia    | Runs to end of line                             |
+| Terminator (`\n` or `;`)          | separator | Runs of newlines/semicolons collapse to one `TERM`. |
 
-Compound glyphs (operators, shape openers, etc.) use longest-match lexing. Sequences up to three characters (e.g., `::=`, `<<`, `|{`, `*{`, `!!{`, `[[`, `]]`, `.{`, `@{`, `??`) are single tokens today. If a longer sequence is introduced, it must extend this table; existing multi-char tokens never regress to shorter fragments.
-
-See `spec/unicode.md` for UTF‑8 handling, identifier normalization, and allowed whitespace characters.
 
 ### Binding & Module Surfaces
 
@@ -105,22 +104,18 @@ See `spec/unicode.md` for UTF‑8 handling, identifier normalization, and allowe
 | `[[pkg::ns]]`                              | module       | Module header; must be first declaration.  |
 
 
-### Control, Aggregates, and Patterns
+### Control, Aggregates & Construction
 
 
-| Surface                                 | Category   | Notes                                                                   |
-| --------------------------------------- | ---------- | ----------------------------------------------------------------------- |
-| `scrutinee =>`                          | control    | Starts a `MatchExpr`; see match productions.                            |
-| `?? expr`                               | control    | Pattern guard following `MatchArm`.                                     |
-| `expr :> Type`                          | conversion | Checked cast; see semantics for errors.                                 |
-| `Type := %{ field :Type, ... }`         | type       | Struct shape declaration.                                               |
-| `Type%{ field = expr, ... }`            | construct  | Struct construction literal.                                            |
-| `Type := <PIPE>{ Variant :Type?, ... }` | type       | Union shape declaration.                                                |
-| `Type<PIPE>{ Variant (= expr)? }`       | construct  | Union construction (with optional payload).                             |
-| `seq[T]{ expr, ... }`                   | construct  | Growable sequence literal (element type inferred or via `seq[T]{...}`). |
-| `buf[T; N]{ expr, ... }`                | construct  | Fixed-length buffer literal; element count must equal `N`.              |
-| `Type := @{ field :Type, ... }`         | type       | Service field layout declaration.                                       |
-| --                                      | pattern    | See pattern grammar for allowed forms.                                  |
+| Surface                         | Category   | Notes                                                      |
+| ------------------------------- | ---------- | ---------------------------------------------------------- |
+| `scrutinee =>`                  | control    | Starts a `MatchExpr`; see match productions.               |
+| `?? expr`                       | control    | Pattern guard following `MatchArm`.                        |
+| `expr :> Type`                  | conversion | Checked cast; see semantics for errors.                    |
+| `Type := %{ field :Type, ... }` | type       | Aggregate shape declaration.                               |
+| `Type%{ field = expr, ... }`    | construct  | Aggregate construction expression.                         |
+| `seq[T]{ expr, ... }`           | construct  | Growable sequence literal.                                 |
+| `buf[T; N]{ expr, ... }`        | construct  | Fixed-length buffer literal; element count must equal `N`. |
 
 
 ## Operator Tokens & Precedence
@@ -170,12 +165,14 @@ Precedence and Associativity:
 ```hgf
 IDENT          = "identifier"
 NEWLINE        = '\n'
-TERM           = NEWLINE
+SEMICOLON      = ';'
 LINE_COMMENT   = '--'
 
-MOD_PATH_SEP  = '::'
-MOD_PATH_OPEN = '[['
-MOD_PATH_CLOSE= ']]'
+MOD_PATH_SEP   = '::'
+MOD_PATH_OPEN  = '[['
+MOD_PATH_CLOSE = ']]'
+EXPORT_OPEN    = '<<'
+EXPORT_CLOSE   = '>>'
 ARROW          = '=>'
 CAST           = ':>'
 MUTABLE        = '^'
@@ -222,6 +219,11 @@ U64_KW         = 'u64'
 -- Pattern Tokens
 REST           = '..'
 GUARD          = '??'
+TUPLE_PATTERN  = '#('
+STRUCT_PATTERN = '%('
+UNION_PATTERN  = '|('
+FLAGS_PATTERN  = '&('
+SERVICE_PATTERN= '@('
 
 -- Propagation Tokens
 OPTIONAL       = '?'
@@ -240,27 +242,27 @@ DECIMAL        = "decimal literal"
 Capture common structural patterns in templates to reduce boilerplate.
 
 ```hgf
-CommaList<T>         : T [',' T]* [',']?
-CommaListOpt<T>      : [CommaList<T>]?
-CommaLineList<T>     : T [',']?
-                     | T ',' [TERM T ',']* TERM T [',']?
+TERM                     : {NEWLINE | SEMICOLON}+
+CommaList<T>             : TERM? T [',' TERM? T]* ','? TERM?
+CommaListOpt<T>          : [CommaList<T>]?
 
-FieldList<T>         : T [TERM T]* [TERM]?
-BlockList<T>         : '{' TERM CommaLineList<T> TERM '}'
+FieldList<T>             : T [TERM T]* [TERM]?
 
-AggregateShape<H, T> : H [ CommaList<T> '}' | TERM CommaLineList<T> TERM '}' ]
-TypedConstruct<H, T> : { TypeRef AggregateShape<H, T> }
+AggregateShape<H, T>     : H CommaList<T> '}'
 
-ParenList<T>         : '(' CommaList<T> ')'
-                     | '(' TERM CommaLineList<T> TERM ')'
+TypedConstruct<H, T>     : { TypeRef AggregateShape<H, T> }
+LinearConstruct<H, A, T> : { H A? '{' } CommaListOpt<T> '}'
 
-ParenListOpt<T>      : '(' CommaListOpt<T> ')'
-                     | '(' TERM CommaLineList<T> TERM ')'
+ParenList<T>             : '(' CommaList<T> ')'
+ParenListOpt<T>          : '(' CommaListOpt<T> ')'
+BlockListOpt<T>          : '{' CommaListOpt<T> '}'
+BracketListOpt<T>        : '[' CommaListOpt<T> ']'
+AngleListOpt<T>          : '<' CommaListOpt<T> '>'
 
-Terminated<T>        : T TERM
-TerminatedListOpt<T> : Terminated<T>*
+Terminated<T>            : T TERM
+TerminatedListOpt<T>     : Terminated<T>*
 
-ModuleRef            : IDENT [MOD_PATH_SEP IDENT]*
+ModuleRef                : IDENT [MOD_PATH_SEP IDENT]*
 ```
 
 ## Trivia
@@ -272,18 +274,15 @@ LineCommentTrivia : LINE_COMMENT [^TERM]* TERM
 ## Module Structure
 
 ```hgf
-Module            : ModuleHeader [TERM ModuleBody]?
-ModuleHeader      : MOD_PATH_OPEN ModuleRef MOD_PATH_CLOSE
-ModuleBody        : TerminatedListOpt<Declaration>
+Module       : ModuleHeader [TERM ModuleBody]?
+ModuleHeader : MOD_PATH_OPEN ModuleRef MOD_PATH_CLOSE
+ModuleBody   : TerminatedListOpt<Declaration>
 ```
 
-## Block Structure
-
-Note: Blocks always contain at least one expression, which is the block's value. It may be `unit{}` if there are no other expressions.
+## Block Expression
 
 ```hgf
-Block          : '{' TerminatedListOpt<BlockEntry>? Expr '}'
-
+BlockExpr      : '{' TerminatedListOpt<BlockEntry> Expr '}'
 BlockEntry     : BindingDecl
                | Expr
 ```
@@ -291,35 +290,35 @@ BlockEntry     : BindingDecl
 ## Types
 
 ```hgf
-TypeExpr          : TypePrimary TypeSuffix?
+TypeExpr           : TypeCore TypeSuffix?
 
-TypePrimary       : TypeRef
-                  | FunctionTypeExpr
-                  | SeqTypeExpr
-                  | BufTypeExpr
-                  | AggregateTypeExpr
+TypeCore           : TypeRef
+                   | FunctionTypeExpr
+                   | SeqTypeExpr
+                   | BufTypeExpr
+                   | AggregateTypeExpr
 
-TypeSuffix        : OPTIONAL
-                  | FALLIBLE
+TypeSuffix         : OPTIONAL
+                   | FALLIBLE
 
-TypeRef           : IDENT GenericArgs?
-                  | BOOL_KW
-                  | UNIT_KW
-                  | VOID_KW
-                  | STR_KW
-                  | RUNE_KW
-                  | ERR_KW
-                  | I8_KW
-                  | I16_KW
-                  | I32_KW
-                  | I64_KW
-                  | U8_KW
-                  | U16_KW
-                  | U32_KW
-                  | U64_KW
-                  | SERVICE_HANDLE
+TypeRef            : IDENT GenericArgs?
+                   | BOOL_KW
+                   | UNIT_KW
+                   | VOID_KW
+                   | STR_KW
+                   | RUNE_KW
+                   | ERR_KW
+                   | I8_KW
+                   | I16_KW
+                   | I32_KW
+                   | I64_KW
+                   | U8_KW
+                   | U16_KW
+                   | U32_KW
+                   | U64_KW
+                   | SERVICE_HANDLE
 
-FunctionTypeExpr   : '(' CommaListOpt<TypeExpr> ')' TypeExpr
+FunctionTypeExpr   : ParenListOpt<TypeExpr> TypeExpr
 SeqTypeExpr        : { SEQ_KW '[' } TypeExpr ']'
 BufTypeExpr        : { BUF_KW '[' } TypeExpr [';' INTEGER]? ']'
 
@@ -336,60 +335,59 @@ MethodSignature         : IDENT ':' ParamList TypeExpr
 NamedTupleElement       : IDENT ':' TypeExpr
 FieldDeclaration        : IDENT ':' TypeExpr
 
-BufTypeArgs        : '[' TypeExpr [';' INTEGER]? ']'
-GenericArgs        : '[' CommaListOpt<TypeExpr> ']'
-GenericParams      : '[' CommaListOpt<GenericParam> ']'
-GenericParam       : IDENT [':' ConstraintList]?
-ConstraintList     : TypeRef ['+' TypeRef]*
+BufTypeArgs             : '[' TypeExpr [';' INTEGER]? ']'
+
+GenericArgs             : BracketListOpt<TypeExpr>
+GenericParams           : BracketListOpt<GenericParam>
+GenericParam            : IDENT [':' ConstraintList]?
+ConstraintList          : TypeRef ['+' TypeRef]*
 ```
 
 ## Declarations
 
 ```hgf
-Declaration  : ImportDecl
-             | TypeDecl
-             | FunctionDef
-             | ExportDecl
-             | ServiceDecl
-             | BindingDecl
+Declaration     : ImportDecl
+                | TypeDecl
+                | FunctionDef
+                | ExportDecl
+                | ServiceDecl
+                | BindingDecl
 
-ImportDecl   : IDENT BIND_MODULE ModuleRef
-TypeDecl     : IDENT GenericParams? BIND_TYPE TypeExpr
-FunctionDef  : IDENT GenericParams? ':' ParamList TypeExpr FunctionBody
+ImportDecl      : IDENT BIND_MODULE ModuleRef
+TypeDecl        : IDENT GenericParams? BIND_TYPE TypeExpr
+FunctionDef     : IDENT GenericParams? ':' ParamList TypeExpr FunctionBody
 
-ParamList    : ParenListOpt<ParamDecl>
-ParamDecl    : IDENT ':' TypeExpr
+ParamList       : ParenListOpt<ParamDecl>
+ParamDecl       : IDENT ':' TypeExpr
 
-ExportDecl   : '<<' ExportList '>>'
-ExportList   : CommaListOpt<IDENT>
-             | TERM CommaLineList<IDENT> TERM
+ExportDecl      : EXPORT_OPEN CommaListOpt<IDENT> EXPORT_CLOSE
 
-BindingDecl  : LocalBinding
-             | MutAssign
+BindingDecl     : LocalBinding
+                | MutAssign
 
-LocalBinding : IDENT ':' TypeExpr BIND_VALUE Expr
-             | MUTABLE IDENT ':' TypeExpr BIND_VALUE Expr
-             | IDENT ':' TypeExpr BIND_SERVICE Expr
+LocalBinding    : IDENT ':' TypeExpr BIND_VALUE Expr
+                | MUTABLE IDENT ':' TypeExpr BIND_VALUE Expr
+                | IDENT ':' TypeExpr BIND_SERVICE Expr
 
-MutAssign    : AssignTarget BIND_VALUE Expr
-AssignTarget : IDENT ['.' IDENT]*
+MutAssign       : AssignTarget BIND_VALUE Expr
+AssignTarget    : IDENT ['.' IDENT]*
 
 -- Service Declarations
-ServiceDecl   : ProtocolDecl
-              | LifecycleDecl
+ServiceDecl     : ProtocolDecl
+                | LifecycleDecl
 
-ProtocolDecl  : { TypeRef '<' CommaListOpt<TypeRef> '>' Receiver? } MethodBody
-Receiver      : '(' IDENT ':' SERVICE_HANDLE ')'
-MethodBody    : BlockList<MethodDecl>
-MethodDecl    : IDENT ':' ParamList TypeExpr Block
+ProtocolDecl    : { TypeRef AngleListOpt<TypeRef> Receiver? } MethodBody
+Receiver        : '(' IDENT ':' SERVICE_HANDLE ')'
+MethodBody      : BlockListOpt<MethodDecl>
+MethodDecl      : IDENT ':' ParamList TypeExpr BlockExpr
 
 LifecycleDecl   : TypeRef LifecycleBody
-LifecycleBody   : BlockList<LifecycleMember>
+LifecycleBody   : BlockListOpt<LifecycleMember>
 LifecycleMember : ServiceCtorDecl
                 | ServiceDtorDecl
 
-ServiceCtorDecl : ParamList '@' '!' Block
-ServiceDtorDecl : '~' ParamList TypeExpr Block
+ServiceCtorDecl : ParamList '@' '!' BlockExpr
+ServiceDtorDecl : '~' ParamList TypeExpr BlockExpr
 ```
 
 ## Expressions
@@ -398,12 +396,12 @@ ServiceDtorDecl : '~' ParamList TypeExpr Block
 Expr             : BinaryExpr
                  | MatchExpr
                  | FunctionLiteral
-                 | Block
+                 | BlockExpr
 
 FunctionLiteral  : LambdaParams FunctionBody
 LambdaParams     : ParenListOpt<IDENT>
 FunctionBody     : ARROW Expr
-                 | Block
+                 | BlockExpr
 
 MatchExpr        : BinaryExpr ARROW MatchArmList
 MatchArmList     : FieldList<MatchArm>
@@ -444,17 +442,16 @@ Literal          : STRING
 
 ConstructExpr    : TypedConstruct<TUPLE_SHAPE, Expr>
                  | TypedConstruct<STRUCT_SHAPE, FieldInit>
-                 | UnionExpr
                  | TypedConstruct<FLAGS_SHAPE, IDENT>
+                 | UnionExpr
                  | ServiceExpr
                  | OPT_SHAPE Expr? '}'
                  | OK_SHAPE Expr '}'
                  | ERR_SHAPE Expr '}'
                  | UNIT_KW '{}'
-                 | { SEQ_KW GenericArgs? } [ CommaListOpt<Expr> '}'
-                                           | TERM CommaLineList<Expr> TERM '}']
-                 | { BUF_KW BufTypeArgs? } [ CommaListOpt<Expr> '}'
-                                           | TERM CommaLineList<Expr> TERM '}']
+                 | LinearConstruct<SEQ_KW, GenericArgs, Expr>
+                 | LinearConstruct<BUF_KW, BufTypeArgs, Expr>
+
 
 UnionExpr        : { TypeRef UNION_SHAPE } VariantInit '}'
 
@@ -467,38 +464,42 @@ VariantInit      : IDENT [BIND_VALUE Expr]?
 
 ## Pattern Grammar
 
-Patterns are type-directed based on the match scrutinee.
-See [pattern semantics](/spec/core/match.md).
-
 ```hgf
-Pattern          : WildcardPattern
-                 | BindingPattern
-                 | LiteralPattern
-                 | TuplePattern
-                 | StructPattern
-                 | VariantPattern
-                 | FlagsPattern
-                 | ListPattern
-                 | OptionalPattern
-                 | FalliblePattern
+Pattern             : WildcardPattern
+                    | BindingPattern
+                    | LiteralPattern
+                    | TuplePattern
+                    | StructPattern
+                    | VariantPattern
+                    | FlagsPattern
+                    | ServicePattern
+                    | ListPattern
+                    | OptionalPattern
+                    | FalliblePattern
 
-WildcardPattern  : '_'
-BindingPattern   : IDENT
-LiteralPattern   : Literal
-TuplePattern     : ParenListOpt<Pattern>
-StructPattern    : ParenList<FieldPattern>
-VariantPattern   : IDENT [ParenListOpt<Pattern> ]?
-FlagsPattern     : ParenList<SignedFlag>
-                 | ParenList<IDENT>
-ListPattern      : '(' ListElements? ')'
-OptionalPattern  : '?(' Pattern? ')'
-FalliblePattern  : '!(' Pattern  ')'
-                 | '!!(' Pattern? ')'
+WildcardPattern     : '_'
+BindingPattern      : IDENT
+LiteralPattern      : Literal
+TuplePattern        : TUPLE_PATTERN CommaListOpt<Pattern> ')'
+StructPattern       : STRUCT_PATTERN CommaListOpt<FieldPattern> ')'
+VariantPattern      : UNION_PATTERN IDENT VariantPatternTail? ')'
+FlagsPattern        : FLAGS_PATTERN CommaListOpt<FlagsPatternEntry> ')'
+ServicePattern      : SERVICE_PATTERN CommaListOpt<ServicePatternEntry> ')'
+ListPattern         : '(' ListElements? ')'
+OptionalPattern     : '?(' Pattern? ')'
+FalliblePattern     : '!(' Pattern  ')'
+                    | '!!(' Pattern? ')'
 
-FieldPattern     : IDENT BIND_VALUE Pattern
-ListElements     : Pattern [',' Pattern]* [',' RestPattern]?
-                 | RestPattern
-RestPattern      : REST IDENT?
-SignedFlag       : '+' IDENT
-                 | '-' IDENT
+FieldPattern        : IDENT BIND_VALUE Pattern
+ListElements        : Pattern [',' Pattern]* [',' RestPattern]?
+                    | RestPattern
+RestPattern         : REST IDENT?
+SignedFlag          : '+' IDENT
+                    | '-' IDENT
+
+VariantPatternTail  : ParenListOpt<Pattern>
+FlagsPatternEntry   : SignedFlag
+                    | IDENT
+
+ServicePatternEntry : IDENT ':' TypeRef
 ```

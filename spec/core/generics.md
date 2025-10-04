@@ -103,7 +103,7 @@ Patterns never restate generic arguments:
 Reply[T] := |{ Good : T, Error : str }
 val :Reply[i32] = Reply|{ Good = 42 }
 val =>
-  Good(v) => v
+  |(Good(v)) => v
 ```
 
 ## Diagnostics (Seed)

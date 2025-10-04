@@ -97,6 +97,19 @@ AuthService[T]<log.Logger> {
     log.write(msg)
   }
 }
+
+## Matching on Services
+
+Service instances participate in pattern matching through the `@(` sigil. Patterns bind protocol handles by keyword, enabling method calls on the bound alias immediately inside the arm.
+
+```brim
+svc =>
+  @(auth : AuthProtocol, log : Logger) => auth.login("demo", "pw")
+  @(metrics : Metrics)                 => metrics.increment()
+  _                                    => unit{}
+```
+
+Service pattern entries always annotate the bound alias with a protocol type. Other pattern forms do not admit `:Type` ascriptions; only services permit this substitution surface.
 ```
 
 ## Protocols
