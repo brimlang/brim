@@ -15,7 +15,7 @@ public sealed record ServiceImpl(
   StructuralArray<ServiceFieldInit> InitDecls,
   StructuralArray<GreenNode> Members,
   GreenToken CloseBrace)
-  : GreenNode(SyntaxKind.Block, Sigil.Offset)
+  : GreenNode(SyntaxKind.BlockExpr, Sigil.Offset)
 {
   public override int FullWidth => CloseBrace.EndOffset - Sigil.Offset;
   public override IEnumerable<GreenNode> GetChildren()

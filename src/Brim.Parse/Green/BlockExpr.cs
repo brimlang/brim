@@ -2,11 +2,11 @@ using Brim.Parse.Collections;
 
 namespace Brim.Parse.Green;
 
-public sealed record Block(
+public sealed record BlockExpr(
   GreenToken OpenBrace,
   StructuralArray<GreenNode> Statements,
   GreenToken CloseBrace)
-: GreenNode(SyntaxKind.Block, OpenBrace.Offset)
+: GreenNode(SyntaxKind.BlockExpr, OpenBrace.Offset)
 {
   public override int FullWidth => CloseBrace.EndOffset - OpenBrace.Offset;
   public override IEnumerable<GreenNode> GetChildren()
@@ -19,4 +19,3 @@ public sealed record Block(
     yield return CloseBrace;
   }
 }
-

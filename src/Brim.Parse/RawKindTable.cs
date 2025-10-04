@@ -27,6 +27,18 @@ public static class RawKindTable
         ("!{", RawKind.BangLBrace),
         ("!=", RawKind.BangEqual)
       ]);
+    _lookup['|'] = new(RawKind.Pipe,
+      [
+        ("||", RawKind.PipePipe),
+        ("|{", RawKind.PipeLBrace),
+        ("|(", RawKind.PipeLParen)
+      ]);
+    _lookup['&'] = new(RawKind.Ampersand,
+      [
+        ("&&", RawKind.AmpersandAmpersand),
+        ("&{", RawKind.AmpersandLBrace),
+        ("&(", RawKind.AmpersandLParen)
+      ]);
     _lookup['?'] = new(RawKind.Question,
       [
         ("??", RawKind.QuestionQuestion),
@@ -34,7 +46,8 @@ public static class RawKindTable
       ]);
     _lookup['#'] = new(RawKind.Hash,
       [
-        ("#{", RawKind.HashLBrace)
+        ("#{", RawKind.HashLBrace),
+        ("#(", RawKind.HashLParen)
       ]);
     _lookup['<'] = new(RawKind.Less,
       [
@@ -48,12 +61,23 @@ public static class RawKindTable
       ]);
     _lookup['@'] = new(RawKind.Atmark,
       [
-        ("@{", RawKind.AtmarkLBrace)
+        ("@{", RawKind.AtmarkLBrace),
+        ("@(", RawKind.AtmarkLParen)
       ]);
     _lookup['='] = new(RawKind.Equal,
       [
         ("==", RawKind.EqualEqual),
         ("=>", RawKind.EqualGreater)
+      ]);
+    _lookup['%'] = new(RawKind.Percent,
+      [
+        ("%{", RawKind.PercentLBrace),
+        ("%(", RawKind.PercentLParen)
+      ]);
+    _lookup['>'] = new(RawKind.Greater,
+      [
+        (">>", RawKind.GreaterGreater),
+        (">=", RawKind.GreaterEqual)
       ]);
     _lookup['*'] = new(RawKind.Star,
       [
@@ -62,15 +86,6 @@ public static class RawKindTable
     _lookup['~'] = new(RawKind.Tilde,
       [
         ("~=", RawKind.TildeEqual)
-      ]);
-    _lookup['|'] = new(RawKind.Pipe,
-      [
-        ("||", RawKind.PipePipe),
-        ("|{", RawKind.PipeLBrace)
-      ]);
-    _lookup['%'] = new(RawKind.Percent,
-      [
-        ("%{", RawKind.PercentLBrace)
       ]);
     _lookup['['] = new(RawKind.LBracket,
       [
@@ -81,11 +96,6 @@ public static class RawKindTable
         ("]]", RawKind.RBracketRBracket)
       ]);
     _lookup['-'] = new(RawKind.Minus, []);
-    _lookup['&'] = new(RawKind.Ampersand,
-      [
-        ("&&", RawKind.AmpersandAmpersand),
-        ("&{", RawKind.AmpersandLBrace)
-      ]);
     _lookup['('] = new(RawKind.LParen, []);
     _lookup[')'] = new(RawKind.RParen, []);
     _lookup['{'] = new(RawKind.LBrace, []);
@@ -93,11 +103,6 @@ public static class RawKindTable
     _lookup[','] = new(RawKind.Comma, []);
     _lookup['^'] = new(RawKind.Hat, []);
     _lookup['+'] = new(RawKind.Plus, []);
-    _lookup['>'] = new(RawKind.Greater,
-      [
-        (">>", RawKind.GreaterGreater),
-        (">=", RawKind.GreaterEqual)
-      ]);
     _lookup['/'] = new(RawKind.Slash, []);
     _lookup['\\'] = new(RawKind.Backslash, []);
 

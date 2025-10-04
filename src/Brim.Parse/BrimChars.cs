@@ -13,8 +13,9 @@ static class BrimChars
 
   /// <summary>
   /// Characters that terminate statements or declarations.
+  /// Semicolons are treated the same as newlines for termination.
   /// </summary>
-  public static bool IsTerminator(char c) => c == '\n';
+  public static bool IsTerminator(char c) => c is '\n' or ';';
 
   /// <summary>
   /// Whitespace characters allowed by the Unicode spec - only specific codepoints.

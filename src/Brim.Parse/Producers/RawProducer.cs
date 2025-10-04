@@ -32,7 +32,7 @@ public sealed class RawProducer(
       return false;
     }
 
-    (RawKind, bool) result = span switch
+    (kind, bool Matched) = span switch
     {
       "true" => (RawKind.True, true),
       "false" => (RawKind.False, true),
@@ -57,8 +57,7 @@ public sealed class RawProducer(
       _ => (RawKind._SentinelDefault, false)
     };
 
-    kind = result.Item1;
-    return result.Item2;
+    return Matched;
   }
 
   public bool IsEndOfSource(in RawToken item) => Tokens.IsEob(item);

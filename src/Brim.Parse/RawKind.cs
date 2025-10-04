@@ -69,7 +69,7 @@ public enum RawKind : sbyte
   Backslash, // \
 
   // Possible compound glyph runs
-  Atmark, AtmarkLBrace, // @ @{
+  Atmark, AtmarkLParen, AtmarkLBrace, // @ @( @{
   Less, LessLess, // < <<
   Greater, GreaterGreater, // > >>
   Equal, EqualGreater, // = =>
@@ -78,13 +78,13 @@ public enum RawKind : sbyte
   LBracket, LBracketLBracket, // [ [[
   RBracket, RBracketRBracket, // ] ]]
   Colon, ColonColonEqual, ColonEqual, ColonColon, // : ::= := ::
-  Pipe, PipeLBrace, // | |{
-  Hash, HashLBrace, // # #{
-  Percent, PercentLBrace, // % %{
+  Pipe, PipeLParen, PipeLBrace, // | |( |{
+  Hash, HashLParen, HashLBrace, // # #( #{
+  Percent, PercentLParen, PercentLBrace, // % %( %{
   Stop, StopLBrace, // . .{
   Question, QuestionLBrace, QuestionQuestion, // ? ?{ ??
   Bang, BangEqual, BangLBrace, BangBangLBrace,  // ! != !{ !!{
-  Ampersand, AmpersandAmpersand, AmpersandLBrace, // & && &{
+  Ampersand, AmpersandAmpersand, AmpersandLParen, AmpersandLBrace, // & && &( &{
 
   // Additional compound operators based on character sequences
   ColonGreater, // :> (cast operator)
@@ -96,7 +96,7 @@ public enum RawKind : sbyte
 
   /// <summary>
   /// Sentinel values indicating unused range for future use.
-  _SentinelUnusedRangeStart = 85,
+  _SentinelUnusedRangeStart = 90,
   _SentinelUnusedRangeEnd = 114,
 
   /// <summary>

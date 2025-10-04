@@ -12,7 +12,7 @@
             "program": "${workspaceFolder}/artifacts/bin/Brim.Tool/debug/Brim.Tool.dll",
             "args": [
                 "parse",
-                "./demo.brim"
+                "./spec/sample.brim"
             ],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,

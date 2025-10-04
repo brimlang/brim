@@ -60,7 +60,7 @@ public enum SyntaxKind
   GenericParameter,
   ConstraintList,
   ConstraintRef,
-  Block,
+  BlockExpr,
   ModuleHeader,
   ModulePath,
   ModuleDirective,

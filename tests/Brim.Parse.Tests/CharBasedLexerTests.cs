@@ -279,6 +279,19 @@ public class CharBasedLexerTests
     Assert.Equal(expectedKind, tokens[0].Kind);
   }
 
+  [Theory]
+  [InlineData("#(", RawKind.HashLParen)]
+  [InlineData("%(", RawKind.PercentLParen)]
+  [InlineData("|(", RawKind.PipeLParen)]
+  [InlineData("&(", RawKind.AmpersandLParen)]
+  [InlineData("@(", RawKind.AtmarkLParen)]
+  public void SigilParenOperators_LexCorrectly(string input, RawKind expectedKind)
+  {
+    List<RawToken> tokens = Lex(input);
+    Assert.Single(tokens);
+    Assert.Equal(expectedKind, tokens[0].Kind);
+  }
+
   [Fact]
   public void CompoundTokens_GreedyMatching_LongestWins()
   {
@@ -612,13 +625,19 @@ public class CharBasedLexerTests
   #region Terminator Tests
 
   [Theory]
-  [InlineData("\n", RawKind.Terminator)]
-  [InlineData("\n\n", RawKind.Terminator)]
-  public void Terminators_LexCorrectly(string input, RawKind expectedKind)
+  [InlineData("\n", "\n")]
+  [InlineData("\n\n", "\n\n")]
+  [InlineData(";", ";")]
+  [InlineData(";;", ";;")]
+  [InlineData(";\n", ";\n")]
+  [InlineData("\n;", "\n;")]
+  [InlineData(";\n;", ";\n;")]
+  public void Terminators_LexCorrectly(string input, string expectedValue)
   {
-    List<RawToken> tokens = Lex(input);
+    var tokens = LexWithText(input);
     Assert.Single(tokens);
-    Assert.Equal(expectedKind, tokens[0].Kind);
+    Assert.Equal(RawKind.Terminator, tokens[0].Kind);
+    Assert.Equal(expectedValue, tokens[0].Text);
   }
 
   #endregion
@@ -753,7 +772,7 @@ result .{ success: true, value: x }";
   public void AllOperatorTokens_CanBeLexed()
   {
     // Test all compound operators in one go
-    string input = "::= :: :> := && || == != <= >= >> << [[ ]] !{ !!{ ?{ #{ .{ @{ *{ |{ %{ &{ => ~= .. ??";
+    string input = "::= :: :> := && || == != <= >= >> << [[ ]] !{ !!{ ?{ #{ #( .{ @{ @( *{ |{ |( %{ %( &{ &( => ~= .. ??";
     var tokens = LexWithText(input);
 
     var operatorTokens = tokens.Where(t => t.Kind != RawKind.WhitespaceTrivia).ToList();
@@ -765,8 +784,9 @@ result .{ success: true, value: x }";
       RawKind.AmpersandAmpersand, RawKind.PipePipe, RawKind.EqualEqual, RawKind.BangEqual,
       RawKind.LessEqual, RawKind.GreaterEqual, RawKind.GreaterGreater, RawKind.LessLess,
       RawKind.LBracketLBracket, RawKind.RBracketRBracket, RawKind.BangLBrace, RawKind.BangBangLBrace,
-      RawKind.QuestionLBrace, RawKind.HashLBrace, RawKind.StopLBrace, RawKind.AtmarkLBrace,
-      RawKind.StarLBrace, RawKind.PipeLBrace, RawKind.PercentLBrace, RawKind.AmpersandLBrace, RawKind.EqualGreater,
+      RawKind.QuestionLBrace, RawKind.HashLBrace, RawKind.HashLParen, RawKind.StopLBrace, RawKind.AtmarkLBrace,
+      RawKind.AtmarkLParen, RawKind.StarLBrace, RawKind.PipeLBrace, RawKind.PipeLParen, RawKind.PercentLBrace,
+      RawKind.PercentLParen, RawKind.AmpersandLBrace, RawKind.AmpersandLParen, RawKind.EqualGreater,
       RawKind.TildeEqual, RawKind.StopStop, RawKind.QuestionQuestion
     };
 

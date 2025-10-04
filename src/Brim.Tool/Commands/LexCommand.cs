@@ -1,4 +1,5 @@
 using System.CommandLine;
+using System.Text;
 using Brim.Parse;
 using Brim.Parse.Collections;
 using Brim.Parse.Producers;
@@ -48,7 +49,7 @@ class LexCommand : Command
 
     while (prod.TryRead(out RawToken token))
     {
-      AnsiConsole.Write(GetMarkup(token, st));
+      WriteToken(token, st);
       if (token.Kind == RawKind.Eob)
         break;
     }
@@ -56,21 +57,65 @@ class LexCommand : Command
     return 0;
   }
 
-  static Markup GetMarkup(RawToken token, SourceText source)
+  static void WriteToken(RawToken token, SourceText source)
   {
-    string tokenText = token.Value(source.Span).ToString();
-    return token.Kind switch
+    string literal = EscapeTokenValue(token.Value(source.Span));
+    string color = GetKindStyle(token.Kind);
+
+    AnsiConsole.MarkupLine(
+      $"[{color}]{PadKind(token.Kind)}[/] [grey]{FormatLocation(token)}[/] '[white]{literal}[/]'");
+  }
+
+  static string PadKind(RawKind kind) => Markup.Escape(kind.ToString().PadRight(18));
+
+  static string FormatLocation(RawToken token)
+  {
+    string line = token.Line.ToString().PadLeft(3);
+    string column = token.Column.ToString().PadLeft(3);
+    string width = token.Length.ToString().PadLeft(3);
+    return $"@{line}:{column}({width})";
+  }
+
+  static string EscapeTokenValue(ReadOnlySpan<char> span)
+  {
+    if (span.IsEmpty)
+      return string.Empty;
+
+    StringBuilder builder = new(span.Length);
+
+    foreach (char ch in span)
     {
-      RawKind.Terminator => Markup.FromInterpolated($"[magenta]{{{token.Kind}}}[/] '[grey]{tokenText.Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t")}[/]'\n"),
-      RawKind.Identifier => Markup.FromInterpolated($"[blue]{{{token.Kind}}}[/] '[grey]{tokenText}[/]'\n"),
-      RawKind.IntegerLiteral => Markup.FromInterpolated($"[green]{{{token.Kind}}}[/] '[grey]{tokenText}[/]'\n"),
-      RawKind.DecimalLiteral => Markup.FromInterpolated($"[green]{{{token.Kind}}}[/] '[grey]{tokenText}[/]'\n"),
-      RawKind.StringLiteral => Markup.FromInterpolated($"[green]{{{token.Kind}}}[/] '[grey]{tokenText}[/]'\n"),
-      RawKind.RuneLiteral => Markup.FromInterpolated($"[green]{{{token.Kind}}}[/] '[grey]{tokenText}[/]'\n"),
-      RawKind.WhitespaceTrivia => Markup.FromInterpolated($"[cyan]{{{token.Kind}}}[/] '[grey]{tokenText.Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t")}[/]'\n"),
-      RawKind.CommentTrivia => Markup.FromInterpolated($"[cyan]{{{token.Kind}}}[/] '[grey]{tokenText.Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t")}[/]'\n"),
-      RawKind.Error => Markup.FromInterpolated($"[red]{{{token.Kind}}}[/] '[grey]{tokenText}[/]'\n"),
-      _ => Markup.FromInterpolated($"[yellow]{{{token.Kind}}}[/] '[white]{tokenText}[/]'\n"),
+      _ = ch switch
+      {
+        '\n' => builder.Append("\\n"),
+        '\r' => builder.Append("\\r"),
+        '\t' => builder.Append("\\t"),
+        '\0' => builder.Append("\\0"),
+        _ => builder.Append(ch),
+      };
+    }
+
+    return Markup.Escape(builder.ToString());
+  }
+
+  static string GetKindStyle(RawKind kind)
+  {
+    if (kind == RawKind.Error)
+      return "red";
+
+    return kind switch
+    {
+      RawKind.Terminator => "magenta",
+      RawKind.Identifier => "deepskyblue3",
+      RawKind.CommentTrivia or RawKind.WhitespaceTrivia => "cyan",
+      RawKind.IntegerLiteral or RawKind.DecimalLiteral or RawKind.StringLiteral or RawKind.RuneLiteral => "green",
+      RawKind.Eob => "grey50",
+      > RawKind._SentinelKeyword and < RawKind._SentinelGlyphs => "mediumpurple1",
+      > RawKind._SentinelGlyphs and < RawKind._SentinelLiteral => "darkorange",
+      >= RawKind._SentinelLiteral and < RawKind._SentinelTrivia => "green",
+      >= RawKind._SentinelTrivia and < RawKind._SentinelSynthetic => "cyan",
+      >= RawKind._SentinelSynthetic => "grey66",
+      _ => "yellow",
     };
   }
 }
