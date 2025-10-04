@@ -1,7 +1,3 @@
-- [ ] PRIORITY PHASE - SERVICE IMPL GRAMMAR
-  - [ ] CTOR/State
-  - [ ] DTOR
-
 - [ ] **PRIORITY PHASE - PRESERVE ALL SIGNIFICANT TOKENS IN ORDER IN GREEN NODES**
     - [x] Current state and gaps
         - [x] Already preserved as trailing commas on list elements:
