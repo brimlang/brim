@@ -80,7 +80,7 @@ public class TrailingCommaTests
     var td = m.Members.OfType<TypeDeclaration>().First();
     var ft = Assert.IsType<FunctionShape>(td.TypeNode);
     Assert.Equal(2, ft.ParameterList.Elements.Count);
-    Assert.NotNull(ft.ParameterList.Elements[0].LeadingComma); // interior comma now on next element
+    Assert.NotNull(ft.ParameterList.Elements[1].LeadingComma); // interior comma on second element
     Assert.NotNull(ft.ParameterList.TrailingComma); // trailing comma now on list
   }
 }

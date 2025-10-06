@@ -76,8 +76,9 @@ public class TypeAliasParseTests
     var td = Assert.IsType<TypeDeclaration>(m.Members.First());
     var outer = Assert.IsType<GenericType>(td.TypeNode);
     Assert.Single(outer.Arguments.ArgumentList.Elements);
-    var innerArg = outer.Arguments.ArgumentList.Elements[0];
-    var inner = Assert.IsType<GenericType>(innerArg.Node);
+    var innerArgElem = outer.Arguments.ArgumentList.Elements[0];
+    var innerArgNode = Assert.IsType<GenericArgument>(innerArgElem.Node);
+    var inner = Assert.IsType<GenericType>(innerArgNode.TypeNode);
     Assert.Equal("Inner", inner.Name.GetText(src));
     Assert.Single(inner.Arguments.ArgumentList.Elements);
   }
