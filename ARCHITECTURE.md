@@ -72,11 +72,19 @@ SourceText
 - No red overlay; do not resurrect dual model.
 - Structural nodes are strongly typed records/classes.
 
-### Delimited List Helper
-- For lists whose items are type nodes wrapped in element records with an optional trailing token (e.g., function parameters, generic arguments, service protocols, named tuple elements), use the helper:
-  - `Delimited.ParseCommaSeparatedTypes(p, parseType, (node, comma) => new Element(node, comma), closeKinds)`
-  - Define element as `sealed record Element(GreenNode TypeNode, GreenToken? TrailingComma)` (or `TrailingPlus`).
-- For lists with richer element shape (e.g., fields `name : Type`), the element parser should attach its own trailing separator; the container parses open/close and iterates until `element.TrailingX is null` or end.
+### Delimited List Model
+- All comma-delimited productions share a unified generic container: `CommaList<TElement>`.
+- Each element type `TElement` is a GreenNode (e.g., `FunctionParameter`, `GenericArgument`, `NamedTupleElement`, `ProtocolRef`). Element-internal trailing separators are represented structurally by a preceding comma token captured on the following element (`LeadingComma`) and optional inter-element terminator (`LeadingTerminator`).
+- The list node preserves:
+  - Open token
+  - Optional leading terminator
+  - Ordered element sequence (each element may carry LeadingComma / LeadingTerminator)
+  - Optional trailing comma (at list level)
+  - Optional trailing terminator
+  - Close token
+- Parsing is centralized in `CommaList<T>.Parse(Parser, openKind, closeKind, parseElement)`; avoid bespoke loops.
+- Legacy `Delimited.ParseCommaSeparatedTypes` is being removed; do not reintroduce per-site ad hoc parsing. Prefer extending `CommaList<T>` if a new delimiter policy appears.
+- For heterogeneous or keyed member sets (e.g., struct fields) continue to model a distinct element node per production; only use `CommaList<T>` when the production grammar matches `CommaListOpt<T>` or `CommaList<T>` forms.
 
 ## Diagnostics System
 - Value-type entries; max 512 (flood cap) → last slot = `TooManyErrors` sentinel.
