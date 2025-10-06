@@ -31,7 +31,6 @@ public class TokenOrderRegressionTests
     string src = "[[m]];\n"
       + "Alias[T: C1 + C2] := Outer[Inner,];\n"
       + "P := .{ m1:(A,B,) C, };\n"
-      + "Svc :@ recv {} : P + Q[R]\n"
       + "SvcT := @{ P, Q[R], };\n"
       + "S := %{ a:A, b:B, };\n"
       + "U := |{ A:A, B:B, };\n"

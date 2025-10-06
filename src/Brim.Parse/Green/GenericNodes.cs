@@ -73,6 +73,9 @@ public sealed record GenericArgumentList(
         return new GenericArgument(typeNode2);
       });
 
+    if (list.Elements.Count == 0)
+      p.AddDiagEmptyGeneric(list.OpenToken);
+
     return new GenericArgumentList(list);
   }
 }

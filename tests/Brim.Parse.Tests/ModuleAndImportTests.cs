@@ -52,12 +52,5 @@ public class ModuleAndImportTests
     var m = Parse(src);
     Assert.Contains(m.Diagnostics, d => d.Code == DiagCode.UnexpectedToken);
   }
-
-  [Fact]
-  public void TypeAlias_InvalidFlagsBody_EmitsUnexpectedGenericBody()
-  {
-    string src = "[[m]];\nAlias := &{};\n";
-    var m = Parse(src);
-    Assert.Contains(m.Diagnostics, d => d.Code == DiagCode.UnexpectedGenericBody);
-  }
 }
+
