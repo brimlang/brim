@@ -13,9 +13,9 @@ public class ServiceParseTests
     var m = Parse(src);
     var td = Assert.IsType<TypeDeclaration>(m.Members.First());
     var sv = Assert.IsType<ServiceShape>(td.TypeNode);
-    Assert.Equal(2, sv.Protocols.Count);
-    Assert.NotNull(sv.Protocols[0].TrailingComma);
-    Assert.NotNull(sv.Protocols[1].TrailingComma);
+    Assert.Equal(2, sv.ProtocolList.Elements.Count);
+    Assert.NotNull(sv.ProtocolList.Elements[0].TrailingComma);
+    Assert.NotNull(sv.ProtocolList.Elements[1].TrailingComma);
   }
 
   [Fact]

@@ -15,7 +15,7 @@ public class GenericUseSiteTests
     var field = ss.Fields[0];
     _ = Assert.IsType<GenericType>(field.TypeAnnotation);
     var gt = (GenericType)field.TypeAnnotation;
-    _ = Assert.Single(gt.Arguments.Arguments);
+    _ = Assert.Single(gt.Arguments.ArgumentList.Elements);
   }
 
   [Fact]
@@ -27,6 +27,6 @@ public class GenericUseSiteTests
     var ok = us.Variants[0];
     _ = Assert.IsType<GenericType>(ok.Type);
     var gt = (GenericType)ok.Type;
-    _ = Assert.Single(gt.Arguments.Arguments);
+    _ = Assert.Single(gt.Arguments.ArgumentList.Elements);
   }
 }

@@ -13,7 +13,7 @@ public class NamedTupleParseTests
     var td = m.Members.OfType<TypeDeclaration>().FirstOrDefault();
     Assert.NotNull(td);
     var nts = Assert.IsType<NamedTupleShape>(td!.TypeNode);
-    Assert.Equal(2, nts.Elements.Count);
+    Assert.Equal(2, nts.ElementList.Elements.Count);
   }
 
   [Fact]
