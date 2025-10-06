@@ -16,7 +16,6 @@ add_user,
 
 log     ::= std::log;
 runtime ::= std::runtime
-stdlib  ::= std
 seqops  ::= std::seq
 text    ::= std::text
 

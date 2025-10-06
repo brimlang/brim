@@ -1,9 +1,9 @@
 [[corpus::core]]
 
 <<
-Perms
-User
-ServiceA
+Perms,
+User,
+ServiceA,
 >>
 
 Perms := &{

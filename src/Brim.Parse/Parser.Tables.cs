@@ -8,7 +8,7 @@ public sealed partial class Parser
   // Member / declaration predictions.
   internal static readonly Prediction[] ModuleMemberPredictions =
   [
-    new(ExportDirective.Parse, RawKind.LessLess),
+    new(ExportList.Parse, RawKind.LessLess),
     new(ImportDeclaration.Parse, (RawKind.Identifier, RawKind.ColonColonEqual, RawKind.Identifier)),
 
     // Mutable value declaration: '^' Ident ':' Type '=' Initializer Terminator
@@ -43,7 +43,7 @@ public sealed partial class Parser
     SyntaxKind.TerminatorToken => RawKind.Terminator,
     SyntaxKind.QuestionToken => RawKind.Question,
     SyntaxKind.BangToken => RawKind.Bang,
-    SyntaxKind.ExportMarkerToken => RawKind.LessLess,
+    SyntaxKind.ExportOpenToken => RawKind.LessLess,
     SyntaxKind.ModulePathOpenToken => RawKind.LBracketLBracket,
     SyntaxKind.ModulePathCloseToken => RawKind.RBracketRBracket,
     SyntaxKind.ModulePathSepToken => RawKind.ColonColon,
@@ -67,6 +67,7 @@ public sealed partial class Parser
     SyntaxKind.ColonToken => RawKind.Colon,
     SyntaxKind.LessToken => RawKind.Less,
     SyntaxKind.GreaterToken => RawKind.Greater,
+SyntaxKind.ExportEndToken => RawKind.GreaterGreater,
     SyntaxKind.PlusToken => RawKind.Plus,
     SyntaxKind.CommaToken => RawKind.Comma,
     SyntaxKind.ErrorToken => RawKind.Error,

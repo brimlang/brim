@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace Brim.Parse.Collections;
@@ -51,6 +50,11 @@ public readonly struct StructuralArray<T> : IImmutableList<T>, IEquatable<Struct
   /// Gets the number of elements in the collection.
   /// </summary>
   public int Count => _array.Length;
+
+  /// <summary>
+  /// Gets a value indicating whether the collection is empty.
+  /// </summary>
+  public bool IsEmpty => _array.IsEmpty;
 
   /// <summary>
   /// Gets the element at the specified index.

@@ -360,7 +360,7 @@ FunctionDef     : IDENT GenericParams? ':' ParamList TypeExpr FunctionBody
 ParamList       : ParenListOpt<ParamDecl>
 ParamDecl       : IDENT ':' TypeExpr
 
-ExportDecl      : EXPORT_OPEN CommaListOpt<IDENT> EXPORT_CLOSE
+ExportDecl      : EXPORT_OPEN CommaList<IDENT> EXPORT_CLOSE
 
 BindingDecl     : LocalBinding
                 | MutAssign

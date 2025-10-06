@@ -48,8 +48,8 @@ public static class GreenNodeFormatter
       case ModuleDirective md:
         _ = sb.Append(" path=").Append(Escape(md.ModuleHeader.GetText(source)));
         break;
-      case ExportDirective ed:
-        _ = sb.Append(" name=").Append(Escape(ed.Identifier.GetText(source)));
+      case ExportList ed:
+        _ = sb.Append(" name=").Append(Escape(ed.GetIdentifiersText(source)));
         break;
       case ImportDeclaration id:
         _ = sb.Append(" name=").Append(Escape(id.Identifier.GetText(source)));
@@ -162,7 +162,7 @@ public static class GreenNodeFormatter
     SyntaxKind.ImportDeclaration => "[magenta]",
 
     // Directive node (module header) green
-    SyntaxKind.ModuleDirective or SyntaxKind.ExportDirective => "[green]",
+    SyntaxKind.ModuleDirective or SyntaxKind.ExportList => "[green]",
 
     // Other structural / container nodes
     SyntaxKind.Module => "[bold blue]",
