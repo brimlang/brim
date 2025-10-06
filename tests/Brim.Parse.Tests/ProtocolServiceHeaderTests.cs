@@ -13,7 +13,7 @@ public class ProtocolServiceHeaderTests
     var m = Parse(src);
     var td = Assert.IsType<TypeDeclaration>(m.Members.First());
     var ps = Assert.IsType<ProtocolShape>(td.TypeNode);
-    Assert.Empty(ps.Methods);
+    Assert.Empty(ps.MethodList.Elements);
   }
 
   // TODO: Re-enable after ServiceDeclaration is properly imported
@@ -34,8 +34,8 @@ public class ProtocolServiceHeaderTests
     var m = Parse(src);
     var td = Assert.IsType<TypeDeclaration>(m.Members.First());
     var ps = Assert.IsType<ProtocolShape>(td.TypeNode);
-    Assert.Equal(2, ps.Methods.Count);
-    Assert.Equal("m1", ps.Methods[0].Name.Identifier.GetText(src));
+    Assert.Equal(2, ps.MethodList.Elements.Count);
+    Assert.Equal("m1", ps.MethodList.Elements[0].Node.Name.Identifier.GetText(src));
   }
 
   // TODO: Re-enable after ServiceDeclaration is properly imported

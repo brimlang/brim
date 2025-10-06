@@ -65,13 +65,13 @@ public static class GreenNodeFormatter
         _ = sb.Append($" flags={fs.Members.Count}");
         break;
       case NamedTupleShape nts:
-        _ = sb.Append($" elems={nts.Elements.Count}");
+        _ = sb.Append($" elems={nts.ElementList.Elements.Count}");
         break;
       case ProtocolShape ps:
-        _ = sb.Append($" methods={ps.Methods.Count}");
+        _ = sb.Append($" methods={ps.MethodList.Elements.Count}");
         break;
       case ServiceShape svs:
-        _ = sb.Append($" protos={svs.Protocols.Count}");
+        _ = sb.Append($" protos={svs.ProtocolList.Elements.Count}");
         break;
       case GreenToken t:
         _ = sb.Append(' ').Append(TokenSummary(t, source));

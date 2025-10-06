@@ -3,7 +3,7 @@ using System.Text;
 namespace Brim.Parse.Green;
 
 public sealed record ExportList(
-  CommaList List
+  CommaList<GreenToken> List
 ) : GreenNode(SyntaxKind.ExportList, List.OpenToken.Offset),
   IParsable<ExportList>
 {
@@ -12,7 +12,7 @@ public sealed record ExportList(
   {
     yield return List.OpenToken;
     if (List.LeadingTerminator is not null) yield return List.LeadingTerminator;
-    foreach (CommaList.Element element in List.Elements) yield return element;
+    foreach (CommaList<GreenToken>.Element element in List.Elements) yield return element;
     if (List.TrailingComma is not null) yield return List.TrailingComma;
     if (List.TrailingTerminator is not null) yield return List.TrailingTerminator;
     yield return List.CloseToken;
@@ -21,7 +21,7 @@ public sealed record ExportList(
   public string GetIdentifiersText(ReadOnlySpan<char> source)
   {
     StringBuilder sb = new();
-    foreach (CommaList.Element element in List.Elements)
+    foreach (CommaList<GreenToken>.Element element in List.Elements)
     {
       if (element.Node is not GreenToken gt || gt.Kind != SyntaxKind.IdentifierToken)
         continue;

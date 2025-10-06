@@ -67,7 +67,7 @@ public sealed partial class Parser
     SyntaxKind.ColonToken => RawKind.Colon,
     SyntaxKind.LessToken => RawKind.Less,
     SyntaxKind.GreaterToken => RawKind.Greater,
-SyntaxKind.ExportEndToken => RawKind.GreaterGreater,
+    SyntaxKind.ExportEndToken => RawKind.GreaterGreater,
     SyntaxKind.PlusToken => RawKind.Plus,
     SyntaxKind.CommaToken => RawKind.Comma,
     SyntaxKind.ErrorToken => RawKind.Error,

@@ -2,14 +2,20 @@ using Brim.Parse.Collections;
 
 namespace Brim.Parse.Green;
 
-public sealed record CommaList(
+public static class CommaList
+{
+  public static CommaList<GreenToken> Parse(Parser p, SyntaxKind openKind, SyntaxKind closeKind, SyntaxKind elementKind) =>
+    CommaList<GreenToken>.Parse(p, openKind, closeKind, p2 => p2.ExpectSyntax(elementKind));
+}
+
+public sealed record CommaList<T>(
   GreenToken openToken,
   GreenToken? leadingTerminator,
-  StructuralArray<CommaList.Element> elements,
+  StructuralArray<CommaList<T>.Element> elements,
   GreenToken? trailingComma,
   GreenToken? trailingTerminator,
   GreenToken closeToken
-)
+) : GreenNode(SyntaxKind.CommaList, openToken.Offset) where T : GreenNode
 {
   public GreenToken OpenToken { get; } = openToken;
   public GreenToken? LeadingTerminator { get; } = leadingTerminator;
@@ -18,7 +24,19 @@ public sealed record CommaList(
   public GreenToken? TrailingTerminator { get; } = trailingTerminator;
   public GreenToken CloseToken { get; } = closeToken;
 
-  public static CommaList Parse(Parser p, SyntaxKind openKind, SyntaxKind closeKind, SyntaxKind elementKind)
+  public override int FullWidth => CloseToken.EndOffset - Offset;
+
+  public override IEnumerable<GreenNode> GetChildren()
+  {
+    yield return OpenToken;
+    if (LeadingTerminator is not null) yield return LeadingTerminator;
+    foreach (Element element in Elements) yield return element;
+    if (TrailingComma is not null) yield return TrailingComma;
+    if (TrailingTerminator is not null) yield return TrailingTerminator;
+    yield return CloseToken;
+  }
+
+  public static CommaList<T> Parse(Parser p, SyntaxKind openKind, SyntaxKind closeKind, Func<Parser, T> parseElement)
   {
     GreenToken open = p.ExpectSyntax(openKind);
 
@@ -31,17 +49,20 @@ public sealed record CommaList(
     // Parse first element if not immediately at close
     if (!p.MatchSyntax(closeKind))
     {
-      elements.Add(Element.Parse(p, elementKind));
+      elements.Add(Element.Parse(p, parseElement));
       // Parse remaining elements
       while (true)
       {
+
         if (!p.MatchRaw(RawKind.Comma))
           break;
 
-        if (TrailingCommaAhead())
+        if (p.MatchSyntax(closeKind, 1) || (p.MatchRaw(RawKind.Terminator, 1) && p.MatchSyntax(closeKind, 2)))
           break;
 
-        elements.Add(Element.Parse(p, elementKind));
+        Parser.StallGuard sg = p.GetStallGuard();
+        elements.Add(Element.Parse(p, parseElement));
+        if (sg.Stalled) break;
       }
     }
 
@@ -54,7 +75,7 @@ public sealed record CommaList(
       trailingTerminator = p.ExpectSyntax(SyntaxKind.TerminatorToken);
 
     GreenToken close = p.ExpectSyntax(closeKind);
-    return new CommaList(
+    return new(
       open,
       leadingTerminator,
       elements,
@@ -62,22 +83,12 @@ public sealed record CommaList(
       trailingTerminator,
       close
     );
-
-    // local functions
-
-    // Helper to detect a trailing-comma scenario: close follows either
-    // immediately or after a single Terminator. Placed at end of parent
-    // function per style preference (local functions may be referenced
-    // before their declaration).
-    bool TrailingCommaAhead() => p.MatchSyntax(closeKind, 1)
-      ? true
-      : p.MatchRaw(RawKind.Terminator, 1) && p.MatchSyntax(closeKind, 2);
   }
 
   public sealed record Element(
     GreenToken? LeadingComma,
     GreenToken? LeadingTerminator,
-    GreenNode Node
+    T Node
   ) : GreenNode(SyntaxKind.ListElement, Node.Offset)
   {
     public override int FullWidth => (LeadingComma?.EndOffset ?? LeadingTerminator?.EndOffset ?? Node.EndOffset) - Offset;
@@ -88,7 +99,7 @@ public sealed record CommaList(
       yield return Node;
     }
 
-    public static Element Parse(Parser p, SyntaxKind elementKind)
+    internal static Element Parse(Parser p, Func<Parser, T> parseElement)
     {
       GreenToken? comma = null;
       if (p.MatchRaw(RawKind.Comma))
@@ -98,7 +109,7 @@ public sealed record CommaList(
       if (p.MatchRaw(RawKind.Terminator))
         terminator = p.ExpectSyntax(SyntaxKind.TerminatorToken);
 
-      GreenNode element = p.ExpectSyntax(elementKind);
+      T element = parseElement(p);
       return new(comma, terminator, element);
     }
   }

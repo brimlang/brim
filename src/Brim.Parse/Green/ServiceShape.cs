@@ -1,43 +1,19 @@
-using Brim.Parse.Collections;
-
 namespace Brim.Parse.Green;
 
 public sealed record ServiceShape(
-  GreenToken AtToken,
-  GreenToken OpenToken,
-  StructuralArray<ProtocolRef> Protocols,
-  GreenToken CloseBrace)
-  : GreenNode(SyntaxKind.ServiceShape, OpenToken.Offset)
+  CommaList<ProtocolRef> ProtocolList
+) : GreenNode(SyntaxKind.ServiceShape, ProtocolList.Offset)
 {
-  public override int FullWidth => CloseBrace.EndOffset - OpenToken.Offset;
-  public override IEnumerable<GreenNode> GetChildren()
-  {
-    yield return AtToken;
-    yield return OpenToken;
-    foreach (ProtocolRef p in Protocols) yield return p;
-    yield return CloseBrace;
-  }
+  public override int FullWidth => ProtocolList.FullWidth;
+
+  public override IEnumerable<GreenNode> GetChildren() => ProtocolList.GetChildren();
 
   public static ServiceShape Parse(Parser p)
   {
-    // Expect '@' then '{'
-    GreenToken at = p.ExpectSyntax(SyntaxKind.ServiceImplToken);
-    GreenToken open = p.ExpectSyntax(SyntaxKind.OpenBraceToken);
-
-    StructuralArray<ProtocolRef> list =
-      Delimited.ParseCommaSeparatedTypes(
-        p,
-        static p2 =>
-        {
-          GreenToken head2 = p2.ExpectSyntax(SyntaxKind.IdentifierToken);
-          GreenNode pref2 = head2;
-          if (p2.MatchRaw(RawKind.LBracket) && !p2.MatchRaw(RawKind.LBracketLBracket))
-            pref2 = GenericType.ParseAfterName(p2, head2);
-          return pref2;
-        },
-        static (n, c) => new ProtocolRef(n, c),
-        RawKind.RBrace);
-    GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
-    return new ServiceShape(at, open, list, close);
+    return new ServiceShape(CommaList<ProtocolRef>.Parse(
+      p,
+      SyntaxKind.ServiceToken,
+      SyntaxKind.CloseBlockToken,
+      ProtocolRef.Parse));
   }
 }

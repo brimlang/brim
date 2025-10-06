@@ -44,28 +44,35 @@ public sealed record ConstraintList(
 }
 
 public sealed record GenericArgument(
-  GreenNode TypeNode,
-  GreenToken? TrailingComma) : GreenNode(SyntaxKind.GenericArgument, TypeNode.Offset)
+  GreenNode TypeNode
+) : GreenNode(SyntaxKind.GenericArgument, TypeNode.Offset)
 {
-  public override int FullWidth => (TrailingComma?.EndOffset ?? TypeNode.EndOffset) - TypeNode.Offset;
-  public override IEnumerable<GreenNode> GetChildren()
-  {
-    yield return TypeNode;
-    if (TrailingComma is not null) yield return TrailingComma;
-  }
+  public override int FullWidth => TypeNode.FullWidth;
+  public override IEnumerable<GreenNode> GetChildren() { yield return TypeNode; }
 }
 
 public sealed record GenericArgumentList(
-  GreenToken Open,
-  StructuralArray<GenericArgument> Arguments,
-  GreenToken Close)
-: GreenNode(SyntaxKind.GenericArgumentList, Open.Offset)
+  CommaList<GenericArgument> ArgumentList
+) : GreenNode(SyntaxKind.GenericArgumentList, ArgumentList.Offset)
 {
-  public override int FullWidth => Close.EndOffset - Open.Offset;
-  public override IEnumerable<GreenNode> GetChildren()
+  public override int FullWidth => ArgumentList.FullWidth;
+  public override IEnumerable<GreenNode> GetChildren() => ArgumentList.GetChildren();
+
+  public static GenericArgumentList Parse(Parser p)
   {
-    yield return Open;
-    foreach (GenericArgument a in Arguments) yield return a;
-    yield return Close;
+    CommaList<GenericArgument> list = CommaList<GenericArgument>.Parse(
+      p,
+      SyntaxKind.GenericOpenToken,
+      SyntaxKind.GenericCloseToken,
+      static p2 =>
+      {
+        GreenToken headTok2 = p2.ExpectSyntax(SyntaxKind.IdentifierToken);
+        GreenNode typeNode2 = headTok2;
+        if (p2.MatchRaw(RawKind.LBracket))
+          typeNode2 = GenericType.ParseAfterName(p2, headTok2);
+        return new GenericArgument(typeNode2);
+      });
+
+    return new GenericArgumentList(list);
   }
 }

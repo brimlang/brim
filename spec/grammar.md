@@ -244,9 +244,7 @@ Capture common structural patterns in templates to reduce boilerplate.
 ```hgf
 TERM                     : {NEWLINE | SEMICOLON}+
 CommaList<T>             : TERM? T [',' TERM? T]* ','? TERM?
-CommaListOpt<T>          : [CommaList<T>]?
-
-FieldList<T>             : T [TERM T]* [TERM]?
+CommaListOpt<T>          : CommaList<T>?
 
 AggregateShape<H, T>     : H CommaList<T> '}'
 
@@ -260,7 +258,9 @@ BracketListOpt<T>        : '[' CommaListOpt<T> ']'
 AngleListOpt<T>          : '<' CommaListOpt<T> '>'
 
 Terminated<T>            : T TERM
-TerminatedListOpt<T>     : Terminated<T>*
+
+TerminatedList<T>        : TERM? Terminated<T>+
+TerminatedListOpt<T>     : TerminatedList<T>?
 
 ModuleRef                : IDENT [MOD_PATH_SEP IDENT]*
 ```
@@ -404,7 +404,7 @@ FunctionBody     : ARROW Expr
                  | BlockExpr
 
 MatchExpr        : BinaryExpr ARROW MatchArmList
-MatchArmList     : FieldList<MatchArm>
+MatchArmList     : TerminatedList<MatchArm>
 MatchArm         : Pattern GuardExpr? ARROW MatchTarget
 MatchTarget      : Expr
 GuardExpr        : GUARD BinaryExpr
