@@ -19,7 +19,7 @@ public class CommaListTests
     RawToken rawTerm = new(RawKind.Terminator, 9, 1, 1, 2);
     GreenToken term = new(SyntaxKind.TerminatorToken, rawTerm);
 
-    var element = new CommaList.Element(comma, term, node);
+    var element = new CommaList<GreenToken>.Element(comma, term, node);
 
     var children = element.GetChildren().ToArray();
     Assert.Equal(3, children.Length);
@@ -39,7 +39,7 @@ public class CommaListTests
     RawToken rawTerm = new(RawKind.Terminator, 14, 1, 1, 5);
     GreenToken term = new(SyntaxKind.TerminatorToken, rawTerm);
 
-    var element = new CommaList.Element(null, term, node);
+    var element = new CommaList<GreenToken>.Element(null, term, node);
 
     int expected = term.EndOffset - node.Offset; // (14+1) - 10 = 5? EndOffset = Offset + Length => 14+1
     Assert.Equal(expected, element.FullWidth);
@@ -57,8 +57,8 @@ public class CommaListTests
     RawToken rawId2 = new(RawKind.Identifier, 4, 3, 1, 5); // "two"
     GreenToken id2 = new(SyntaxKind.IdentifierToken, rawId2);
 
-    var e1 = new CommaList.Element(null, null, id1);
-    var e2 = new CommaList.Element(null, null, id2);
+    var e1 = new CommaList<GreenToken>.Element(null, null, id1);
+    var e2 = new CommaList<GreenToken>.Element(null, null, id2);
 
     var elements = StructuralArray.Create(e1, e2);
 
@@ -68,7 +68,7 @@ public class CommaListTests
     RawToken rawClose = new(RawKind.GreaterGreater, 6, 2, 1, 7);
     GreenToken close = new(SyntaxKind.ExportEndToken, rawClose);
 
-    var cl = new CommaList(open, null, elements, null, null, close);
+    var cl = new CommaList<GreenToken>(open, null, elements, null, null, close);
     var exportList = new ExportList(cl);
 
     string got = exportList.GetIdentifiersText(src.AsSpan());
@@ -93,7 +93,7 @@ public class CommaListTests
     {
       var m = Parse(src);
       var export = m.Members.OfType<ExportList>().First();
-      CommaList cl = export.List;
+      var cl = export.List;
       Assert.Equal(3, cl.Elements.Length);
       var names = cl.Elements.Select(e => ((GreenToken)e.Node).GetText(src.AsSpan())).ToArray();
       Assert.Equal(_expected, names);

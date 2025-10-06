@@ -65,7 +65,7 @@ public class TypeAliasParseTests
     var td = Assert.IsType<TypeDeclaration>(m.Members.First());
     var gt = Assert.IsType<GenericType>(td.TypeNode);
     Assert.Single(gt.Arguments.ArgumentList.Elements);
-    Assert.NotNull(gt.Arguments.ArgumentList.Elements[0].TrailingComma);
+    Assert.NotNull(gt.Arguments.ArgumentList.TrailingComma); // trailing comma on list
   }
 
   [Fact]
@@ -77,7 +77,7 @@ public class TypeAliasParseTests
     var outer = Assert.IsType<GenericType>(td.TypeNode);
     Assert.Single(outer.Arguments.ArgumentList.Elements);
     var innerArg = outer.Arguments.ArgumentList.Elements[0];
-    var inner = Assert.IsType<GenericType>(innerArg.TypeNode);
+    var inner = Assert.IsType<GenericType>(innerArg.Node);
     Assert.Equal("Inner", inner.Name.GetText(src));
     Assert.Single(inner.Arguments.ArgumentList.Elements);
   }

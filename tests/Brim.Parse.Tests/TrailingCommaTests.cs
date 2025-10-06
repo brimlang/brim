@@ -46,8 +46,8 @@ public class TrailingCommaTests
     var td = m.Members.OfType<TypeDeclaration>().First();
     var nts = Assert.IsType<NamedTupleShape>(td.TypeNode);
     Assert.Equal(2, nts.ElementList.Elements.Count);
-    Assert.NotNull(nts.ElementList.Elements[0].TrailingComma);
-    Assert.NotNull(nts.ElementList.Elements[1].TrailingComma);
+    Assert.NotNull(nts.ElementList.Elements[1].LeadingComma); // interior comma on second element
+    Assert.NotNull(nts.ElementList.TrailingComma); // trailing comma on list
   }
 
   [Fact]
@@ -70,7 +70,7 @@ public class TrailingCommaTests
     var field = ss.Fields[0];
     var gt = Assert.IsType<GenericType>(field.TypeAnnotation);
     Assert.Single(gt.Arguments.ArgumentList.Elements); // one argument
-    Assert.NotNull(gt.Arguments.ArgumentList.Elements[0].TrailingComma);
+    Assert.NotNull(gt.Arguments.ArgumentList.TrailingComma); // trailing comma on list
   }
 
   [Fact]
