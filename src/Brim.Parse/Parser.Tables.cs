@@ -28,6 +28,12 @@ public sealed partial class Parser
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.Any)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.RBracket)), // empty generic param list
 
+    // Type keywords as TypeRef
+    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.Str)),
+    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.Bool)),
+    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.I32)),
+    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.U64)),
+
     // Const value declaration: Ident ':' Type '=' Initializer Terminator
     new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.Identifier)),
     new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.StopLBrace)),
