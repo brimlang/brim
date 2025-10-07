@@ -29,7 +29,7 @@ All current value‑producing simple expressions:
 - Call: `callee(args)` (callee and each argument are expressions)
 - Constructors:
   - Option / Result: `?{}`, `?{x}`, `!{x}`, `!!{e}`
-  - Aggregates (see Aggregate Types): `Type%{ field = expr, ... }`, `Type|{ Variant }` or `Type|{ Variant = Expr }`, `Type#{ e1, e2, ... }`, `seq{ e1, e2, ... }`, `buf[T; N]{ e1, … }`
+  - Aggregates (see Aggregate Types): `Type%{ field = expr, ... }`, `Type|{ Variant }` or `Type|{ Variant = Expr }`, `Type#{ e1, e2, ... }`, `seq{ e1, e2, ... }`, `buf[T* N]{ e1, … }`
 - Propagation: `expr?`, `expr!` (contextual return propagation)
 - Match: `scrutinee => arm+`
 - Block: `{ ... }` (compound form listed for completeness)

@@ -54,22 +54,20 @@ all    :seq[seq[i32]] = seq{ seq{1, 2}, seq{3} }
 
 ## Buffers — fixed-length contiguous aggregates
 
-- **Type:** `buf[T; N]`
-- **Construction:** `buf[T; N]{e1, …, eN}` (literal length must equal `N`)
-- **Empty:** `buf[T; 0]{}`
+- **Type:** `buf[T* N]`
+- **Construction:** `buf[T* N]{e1, …, eN}` (literal length must equal `N`)
+- **Empty:** `buf[T* 0]{}`
 - **Pattern:** `(p1, …, pN)` with exact arity matching `N`
 
 Examples:
 ```brim
-Chunk := buf[u8; 4]
+Chunk := buf[u8*4]
 
-magic :Chunk = buf[u8; 4]{ 0xDE, 0xAD, 0xBE, 0xEF }
+magic :Chunk = buf[u8*4]{ 0xDE, 0xAD, 0xBE, 0xEF }
 
-copy :(src :Chunk) Chunk = {
-  buf[u8; 4]{ src(0), src(1), src(2), src(3) }
-}
+  buf[u8*4]{ src(0), src(1), src(2), src(3) }
 
-empty_bytes :buf[u8; 0] = buf[u8; 0]{}
+empty_bytes :buf[u8*0] = buf[u8*0]{}
 ```
 
 ## Structs — named aggregates

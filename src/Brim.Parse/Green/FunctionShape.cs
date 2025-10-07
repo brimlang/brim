@@ -8,10 +8,8 @@ public sealed record FunctionShape(
   public override int FullWidth => ReturnType.EndOffset - Offset;
   public override IEnumerable<GreenNode> GetChildren()
   {
-    foreach (GreenNode child in ParameterList.GetChildren())
-      yield return child;
-    foreach (GreenNode child in ReturnType.GetChildren())
-      yield return child;
+    yield return ParameterList;
+    yield return ReturnType;
   }
 
   public static FunctionShape Parse(Parser p)

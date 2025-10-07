@@ -13,7 +13,7 @@ version: 0.1.0
 Defines canonical syntax & minimal semantics for parametric polymorphism.
 
 ## Scope
-Applies to: functions, struct types, union types, services, protocols, builtin parametric types (`T?`, `T!`, `seq[T]`, `buf[T; N]`).
+Applies to: functions, struct types, union types, services, protocols, builtin parametric types (`T?`, `T!`, `seq[T]`, `buf[T* N]`).
 Excludes: higher-kinded types, value generics, variadics, partial application.
 
 ## Parameter Lists
@@ -74,7 +74,7 @@ Remain unchanged syntactically:
 - `T?` (option type)
 - `T!` (result type)
 - `seq[T]` (growable sequence)
-- `buf[T; N]` (fixed-length buffer)
+- `buf[T* N]` (fixed-length buffer)
 Constraints do not attach inside these forms; they attach where parameters are introduced.
 
 *Note: The previous `opt[T]` and `res[T]` types are replaced by `T?` and `T!` as per the Option/Result & Return Lifting spec.*

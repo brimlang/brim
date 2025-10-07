@@ -115,7 +115,7 @@ Fences labeled hgf are in 'hinky grammar format', a highly custom variant of EBN
 | `Type := %{ field :Type, ... }` | type       | Aggregate shape declaration.                               |
 | `Type%{ field = expr, ... }`    | construct  | Aggregate construction expression.                         |
 | `seq[T]{ expr, ... }`           | construct  | Growable sequence literal.                                 |
-| `buf[T; N]{ expr, ... }`        | construct  | Fixed-length buffer literal; element count must equal `N`. |
+| `buf[T* N]{ expr, ... }`        | construct  | Fixed-length buffer literal; element count must equal `N`. |
 
 
 ## Operator Tokens & Precedence
@@ -320,7 +320,7 @@ TypeRef            : IDENT GenericArgs?
 
 FunctionTypeExpr   : ParenListOpt<TypeExpr> TypeExpr
 SeqTypeExpr        : { SEQ_KW '[' } TypeExpr ']'
-BufTypeExpr        : { BUF_KW '[' } TypeExpr [';' INTEGER]? ']'
+BufTypeExpr        : { BUF_KW '[' } TypeExpr ['*' INTEGER]? ']'
 
 AggregateTypeExpr  : AggregateShape<STRUCT_SHAPE, FieldDeclaration>
                    | AggregateShape<UNION_SHAPE, UnionVariantDeclaration>
@@ -335,7 +335,7 @@ MethodSignature         : IDENT ':' ParamList TypeExpr
 NamedTupleElement       : IDENT ':' TypeExpr
 FieldDeclaration        : IDENT ':' TypeExpr
 
-BufTypeArgs             : '[' TypeExpr [';' INTEGER]? ']'
+BufTypeArgs             : '[' TypeExpr ['*' INTEGER]? ']'
 
 GenericArgs             : BracketListOpt<TypeExpr>
 GenericParams           : BracketListOpt<GenericParam>

@@ -9,11 +9,7 @@ public sealed record TypeRef(
   public override IEnumerable<GreenNode> GetChildren()
   {
     yield return Name;
-    if (GenericArgs is not null)
-    {
-      foreach (GreenNode child in GenericArgs.GetChildren())
-        yield return child;
-    }
+    if (GenericArgs is not null) yield return GenericArgs;
   }
 
   public static TypeRef Parse(Parser p)

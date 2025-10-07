@@ -24,7 +24,7 @@ Empty sequences:
 ## Rationale
 
 - Improves readability for common sequence construction while preserving the core’s sigil+brace pattern (`seq{ ... }`).
-- Avoids confusion with types: bracket sequence literals live only in term space; type generics already use brackets in type space `seq[T]` / `buf[T; N]`.
+- Avoids confusion with types: bracket sequence literals live only in term space; type generics already use brackets in type space `seq[T]` / `buf[T* N]`.
 - Respects global comma policy (optional single trailing comma; empty lists contain none).
 
 ## Grammar (S0)

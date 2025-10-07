@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Brim.Parse.Collections;
 using Brim.Parse.Green;
@@ -38,7 +39,7 @@ internal readonly struct PredictionTable
     int idx = (int)kind;
     if (idx >= _groupStart.Length || _groupStart[idx] < 0)
     {
-      group = [];
+      group = Array.Empty<Prediction>();
       return false;
     }
 
@@ -51,7 +52,7 @@ internal readonly struct PredictionTable
   internal static PredictionTable Build(Prediction[] preds)
   {
     if (preds.Length == 0)
-      return new PredictionTable(preds, [], []);
+      return new PredictionTable(preds, Array.Empty<int>(), Array.Empty<byte>());
 
     int maxKind = 0;
     foreach (Prediction p in preds)
@@ -96,7 +97,7 @@ internal readonly struct PredictionTable
   internal static PredictionTable Build(ReadOnlySpan<Prediction> preds)
   {
     // Fallback that copies when only a span is available.
-    Prediction[] arr = preds.Length == 0 ? [] : preds.ToArray();
+    Prediction[] arr = preds.Length == 0 ? Array.Empty<Prediction>() : preds.ToArray();
     return Build(arr);
   }
 }

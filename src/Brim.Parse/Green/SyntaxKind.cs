@@ -27,6 +27,7 @@ public enum SyntaxKind
   ColonToken,
   CommaToken,
   PlusToken,
+  StarToken,
   GenericOpenToken,
   GenericCloseToken,
   OpenParenToken,

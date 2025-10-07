@@ -4,7 +4,7 @@ public sealed record BufTypeExpr(
   GreenToken BufKeyword,
   GreenToken LBracket,
   TypeExpr ElementType,
-  GreenToken? Semicolon,
+  GreenToken? Star,
   GreenToken? Size,
   GreenToken RBracket
 ) : GreenNode(SyntaxKind.BufTypeExpr, BufKeyword.Offset)
@@ -14,9 +14,8 @@ public sealed record BufTypeExpr(
   {
     yield return BufKeyword;
     yield return LBracket;
-    foreach (GreenNode child in ElementType.GetChildren())
-      yield return child;
-    if (Semicolon is not null) yield return Semicolon;
+    yield return ElementType;
+    if (Star is not null) yield return Star;
     if (Size is not null) yield return Size;
     yield return RBracket;
   }
@@ -26,14 +25,14 @@ public sealed record BufTypeExpr(
     GreenToken buf = p.ExpectSyntax(SyntaxKind.BufKeywordToken);
     GreenToken lbracket = p.ExpectSyntax(SyntaxKind.GenericOpenToken);
     TypeExpr elem = TypeExpr.Parse(p);
-    GreenToken? semicolon = null;
+    GreenToken? star = null;
     GreenToken? size = null;
-    if (p.MatchRaw(RawKind.Terminator))
+    if (p.MatchRaw(RawKind.Star))
     {
-      semicolon = p.ExpectSyntax(SyntaxKind.TerminatorToken);
+      star = p.ExpectSyntax(SyntaxKind.StarToken);
       size = p.ExpectSyntax(SyntaxKind.IntToken);
     }
     GreenToken rbracket = p.ExpectSyntax(SyntaxKind.GenericCloseToken);
-    return new BufTypeExpr(buf, lbracket, elem, semicolon, size, rbracket);
+    return new BufTypeExpr(buf, lbracket, elem, star, size, rbracket);
   }
 }

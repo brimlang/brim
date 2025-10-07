@@ -33,13 +33,12 @@ Area  := |{
   Admin  :Perms,
   Client :Perms,
   Banned,
-};
+};
 
 User := %{
   name  :Name,
   perms :Area,
 }
-
 
 
 AuthProtocol := .{
