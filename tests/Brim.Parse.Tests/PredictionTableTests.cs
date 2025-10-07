@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Xunit;
 using Brim.Parse;
 using Brim.Parse.Collections;
+using Xunit;
 
 public class PredictionTableTests
 {
