@@ -12,7 +12,8 @@ public class ProtocolServiceHeaderTests
     string src = "[[m]];\nProto := .{};\n";
     var m = Parse(src);
     var td = Assert.IsType<TypeDeclaration>(m.Members.First());
-    var ps = Assert.IsType<ProtocolShape>(td.TypeNode);
+    var te = Assert.IsType<TypeExpr>(td.TypeNode);
+    var ps = Assert.IsType<ProtocolShape>(te.Core);
     Assert.Empty(ps.MethodList.Elements);
   }
 
@@ -33,7 +34,8 @@ public class ProtocolServiceHeaderTests
     string src = "[[m]];\nP := .{ m1:(A) B, m2:(A,B) C, };\n";
     var m = Parse(src);
     var td = Assert.IsType<TypeDeclaration>(m.Members.First());
-    var ps = Assert.IsType<ProtocolShape>(td.TypeNode);
+    var te = Assert.IsType<TypeExpr>(td.TypeNode);
+    var ps = Assert.IsType<ProtocolShape>(te.Core);
     Assert.Equal(2, ps.MethodList.Elements.Count);
     Assert.Equal("m1", ps.MethodList.Elements[0].Node.Name.Identifier.GetText(src));
   }

@@ -79,6 +79,8 @@ public sealed partial class Parser
     SyntaxKind.ProtocolToken => RawKind.StopLBrace,
     SyntaxKind.ServiceToken => RawKind.AtmarkLBrace,
     SyntaxKind.NamedTupleToken => RawKind.HashLBrace,
+    SyntaxKind.SeqKeywordToken => RawKind.Seq,
+    SyntaxKind.BufKeywordToken => RawKind.Buf,
     _ => RawKind.Error
   };
 

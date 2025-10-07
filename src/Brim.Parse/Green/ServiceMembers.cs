@@ -5,12 +5,19 @@ namespace Brim.Parse.Green;
 public sealed record ServiceParam(
   GreenToken Name,
   GreenToken Colon,
-  GreenNode Type,
+  TypeExpr Type,
   GreenToken? TrailingComma)
   : GreenNode(SyntaxKind.FieldDeclaration, Name.Offset)
 {
   public override int FullWidth => (TrailingComma?.EndOffset ?? Type.EndOffset) - Name.Offset;
-  public override IEnumerable<GreenNode> GetChildren() { yield return Name; yield return Colon; yield return Type; if (TrailingComma is not null) yield return TrailingComma; }
+  public override IEnumerable<GreenNode> GetChildren()
+  {
+    yield return Name;
+    yield return Colon;
+    foreach (GreenNode child in Type.GetChildren())
+      yield return child;
+    if (TrailingComma is not null) yield return TrailingComma;
+  }
 }
 
 public sealed record ServiceCtorHeader(
@@ -37,7 +44,7 @@ public sealed record ServiceMethodHeader(
   GreenToken OpenParen,
   StructuralArray<ServiceParam> Parameters,
   GreenToken CloseParen,
-  GreenNode ReturnType,
+  TypeExpr ReturnType,
   GreenToken BodyOpen)
   : GreenNode(SyntaxKind.FunctionDeclaration, Name.Offset)
 {
@@ -48,7 +55,8 @@ public sealed record ServiceMethodHeader(
     yield return OpenParen;
     foreach (ServiceParam p in Parameters) yield return p;
     yield return CloseParen;
-    yield return ReturnType;
+    foreach (GreenNode child in ReturnType.GetChildren())
+      yield return child;
     yield return BodyOpen;
   }
 }
@@ -57,7 +65,7 @@ public sealed record ServiceDtorHeader(
   GreenToken Tilde,
   GreenToken OpenParen,
   GreenToken CloseParen,
-  GreenNode ReturnType,
+  TypeExpr ReturnType,
   GreenToken BodyOpen)
   : GreenNode(SyntaxKind.FunctionDeclaration, Tilde.Offset)
 {
@@ -67,7 +75,8 @@ public sealed record ServiceDtorHeader(
     yield return Tilde;
     yield return OpenParen;
     yield return CloseParen;
-    yield return ReturnType;
+    foreach (GreenNode child in ReturnType.GetChildren())
+      yield return child;
     yield return BodyOpen;
   }
 }

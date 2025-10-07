@@ -6,7 +6,7 @@ public sealed record ValueDeclaration(
   GreenToken? Mutator,
   GreenToken Name,
   GreenToken Colon,
-  GreenNode TypeNode,
+  TypeExpr TypeNode,
   GreenToken Equal,
   StructuralArray<GreenNode> Initializer,
   GreenToken Terminator)
@@ -19,7 +19,8 @@ public sealed record ValueDeclaration(
     if (Mutator is not null) yield return Mutator;
     yield return Name;
     yield return Colon;
-    yield return TypeNode;
+    foreach (GreenNode child in TypeNode.GetChildren())
+      yield return child;
     yield return Equal;
     foreach (GreenNode n in Initializer) yield return n;
     yield return Terminator;
@@ -33,7 +34,7 @@ public sealed record ValueDeclaration(
 
     GreenToken name = p.ExpectSyntax(SyntaxKind.IdentifierToken);
     GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
-    GreenNode typeExpr = TypeExpr.Parse(p);
+    TypeExpr typeExpr = TypeExpr.Parse(p);
     GreenToken eq = p.ExpectSyntax(SyntaxKind.EqualToken);
 
     ImmutableArray<GreenNode>.Builder init = ImmutableArray.CreateBuilder<GreenNode>();

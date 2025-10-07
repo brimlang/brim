@@ -2,7 +2,7 @@ namespace Brim.Parse.Green;
 
 public sealed record FunctionShape(
     CommaList<FunctionParameter> ParameterList,
-    GreenNode ReturnType)
+    TypeExpr ReturnType)
   : GreenNode(SyntaxKind.FunctionShape, ParameterList.OpenToken.Offset)
 {
   public override int FullWidth => ReturnType.EndOffset - Offset;
@@ -10,7 +10,8 @@ public sealed record FunctionShape(
   {
     foreach (GreenNode child in ParameterList.GetChildren())
       yield return child;
-    yield return ReturnType;
+    foreach (GreenNode child in ReturnType.GetChildren())
+      yield return child;
   }
 
   public static FunctionShape Parse(Parser p)
@@ -21,7 +22,7 @@ public sealed record FunctionShape(
       SyntaxKind.CloseParenToken,
       FunctionParameter.Parse);
 
-    GreenNode returnType = TypeExpr.Parse(p);
+    TypeExpr returnType = TypeExpr.Parse(p);
 
     return new FunctionShape(parameters, returnType);
   }

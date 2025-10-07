@@ -13,10 +13,12 @@ public class TypeAliasParseTests
     var m = Parse(src);
     var td = Assert.IsType<TypeDeclaration>(m.Members.First());
     Assert.Equal("Alias", td.Name.Identifier.GetText(src));
-    // Identifier alias: type node is the identifier token
-    var tok = Assert.IsType<GreenToken>(td.TypeNode);
-    Assert.Equal(SyntaxKind.IdentifierToken, tok.SyntaxKind);
-    Assert.Equal("Foo", tok.GetText(src));
+    // TypeExpr wraps TypeRef wraps identifier token
+    var te = Assert.IsType<TypeExpr>(td.TypeNode);
+    Assert.Null(te.Suffix);
+    var tr = Assert.IsType<TypeRef>(te.Core);
+    Assert.Equal(SyntaxKind.IdentifierToken, tr.Name.SyntaxKind);
+    Assert.Equal("Foo", tr.Name.GetText(src));
   }
 
   [Fact]
@@ -25,9 +27,11 @@ public class TypeAliasParseTests
     string src = "[[m]];\nAlias := Wrapper[T];\n";
     var m = Parse(src);
     var td = Assert.IsType<TypeDeclaration>(m.Members.First());
-    var gt = Assert.IsType<GenericType>(td.TypeNode);
-    Assert.Equal("Wrapper", gt.Name.GetText(src));
-    Assert.Single(gt.Arguments.ArgumentList.Elements);
+    var te = Assert.IsType<TypeExpr>(td.TypeNode);
+    var tr = Assert.IsType<TypeRef>(te.Core);
+    Assert.Equal("Wrapper", tr.Name.GetText(src));
+    Assert.NotNull(tr.GenericArgs);
+    Assert.Single(tr.GenericArgs!.ArgumentList.Elements);
   }
 
   [Fact]
@@ -38,8 +42,10 @@ public class TypeAliasParseTests
     var td = Assert.IsType<TypeDeclaration>(m.Members.First());
     Assert.NotNull(td.Name.GenericParams);
     Assert.Single(td.Name.GenericParams!.Parameters);
-    var gt = Assert.IsType<GenericType>(td.TypeNode);
-    Assert.Single(gt.Arguments.ArgumentList.Elements);
+    var te = Assert.IsType<TypeExpr>(td.TypeNode);
+    var tr = Assert.IsType<TypeRef>(te.Core);
+    Assert.NotNull(tr.GenericArgs);
+    Assert.Single(tr.GenericArgs!.ArgumentList.Elements);
   }
 
   [Fact]
@@ -63,9 +69,11 @@ public class TypeAliasParseTests
     string src = "[[m]];\nAlias := Outer[Inner,];\n";
     var m = Parse(src);
     var td = Assert.IsType<TypeDeclaration>(m.Members.First());
-    var gt = Assert.IsType<GenericType>(td.TypeNode);
-    Assert.Single(gt.Arguments.ArgumentList.Elements);
-    Assert.NotNull(gt.Arguments.ArgumentList.TrailingComma); // trailing comma on list
+    var te = Assert.IsType<TypeExpr>(td.TypeNode);
+    var tr = Assert.IsType<TypeRef>(te.Core);
+    Assert.NotNull(tr.GenericArgs);
+    Assert.Single(tr.GenericArgs!.ArgumentList.Elements);
+    Assert.NotNull(tr.GenericArgs!.ArgumentList.TrailingComma); // trailing comma on list
   }
 
   [Fact]
@@ -74,12 +82,16 @@ public class TypeAliasParseTests
     string src = "[[m]];\nAlias := Outer[Inner[Deep]];\n";
     var m = Parse(src);
     var td = Assert.IsType<TypeDeclaration>(m.Members.First());
-    var outer = Assert.IsType<GenericType>(td.TypeNode);
-    Assert.Single(outer.Arguments.ArgumentList.Elements);
-    var innerArgElem = outer.Arguments.ArgumentList.Elements[0];
+    var te = Assert.IsType<TypeExpr>(td.TypeNode);
+    var outer = Assert.IsType<TypeRef>(te.Core);
+    Assert.NotNull(outer.GenericArgs);
+    Assert.Single(outer.GenericArgs!.ArgumentList.Elements);
+    var innerArgElem = outer.GenericArgs!.ArgumentList.Elements[0];
     var innerArgNode = Assert.IsType<GenericArgument>(innerArgElem.Node);
-    var inner = Assert.IsType<GenericType>(innerArgNode.TypeNode);
+    var innerTe = Assert.IsType<TypeExpr>(innerArgNode.TypeNode);
+    var inner = Assert.IsType<TypeRef>(innerTe.Core);
     Assert.Equal("Inner", inner.Name.GetText(src));
-    Assert.Single(inner.Arguments.ArgumentList.Elements);
+    Assert.NotNull(inner.GenericArgs);
+    Assert.Single(inner.GenericArgs!.ArgumentList.Elements);
   }
 }

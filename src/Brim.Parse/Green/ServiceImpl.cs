@@ -41,7 +41,7 @@ public sealed record ServiceImpl(
     GreenToken head = p.ExpectSyntax(SyntaxKind.IdentifierToken);
     GreenNode sref = head;
     if (p.MatchRaw(RawKind.LBracket) && !p.MatchRaw(RawKind.LBracketLBracket))
-      sref = GenericType.ParseAfterName(p, head);
+      sref = TypeRef.ParseAfterName(p, head);
 
     GreenToken recvOpen = p.ExpectSyntax(SyntaxKind.LessToken);
     GreenToken rid = p.ExpectSyntax(SyntaxKind.IdentifierToken); // allow '_'
@@ -79,7 +79,7 @@ public sealed record ServiceImpl(
 
       GreenToken fname = p.ExpectSyntax(SyntaxKind.IdentifierToken);
       GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
-      GreenNode ftype = TypeExpr.Parse(p);
+      TypeExpr ftype = TypeExpr.Parse(p);
       GreenToken eq = p.ExpectSyntax(SyntaxKind.EqualToken);
 
       // Consume initializer structurally until Terminator
@@ -121,7 +121,7 @@ public sealed record ServiceImpl(
     GreenToken op = p.ExpectSyntax(SyntaxKind.OpenParenToken);
     StructuralArray<ServiceParam> @params = ParseParamDeclList(p);
     GreenToken cp = p.ExpectSyntax(SyntaxKind.CloseParenToken);
-    GreenNode ret = TypeExpr.Parse(p);
+    TypeExpr ret = TypeExpr.Parse(p);
     GreenToken bodyOpen = p.ExpectSyntax(SyntaxKind.OpenBraceToken);
     SkipBlock(p);
     return new ServiceMethodHeader(name, op, @params, cp, ret, bodyOpen);
@@ -132,7 +132,7 @@ public sealed record ServiceImpl(
     GreenToken tilde = new(SyntaxKind.TildeToken, p.ExpectRaw(RawKind.Tilde));
     GreenToken op = p.ExpectSyntax(SyntaxKind.OpenParenToken);
     GreenToken cp = p.ExpectSyntax(SyntaxKind.CloseParenToken);
-    GreenNode ret = TypeExpr.Parse(p);
+    TypeExpr ret = TypeExpr.Parse(p);
     GreenToken bodyOpen = p.ExpectSyntax(SyntaxKind.OpenBraceToken);
     SkipBlock(p);
     return new ServiceDtorHeader(tilde, op, cp, ret, bodyOpen);
@@ -147,7 +147,7 @@ public sealed record ServiceImpl(
       Parser.StallGuard sg = p.GetStallGuard();
       GreenToken pname = p.ExpectSyntax(SyntaxKind.IdentifierToken);
       GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
-      GreenNode ptype = TypeExpr.Parse(p);
+      TypeExpr ptype = TypeExpr.Parse(p);
 
       GreenToken? trailing = null;
       if (p.MatchRaw(RawKind.Comma))
@@ -182,7 +182,7 @@ public sealed record ServiceFieldInit(
   GreenToken? Mutator,
   GreenToken Name,
   GreenToken Colon,
-  GreenNode Type,
+  TypeExpr Type,
   GreenToken Equal,
   GreenToken Terminator)
   : GreenNode(SyntaxKind.FieldDeclaration, (Mutator ?? Name).Offset)
@@ -193,7 +193,8 @@ public sealed record ServiceFieldInit(
     if (Mutator is not null) yield return Mutator;
     yield return Name;
     yield return Colon;
-    yield return Type;
+    foreach (GreenNode child in Type.GetChildren())
+      yield return child;
     yield return Equal;
     yield return Terminator;
   }

@@ -39,6 +39,8 @@ public enum SyntaxKind
   ProtocolToken,
   StructToken,
   ServiceToken,
+  SeqKeywordToken,
+  BufKeywordToken,
   EobToken,
 
   // Nodes
@@ -68,6 +70,11 @@ public enum SyntaxKind
   GenericType,
 
   // Type expression nodes
+  TypeExpr,
+  TypeRef,
+  SeqTypeExpr,
+  BufTypeExpr,
+  FunctionTypeExpr,
   StructShape,
   UnionShape,
   FlagsShape,

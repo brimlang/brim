@@ -3,7 +3,7 @@ namespace Brim.Parse.Green;
 public sealed record TypeDeclaration(
   DeclarationName Name,
   GreenToken TypeBind,
-  GreenNode TypeNode,
+  TypeExpr TypeNode,
   GreenToken Terminator)
   : GreenNode(SyntaxKind.TypeDeclaration, Name.Offset)
 {
@@ -12,7 +12,8 @@ public sealed record TypeDeclaration(
   {
     yield return Name;
     yield return TypeBind;
-    yield return TypeNode;
+    foreach (GreenNode child in TypeNode.GetChildren())
+      yield return child;
     yield return Terminator;
   }
 
@@ -20,7 +21,7 @@ public sealed record TypeDeclaration(
   {
     DeclarationName name = DeclarationName.Parse(p);
     GreenToken bind = p.ExpectSyntax(SyntaxKind.TypeBindToken);
-    GreenNode typeExpr = TypeExpr.Parse(p);
+    TypeExpr typeExpr = TypeExpr.Parse(p);
     GreenToken term = p.ExpectSyntax(SyntaxKind.TerminatorToken);
     return new TypeDeclaration(name, bind, typeExpr, term);
   }

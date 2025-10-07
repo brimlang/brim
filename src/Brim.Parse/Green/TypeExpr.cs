@@ -1,45 +1,52 @@
 namespace Brim.Parse.Green;
 
-/// <summary>
-/// Entry for parsing a type expression (no value expressions).
-/// </summary>
-public static class TypeExpr
+public sealed record TypeExpr(
+  GreenNode Core,
+  GreenToken? Suffix
+) : GreenNode(SyntaxKind.TypeExpr, Core.Offset)
 {
-  public static GreenNode Parse(Parser p)
+  public override int FullWidth => (Suffix?.EndOffset ?? Core.EndOffset) - Offset;
+  public override IEnumerable<GreenNode> GetChildren()
   {
-    Opt<ParseFunc> shapeParser = MapShapeParser(p.Current);
-    GreenNode primary = shapeParser.HasValue
-      ? shapeParser.Value(p)
-      : Fallback(p);
+    foreach (GreenNode child in Core.GetChildren())
+      yield return child;
+    if (Suffix is not null) yield return Suffix;
+  }
 
-    return p.Current.Kind switch
+  public static TypeExpr Parse(Parser p)
+  {
+    // Parse TypeCore
+    GreenNode core = p.Current.Kind switch
     {
-      RawKind.Question => new OptionType(primary, p.ExpectSyntax(SyntaxKind.QuestionToken)),
-      RawKind.Bang => new ResultType(primary, p.ExpectSyntax(SyntaxKind.BangToken)),
-      _ => primary,
+      // Aggregate shapes
+      RawKind.PercentLBrace => StructShape.Parse(p),
+      RawKind.PipeLBrace => UnionShape.Parse(p),
+      RawKind.HashLBrace => NamedTupleShape.Parse(p),
+      RawKind.StopLBrace => ProtocolShape.Parse(p),
+      RawKind.AtmarkLBrace => ServiceShape.Parse(p),
+      RawKind.AmpersandLBrace or RawKind.Ampersand => FlagsShape.Parse(p),
+
+      // Function type
+      RawKind.LParen => new FunctionTypeExpr(FunctionShape.Parse(p)),
+
+      // Seq type
+      RawKind.Seq => SeqTypeExpr.Parse(p),
+
+      // Buf type
+      RawKind.Buf => BufTypeExpr.Parse(p),
+
+      // TypeRef (identifier or keyword)
+      _ => TypeRef.Parse(p)
     };
 
-    static Opt<ParseFunc> MapShapeParser(TokenView tok) => tok.Kind switch
+    // Parse optional TypeSuffix
+    GreenToken? suffix = p.Current.Kind switch
     {
-      RawKind.PercentLBrace => new(StructShape.Parse),
-      RawKind.PipeLBrace => new(UnionShape.Parse),
-      RawKind.HashLBrace => new(NamedTupleShape.Parse),
-      RawKind.StopLBrace => new(ProtocolShape.Parse),
-      RawKind.AtmarkLBrace => new(ServiceShape.Parse),
-      RawKind.Ampersand => new(FlagsShape.Parse),
-      RawKind.LParen => new(FunctionShape.Parse),
-      _ => Opt<ParseFunc>.None,
+      RawKind.Question => p.ExpectSyntax(SyntaxKind.QuestionToken),
+      RawKind.Bang => p.ExpectSyntax(SyntaxKind.BangToken),
+      _ => null
     };
 
-    static GreenNode Fallback(Parser p)
-    {
-      GreenNode primary;
-      GreenToken head = p.ExpectSyntax(SyntaxKind.IdentifierToken);
-      primary = head;
-      if (p.MatchRaw(RawKind.LBracket))
-        primary = GenericType.ParseAfterName(p, head);
-
-      return primary;
-    }
+    return new TypeExpr(core, suffix);
   }
 }

@@ -44,11 +44,15 @@ public sealed record ConstraintList(
 }
 
 public sealed record GenericArgument(
-  GreenNode TypeNode
+  TypeExpr TypeNode
 ) : GreenNode(SyntaxKind.GenericArgument, TypeNode.Offset)
 {
   public override int FullWidth => TypeNode.FullWidth;
-  public override IEnumerable<GreenNode> GetChildren() { yield return TypeNode; }
+  public override IEnumerable<GreenNode> GetChildren()
+  {
+    foreach (GreenNode child in TypeNode.GetChildren())
+      yield return child;
+  }
 }
 
 public sealed record GenericArgumentList(
@@ -64,14 +68,7 @@ public sealed record GenericArgumentList(
       p,
       SyntaxKind.GenericOpenToken,
       SyntaxKind.GenericCloseToken,
-      static p2 =>
-      {
-        GreenToken headTok2 = p2.ExpectSyntax(SyntaxKind.IdentifierToken);
-        GreenNode typeNode2 = headTok2;
-        if (p2.MatchRaw(RawKind.LBracket))
-          typeNode2 = GenericType.ParseAfterName(p2, headTok2);
-        return new GenericArgument(typeNode2);
-      });
+      static p2 => new GenericArgument(TypeExpr.Parse(p2)));
 
     if (list.Elements.Count == 0)
       p.AddDiagEmptyGeneric(list.OpenToken);

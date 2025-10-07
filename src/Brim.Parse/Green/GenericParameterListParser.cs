@@ -49,7 +49,7 @@ internal static class GenericParameterListParser
       GreenToken typeNameTok = p.ExpectSyntax(SyntaxKind.IdentifierToken);
       GreenNode refNode = typeNameTok;
       if (p.MatchRaw(RawKind.LBracket) && !p.MatchRaw(RawKind.LBracketLBracket))
-        refNode = GenericType.ParseAfterName(p, typeNameTok);
+        refNode = TypeRef.ParseAfterName(p, typeNameTok);
 
       GreenToken? trailingPlus = null;
       if (p.MatchRaw(RawKind.Plus)) trailingPlus = new GreenToken(SyntaxKind.PlusToken, p.ExpectRaw(RawKind.Plus));

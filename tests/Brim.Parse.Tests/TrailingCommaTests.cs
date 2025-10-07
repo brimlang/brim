@@ -11,7 +11,8 @@ public class TrailingCommaTests
   {
     var m = Parse("[[m]];\nS := %{ a:A, b:B, };\n");
     var td = m.Members.OfType<TypeDeclaration>().First();
-    var ss = Assert.IsType<StructShape>(td.TypeNode);
+    var te = Assert.IsType<TypeExpr>(td.TypeNode);
+    var ss = Assert.IsType<StructShape>(te.Core);
     Assert.Equal(2, ss.Fields.Count);
     Assert.NotNull(ss.Fields[0].TrailingComma);
     Assert.NotNull(ss.Fields[1].TrailingComma); // trailing on last
@@ -22,7 +23,8 @@ public class TrailingCommaTests
   {
     var m = Parse("[[m]];\nU := |{ A:A, B:B, };\n");
     var td = m.Members.OfType<TypeDeclaration>().First();
-    var us = Assert.IsType<UnionShape>(td.TypeNode);
+    var te = Assert.IsType<TypeExpr>(td.TypeNode);
+    var us = Assert.IsType<UnionShape>(te.Core);
     Assert.Equal(2, us.Variants.Count);
     Assert.NotNull(us.Variants[0].TrailingComma);
     Assert.NotNull(us.Variants[1].TrailingComma); // trailing
@@ -33,7 +35,8 @@ public class TrailingCommaTests
   {
     var m = Parse("[[m]];\nF := & prim { ONE, TWO, };\n");
     var td = m.Members.OfType<TypeDeclaration>().First();
-    var fs = Assert.IsType<FlagsShape>(td.TypeNode);
+    var te = Assert.IsType<TypeExpr>(td.TypeNode);
+    var fs = Assert.IsType<FlagsShape>(te.Core);
     Assert.Equal(2, fs.Members.Count);
     Assert.NotNull(fs.Members[0].TrailingComma);
     Assert.NotNull(fs.Members[1].TrailingComma);
@@ -44,7 +47,8 @@ public class TrailingCommaTests
   {
     var m = Parse("[[m]];\nPair := #{ A, B, };\n");
     var td = m.Members.OfType<TypeDeclaration>().First();
-    var nts = Assert.IsType<NamedTupleShape>(td.TypeNode);
+    var te = Assert.IsType<TypeExpr>(td.TypeNode);
+    var nts = Assert.IsType<NamedTupleShape>(te.Core);
     Assert.Equal(2, nts.ElementList.Elements.Count);
     Assert.NotNull(nts.ElementList.Elements[1].LeadingComma); // interior comma on second element
     Assert.NotNull(nts.ElementList.TrailingComma); // trailing comma on list
@@ -66,11 +70,14 @@ public class TrailingCommaTests
   {
     var m = Parse("[[m]];\nWrap := %{ field: Outer[Inner,] };\n");
     var td = m.Members.OfType<TypeDeclaration>().First();
-    var ss = Assert.IsType<StructShape>(td.TypeNode);
+    var tde = Assert.IsType<TypeExpr>(td.TypeNode);
+    var ss = Assert.IsType<StructShape>(tde.Core);
     var field = ss.Fields[0];
-    var gt = Assert.IsType<GenericType>(field.TypeAnnotation);
-    Assert.Single(gt.Arguments.ArgumentList.Elements); // one argument
-    Assert.NotNull(gt.Arguments.ArgumentList.TrailingComma); // trailing comma on list
+    var fieldType = Assert.IsType<TypeExpr>(field.TypeAnnotation);
+    var tr = Assert.IsType<TypeRef>(fieldType.Core);
+    Assert.NotNull(tr.GenericArgs);
+    Assert.Single(tr.GenericArgs!.ArgumentList.Elements); // one argument
+    Assert.NotNull(tr.GenericArgs!.ArgumentList.TrailingComma); // trailing comma on list
   }
 
   [Fact]
@@ -78,7 +85,9 @@ public class TrailingCommaTests
   {
     var m = Parse("[[m]];\nF := (A, B,) C;\n");
     var td = m.Members.OfType<TypeDeclaration>().First();
-    var ft = Assert.IsType<FunctionShape>(td.TypeNode);
+    var tde = Assert.IsType<TypeExpr>(td.TypeNode);
+    var fte = Assert.IsType<FunctionTypeExpr>(tde.Core);
+    var ft = fte.Shape;
     Assert.Equal(2, ft.ParameterList.Elements.Count);
     Assert.NotNull(ft.ParameterList.Elements[1].LeadingComma); // interior comma on second element
     Assert.NotNull(ft.ParameterList.TrailingComma); // trailing comma now on list

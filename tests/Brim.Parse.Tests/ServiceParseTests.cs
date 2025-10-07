@@ -12,7 +12,8 @@ public class ServiceParseTests
     string src = "[[m]];\nIntService[T] := @{ Adder[T], Fmt, };\n";
     var m = Parse(src);
     var td = Assert.IsType<TypeDeclaration>(m.Members.First());
-    var sv = Assert.IsType<ServiceShape>(td.TypeNode);
+    var te = Assert.IsType<TypeExpr>(td.TypeNode);
+    var sv = Assert.IsType<ServiceShape>(te.Core);
     Assert.Equal(2, sv.ProtocolList.Elements.Count);
     Assert.NotNull(sv.ProtocolList.Elements[1].LeadingComma); // interior comma on second element
     Assert.NotNull(sv.ProtocolList.TrailingComma); // trailing comma on list

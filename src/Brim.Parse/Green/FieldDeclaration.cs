@@ -3,7 +3,7 @@ namespace Brim.Parse.Green;
 public sealed record FieldDeclaration(
   GreenToken Identifier,
   GreenToken Colon,
-  GreenNode TypeAnnotation,
+  TypeExpr TypeAnnotation,
   GreenToken? TrailingComma) :
 GreenNode(SyntaxKind.FieldDeclaration, Identifier.Offset),
 IParsable<FieldDeclaration>
@@ -13,7 +13,8 @@ IParsable<FieldDeclaration>
   {
     yield return Identifier;
     yield return Colon;
-    yield return TypeAnnotation;
+    foreach (GreenNode child in TypeAnnotation.GetChildren())
+      yield return child;
     if (TrailingComma is not null) yield return TrailingComma;
   }
 
@@ -21,13 +22,7 @@ IParsable<FieldDeclaration>
   {
     GreenToken nameTok = p.ExpectSyntax(SyntaxKind.IdentifierToken);
     GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
-    GreenToken typeNameTok = p.ExpectSyntax(SyntaxKind.IdentifierToken);
-
-    GreenNode type = typeNameTok;
-    if (p.MatchRaw(RawKind.LBracket))
-    {
-      type = GenericType.ParseAfterName(p, typeNameTok);
-    }
+    TypeExpr type = TypeExpr.Parse(p);
 
     GreenToken? trailing = null;
     if (p.MatchRaw(RawKind.Comma))

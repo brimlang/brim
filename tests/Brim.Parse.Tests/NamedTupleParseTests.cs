@@ -12,7 +12,8 @@ public class NamedTupleParseTests
     var m = Parse("[[m]];\nPair[T,U] := #{T, U};");
     var td = m.Members.OfType<TypeDeclaration>().FirstOrDefault();
     Assert.NotNull(td);
-    var nts = Assert.IsType<NamedTupleShape>(td!.TypeNode);
+    var te = Assert.IsType<TypeExpr>(td!.TypeNode);
+    var nts = Assert.IsType<NamedTupleShape>(te.Core);
     Assert.Equal(2, nts.ElementList.Elements.Count);
   }
 

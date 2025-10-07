@@ -3,7 +3,7 @@ namespace Brim.Parse.Green;
 public sealed record UnionVariantDeclaration(
   GreenToken Identifier,
   GreenToken Colon,
-  GreenNode Type,
+  TypeExpr Type,
   GreenToken? TrailingComma) :
 GreenNode(SyntaxKind.UnionVariantDeclaration, Identifier.Offset),
 IParsable<UnionVariantDeclaration>
@@ -13,7 +13,8 @@ IParsable<UnionVariantDeclaration>
   {
     yield return Identifier;
     yield return Colon;
-    yield return Type;
+    foreach (GreenNode child in Type.GetChildren())
+      yield return child;
     if (TrailingComma is not null) yield return TrailingComma;
   }
 
@@ -21,12 +22,7 @@ IParsable<UnionVariantDeclaration>
   {
     GreenToken nameTok = p.ExpectSyntax(SyntaxKind.IdentifierToken);
     GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
-    GreenToken typeNameTok = p.ExpectSyntax(SyntaxKind.IdentifierToken);
-    GreenNode ty = typeNameTok;
-    if (p.MatchRaw(RawKind.LBracket) && !p.MatchRaw(RawKind.LBracketLBracket))
-    {
-      ty = GenericType.ParseAfterName(p, typeNameTok);
-    }
+    TypeExpr ty = TypeExpr.Parse(p);
     GreenToken? trailing = null;
     if (p.MatchRaw(RawKind.Comma))
       trailing = p.ExpectSyntax(SyntaxKind.CommaToken);
