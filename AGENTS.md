@@ -16,9 +16,9 @@
     - Design predictions against these stable first tokens (e.g., `<<`, `::=`, `:=`, `.[{]`, `^{`, `[[`, etc.) and ignore trivia — this keeps LL(k) small and tables robust.
 7. Tree model: single immutable layer (names with Green* are historical—do NOT add a red layer).
 8. Diagnostics: allocate-light value types, capped at 512; last slot becomes TooManyErrors sentinel.
-9. Coding style: C# preview, `<Nullable>enable</Nullable>`, implicit usings on; treat warnings as errors; keep analyzer warnings at zero.
+9. Coding style: C# 13 (preview where applicable), `<Nullable>enable</Nullable>`, implicit usings ON; treat warnings as errors; keep analyzer warnings at zero. Agents should not assume modern C# syntax is incorrect — verify by building (`mise run build` or `dotnet build`) and rely on build errors before diagnosing syntax issues.
 10. Naming: prefer explicit, PascalCase types, camelCase locals, ALL_CAPS only for const static readonly primitives if strongly justified (avoid new ones unless pattern exists).
-11. Imports/usings: rely on implicit usings; place explicit usings sorted System.* first, then project namespaces; remove unused (lint enforces).
+11. Imports/usings: implicit usings are enabled; prefer relying on them. When adding explicit `using` directives place `System.*` first, then project namespaces; remove unused usings (lint enforces). Agents must not remove or change modern implicit usings without reproducing a build error that justifies the change.
 12. Types & allocations: use `readonly struct` where beneficial; avoid capturing spans beyond lifetime; favor value semantics in hot paths.
 13. Error handling: fail fast with diagnostics—not exceptions—for syntax issues; reserve exceptions for truly exceptional states (I/O, invariant violation).
 14. Performance: measure before optimizing; avoid premature micro-opts; keep parsing streaming (no full token buffering).
