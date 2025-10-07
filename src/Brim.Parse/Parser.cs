@@ -196,6 +196,7 @@ public sealed partial class Parser(
       RawKind actual = i == 0
         ? Current.Kind
         : _look.Peek(i).Kind; // direct peek; safe within capacity by table construction
+
       if (actual != expect) return false;
     }
 

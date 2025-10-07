@@ -41,6 +41,8 @@ public sealed partial class Parser
     new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.PipeLBrace)),
     new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.Ampersand)),
     new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.HashLBrace)),
+    new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.Buf)),
+    new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.Seq)),
   ];
 
   internal static readonly PredictionTable ModuleMembersTable = PredictionTable.Build(ModuleMemberPredictions);
@@ -76,6 +78,7 @@ public sealed partial class Parser
     SyntaxKind.GreaterToken => RawKind.Greater,
     SyntaxKind.ExportEndToken => RawKind.GreaterGreater,
     SyntaxKind.PlusToken => RawKind.Plus,
+    SyntaxKind.StarToken => RawKind.Star,
     SyntaxKind.CommaToken => RawKind.Comma,
     SyntaxKind.ErrorToken => RawKind.Error,
     SyntaxKind.ServiceImplToken => RawKind.Atmark,

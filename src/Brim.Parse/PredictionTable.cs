@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Brim.Parse.Collections;
 using Brim.Parse.Green;
 
@@ -59,26 +60,37 @@ internal readonly struct PredictionTable
       if (k > maxKind) maxKind = k;
     }
 
+    // Bucket by first token to ensure contiguous groups for each starting kind.
+    List<Prediction>?[] buckets = new List<Prediction>?[maxKind + 1];
+    for (int i = 0; i < preds.Length; i++)
+    {
+      int k = (int)preds[i].Sequence[0];
+      List<Prediction>? list = buckets[k];
+      if (list is null)
+      {
+        list = new List<Prediction>();
+        buckets[k] = list;
+      }
+      list.Add(preds[i]);
+    }
+
     int[] starts = new int[maxKind + 1];
     byte[] counts = new byte[maxKind + 1];
     Array.Fill(starts, -1);
 
-    // We rely on original order; first occurrence sets start, every occurrence bumps count.
-    for (int i = 0; i < preds.Length; i++)
+    Prediction[] entries = new Prediction[preds.Length];
+    int idxOut = 0;
+    for (int k = 0; k < buckets.Length; k++)
     {
-      int k = (int)preds[i].Sequence[0];
-      if (starts[k] == -1)
-      {
-        starts[k] = i;
-        counts[k] = 1;
-      }
-      else
-      {
-        counts[k]++;
-      }
+      List<Prediction>? list = buckets[k];
+      if (list is null) continue;
+
+      starts[k] = idxOut;
+      counts[k] = (byte)list.Count;
+      for (int j = 0; j < list.Count; j++) entries[idxOut++] = list[j];
     }
 
-    return new PredictionTable(preds, starts, counts);
+    return new PredictionTable(entries, starts, counts);
   }
 
   internal static PredictionTable Build(ReadOnlySpan<Prediction> preds)
