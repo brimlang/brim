@@ -157,16 +157,16 @@ public class CharBasedLexerTests
   #region Keyword Tests
 
   [Theory]
-  [InlineData("true", RawKind.True)]
-  [InlineData("false", RawKind.False)]
-  [InlineData("void", RawKind.Void)]
-  [InlineData("unit", RawKind.Unit)]
-  [InlineData("bool", RawKind.Bool)]
-  [InlineData("str", RawKind.Str)]
-  [InlineData("rune", RawKind.Rune)]
-  [InlineData("err", RawKind.Err)]
-  [InlineData("seq", RawKind.Seq)]
-  [InlineData("buf", RawKind.Buf)]
+  [InlineData("true", RawKind.Identifier)]
+  [InlineData("false", RawKind.Identifier)]
+  [InlineData("void", RawKind.Identifier)]
+  [InlineData("unit", RawKind.Identifier)]
+  [InlineData("bool", RawKind.Identifier)]
+  [InlineData("str", RawKind.Identifier)]
+  [InlineData("rune", RawKind.Identifier)]
+  [InlineData("err", RawKind.Identifier)]
+  [InlineData("seq", RawKind.Identifier)]
+  [InlineData("buf", RawKind.Identifier)]
   public void BasicKeywords_RecognizedCorrectly(string keyword, RawKind expectedKind)
   {
     List<RawToken> tokens = Lex(keyword);
@@ -175,16 +175,16 @@ public class CharBasedLexerTests
   }
 
   [Theory]
-  [InlineData("i8", RawKind.I8)]
-  [InlineData("i16", RawKind.I16)]
-  [InlineData("i32", RawKind.I32)]
-  [InlineData("i64", RawKind.I64)]
-  [InlineData("u8", RawKind.U8)]
-  [InlineData("u16", RawKind.U16)]
-  [InlineData("u32", RawKind.U32)]
-  [InlineData("u64", RawKind.U64)]
-  [InlineData("f32", RawKind.F32)]
-  [InlineData("f64", RawKind.F64)]
+  [InlineData("i8", RawKind.Identifier)]
+  [InlineData("i16", RawKind.Identifier)]
+  [InlineData("i32", RawKind.Identifier)]
+  [InlineData("i64", RawKind.Identifier)]
+  [InlineData("u8", RawKind.Identifier)]
+  [InlineData("u16", RawKind.Identifier)]
+  [InlineData("u32", RawKind.Identifier)]
+  [InlineData("u64", RawKind.Identifier)]
+  [InlineData("f32", RawKind.Identifier)]
+  [InlineData("f64", RawKind.Identifier)]
   public void NumericTypeKeywords_RecognizedCorrectly(string keyword, RawKind expectedKind)
   {
     List<RawToken> tokens = Lex(keyword);
@@ -210,9 +210,9 @@ public class CharBasedLexerTests
   {
     var tokens = LexWithText("true false");
     Assert.Equal(3, tokens.Count);
-    Assert.Equal((RawKind.True, "true"), tokens[0]);
+    Assert.Equal((RawKind.Identifier, "true"), tokens[0]);
     Assert.Equal((RawKind.WhitespaceTrivia, " "), tokens[1]);
-    Assert.Equal((RawKind.False, "false"), tokens[2]);
+    Assert.Equal((RawKind.Identifier, "false"), tokens[2]);
   }
 
   #endregion
@@ -704,7 +704,7 @@ public class CharBasedLexerTests
     Assert.Equal((RawKind.WhitespaceTrivia, " "), tokens[1]);
     Assert.Equal((RawKind.ColonEqual, ":="), tokens[2]);
     Assert.Equal((RawKind.WhitespaceTrivia, " "), tokens[3]);
-    Assert.Equal((RawKind.True, "true"), tokens[4]);
+    Assert.Equal((RawKind.Identifier, "true"), tokens[4]);
     Assert.Equal((RawKind.WhitespaceTrivia, " "), tokens[5]);
     Assert.Equal((RawKind.AmpersandAmpersand, "&&"), tokens[6]);
     Assert.Equal((RawKind.WhitespaceTrivia, " "), tokens[7]);
@@ -749,7 +749,7 @@ result .{ success: true, value: x }";
     Assert.Contains(RawKind.AmpersandAmpersand, tokenKinds);
     Assert.Contains(RawKind.BangEqual, tokenKinds);
     Assert.Contains(RawKind.StopLBrace, tokenKinds);
-    Assert.Contains(RawKind.True, tokenKinds);
+    Assert.Contains(RawKind.Identifier, tokenKinds);
     Assert.Contains(RawKind.Terminator, tokenKinds);
   }
 

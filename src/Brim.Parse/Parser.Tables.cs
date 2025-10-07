@@ -28,11 +28,7 @@ public sealed partial class Parser
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.Any)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.RBracket)), // empty generic param list
 
-    // Type keywords as TypeRef
-    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.Str)),
-    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.Bool)),
-    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.I32)),
-    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.U64)),
+    // Type keywords as TypeRef (keywords removed; parser treats identifiers specially)
 
     // Const value declaration: Ident ':' Type '=' Initializer Terminator
     new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.Identifier)),
@@ -41,9 +37,7 @@ public sealed partial class Parser
     new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.PipeLBrace)),
     new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.Ampersand)),
     new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.HashLBrace)),
-    new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.Buf)),
-    new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.Seq)),
-  ];
+   ];
 
   internal static readonly PredictionTable ModuleMembersTable = PredictionTable.Build(ModuleMemberPredictions);
 
@@ -88,8 +82,7 @@ public sealed partial class Parser
     SyntaxKind.ProtocolToken => RawKind.StopLBrace,
     SyntaxKind.ServiceToken => RawKind.AtmarkLBrace,
     SyntaxKind.NamedTupleToken => RawKind.HashLBrace,
-    SyntaxKind.SeqKeywordToken => RawKind.Seq,
-    SyntaxKind.BufKeywordToken => RawKind.Buf,
+    // Keywords are not lexed; identifiers represent former keywords like 'seq'/'buf'.
     _ => RawKind.Error
   };
 

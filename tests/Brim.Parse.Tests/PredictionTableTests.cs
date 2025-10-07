@@ -14,8 +14,8 @@ public class PredictionTableTests
 
     Prediction p0 = new(action, new TokenSequence(RawKind.Identifier, RawKind.ColonEqual));
     Prediction p1 = new(action, new TokenSequence(RawKind.Hat, RawKind.Identifier, RawKind.Colon));
-    Prediction p2 = new(action, new TokenSequence(RawKind.Identifier, RawKind.Colon, RawKind.Buf));
-    Prediction p3 = new(action, new TokenSequence(RawKind.Identifier, RawKind.Colon, RawKind.Seq));
+    Prediction p2 = new(action, new TokenSequence(RawKind.Identifier, RawKind.Colon, RawKind.Identifier));
+    Prediction p3 = new(action, new TokenSequence(RawKind.Identifier, RawKind.Colon, RawKind.Identifier));
 
     // Non-contiguous ordering: identifier-starting entries interleaved with others
     Prediction[] mixed = new[] { p0, p1, p2, p3 };

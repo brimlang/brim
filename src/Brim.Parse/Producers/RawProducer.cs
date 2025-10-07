@@ -20,46 +20,6 @@ public sealed class RawProducer(
   int _col = 1;
   bool _emittedEob;
 
-  /// <summary>
-  /// Keywords that should be recognized as specific tokens instead of identifiers.
-  /// </summary>
-  static bool TryGetKeyword(ReadOnlySpan<char> span, out RawKind kind)
-  {
-    // Keywords are all ASCII, so we can do a quick check before allocating a string
-    if (span.Length == 0 || !BrimChars.IsAsciiLetter(span[0]))
-    {
-      kind = RawKind._SentinelDefault;
-      return false;
-    }
-
-    (kind, bool Matched) = span switch
-    {
-      "true" => (RawKind.True, true),
-      "false" => (RawKind.False, true),
-      "void" => (RawKind.Void, true),
-      "unit" => (RawKind.Unit, true),
-      "bool" => (RawKind.Bool, true),
-      "str" => (RawKind.Str, true),
-      "rune" => (RawKind.Rune, true),
-      "err" => (RawKind.Err, true),
-      "seq" => (RawKind.Seq, true),
-      "buf" => (RawKind.Buf, true),
-      "i8" => (RawKind.I8, true),
-      "i16" => (RawKind.I16, true),
-      "i32" => (RawKind.I32, true),
-      "i64" => (RawKind.I64, true),
-      "u8" => (RawKind.U8, true),
-      "u16" => (RawKind.U16, true),
-      "u32" => (RawKind.U32, true),
-      "u64" => (RawKind.U64, true),
-      "f32" => (RawKind.F32, true),
-      "f64" => (RawKind.F64, true),
-      _ => (RawKind._SentinelDefault, false)
-    };
-
-    return Matched;
-  }
-
   public bool IsEndOfSource(in RawToken item) => Tokens.IsEob(item);
 
   public bool TryRead(out RawToken tok)
@@ -188,16 +148,8 @@ public sealed class RawProducer(
     AdvanceCharWhile(static c => BrimChars.IsIdentifierContinue(c));
     int length = _pos - startOffset;
 
-    // Get the identifier text and normalize it
-    ReadOnlySpan<char> identifierSpan = _source.Span.Slice(startOffset, length);
-
-    // Normalize the identifier and check if it's a keyword using TryGetKeyword
-    string normalized = BrimChars.NormalizeIdentifier(identifierSpan);
-    RawKind kind = TryGetKeyword(normalized, out RawKind keywordKind)
-      ? keywordKind
-      : RawKind.Identifier;
-
-    return new RawToken(kind, startOffset, length, line, col);
+    // Always treat identifiers uniformly; the parser will decide semantics at use-sites.
+    return new RawToken(RawKind.Identifier, startOffset, length, line, col);
   }
 
   RawToken LexNumber(int startOffset, int line, int col)

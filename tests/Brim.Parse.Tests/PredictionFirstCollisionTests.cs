@@ -27,7 +27,24 @@ public class PredictionFirstCollisionTests
             {
               bool identical = true;
               for (int idx = 0; idx < a.Length; idx++) if (a[idx] != b[idx]) { identical = false; break; }
-              Assert.False(identical, $"Duplicate prediction sequences for first token {(RawKind)k}");
+              if (identical)
+              {
+                var sbldrA = new System.Text.StringBuilder();
+                var sbldrB = new System.Text.StringBuilder();
+                for (int ii = 0; ii < a.Length; ii++)
+                {
+                  if (ii > 0) sbldrA.Append(',');
+                  sbldrA.Append(((int)a[ii]).ToString());
+                }
+                for (int ii = 0; ii < b.Length; ii++)
+                {
+                  if (ii > 0) sbldrB.Append(',');
+                  sbldrB.Append(((int)b[ii]).ToString());
+                }
+                string sa = sbldrA.ToString();
+                string sb = sbldrB.ToString();
+                Assert.False(identical, $"Duplicate prediction sequences for first token {(RawKind)k}: a=[{sa}] b=[{sb}]");
+              }
             }
           }
         }

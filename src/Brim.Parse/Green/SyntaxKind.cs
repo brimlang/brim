@@ -40,8 +40,6 @@ public enum SyntaxKind
   ProtocolToken,
   StructToken,
   ServiceToken,
-  SeqKeywordToken,
-  BufKeywordToken,
   EobToken,
 
   // Nodes

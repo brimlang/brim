@@ -19,12 +19,16 @@ public class BufTypeParseTests
     var typeExpr = bind!.TypeNode;
     Assert.IsType<TypeExpr>(typeExpr);
 
-    // The core should be a BufTypeExpr
-    Assert.IsType<BufTypeExpr>(typeExpr.Core);
-    var bufCore = (BufTypeExpr)typeExpr.Core;
-    Assert.NotNull(bufCore.Star);
-    Assert.NotNull(bufCore.Size);
-    Assert.Equal(SyntaxKind.StarToken, bufCore.Star!.SyntaxKind);
-    Assert.Equal(SyntaxKind.IntToken, bufCore.Size!.SyntaxKind);
+    // The core should be a TypeRef with an identifier name and generic args
+    Assert.IsType<TypeRef>(typeExpr.Core);
+    var tref = (TypeRef)typeExpr.Core;
+    Assert.Equal(SyntaxKind.IdentifierToken, tref.Name.SyntaxKind);
+    Assert.NotNull(tref.GenericArgs);
+    Assert.True(tref.GenericArgs!.ArgumentList.Elements.Count > 0);
+    // Basic sanity: first generic argument should be a GenericArgument wrapping a TypeExpr
+    var firstElement = tref.GenericArgs.ArgumentList.Elements[0];
+    Assert.IsType<GenericArgument>(firstElement.Node);
+    Assert.IsType<TypeExpr>(((GenericArgument)firstElement.Node).TypeNode);
+
   }
 }

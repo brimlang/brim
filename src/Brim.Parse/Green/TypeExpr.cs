@@ -29,12 +29,6 @@ public sealed record TypeExpr(
       // Function type
       RawKind.LParen => new FunctionTypeExpr(FunctionShape.Parse(p)),
 
-      // Seq type
-      RawKind.Seq => SeqTypeExpr.Parse(p),
-
-      // Buf type
-      RawKind.Buf => BufTypeExpr.Parse(p),
-
       // TypeRef (identifier or keyword)
       _ => TypeRef.Parse(p)
     };

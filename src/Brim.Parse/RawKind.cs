@@ -23,33 +23,6 @@ public enum RawKind : sbyte
   Terminator,
   _Reserved4 = 4,
 
-  // <summary>
-  // Sentinel value indicating the start of the range
-  // of keyword token kinds.
-  // </summary>
-  _SentinelKeyword = 5,
-
-  True,
-  False,
-  Void,
-  Unit,
-  Bool,
-  Str,
-  Rune,
-  Err,
-  Seq,
-  Buf,
-  I8,
-  I16,
-  I32,
-  I64,
-  U8,
-  U16,
-  U32,
-  U64,
-  F32,
-  F64,
-
   /// <summary>
   /// Sentinel value indicating the start of the range
   /// of glyph token kinds.

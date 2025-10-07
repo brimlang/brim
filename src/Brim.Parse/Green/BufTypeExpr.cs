@@ -22,7 +22,7 @@ public sealed record BufTypeExpr(
 
   public static BufTypeExpr Parse(Parser p)
   {
-    GreenToken buf = p.ExpectSyntax(SyntaxKind.BufKeywordToken);
+    GreenToken buf = p.ExpectSyntax(SyntaxKind.IdentifierToken);
     GreenToken lbracket = p.ExpectSyntax(SyntaxKind.GenericOpenToken);
     TypeExpr elem = TypeExpr.Parse(p);
     GreenToken? star = null;

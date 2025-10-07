@@ -110,7 +110,7 @@ class LexCommand : Command
       RawKind.CommentTrivia or RawKind.WhitespaceTrivia => "cyan",
       RawKind.IntegerLiteral or RawKind.DecimalLiteral or RawKind.StringLiteral or RawKind.RuneLiteral => "green",
       RawKind.Eob => "grey50",
-      > RawKind._SentinelKeyword and < RawKind._SentinelGlyphs => "mediumpurple1",
+      > RawKind._SentinelDefault and < RawKind._SentinelGlyphs => "mediumpurple1",
       > RawKind._SentinelGlyphs and < RawKind._SentinelLiteral => "darkorange",
       >= RawKind._SentinelLiteral and < RawKind._SentinelTrivia => "green",
       >= RawKind._SentinelTrivia and < RawKind._SentinelSynthetic => "cyan",

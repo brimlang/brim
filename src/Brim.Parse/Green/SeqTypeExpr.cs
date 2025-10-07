@@ -19,7 +19,7 @@ public sealed record SeqTypeExpr(
 
   public static SeqTypeExpr Parse(Parser p)
   {
-    GreenToken seq = p.ExpectSyntax(SyntaxKind.SeqKeywordToken);
+    GreenToken seq = p.ExpectSyntax(SyntaxKind.IdentifierToken);
     GreenToken lbracket = p.ExpectSyntax(SyntaxKind.GenericOpenToken);
     TypeExpr elem = TypeExpr.Parse(p);
     GreenToken rbracket = p.ExpectSyntax(SyntaxKind.GenericCloseToken);
