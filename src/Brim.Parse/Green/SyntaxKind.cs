@@ -39,6 +39,7 @@ public enum SyntaxKind
   NamedTupleToken,
   ProtocolToken,
   StructToken,
+  FlagsToken,
   ServiceToken,
   EobToken,
 

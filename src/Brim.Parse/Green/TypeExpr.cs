@@ -24,7 +24,7 @@ public sealed record TypeExpr(
       RawKind.HashLBrace => NamedTupleShape.Parse(p),
       RawKind.StopLBrace => ProtocolShape.Parse(p),
       RawKind.AtmarkLBrace => ServiceShape.Parse(p),
-      RawKind.AmpersandLBrace or RawKind.Ampersand => FlagsShape.Parse(p),
+      RawKind.AmpersandLBrace => FlagsShape.Parse(p),
 
       // Function type
       RawKind.LParen => new FunctionTypeExpr(FunctionShape.Parse(p)),

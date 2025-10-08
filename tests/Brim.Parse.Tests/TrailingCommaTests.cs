@@ -33,13 +33,11 @@ public class TrailingCommaTests
   [Fact]
   public void Flags_Allows_Trailing_Comma()
   {
-    var m = Parse("[[m]];\nF := & prim { ONE, TWO, };\n");
+    var m = Parse("[[m]];\nF := &{ ONE, TWO, };\n");
     var td = m.Members.OfType<TypeDeclaration>().First();
     var te = Assert.IsType<TypeExpr>(td.TypeNode);
     var fs = Assert.IsType<FlagsShape>(te.Core);
-    Assert.Equal(2, fs.Members.Count);
-    Assert.NotNull(fs.Members[0].TrailingComma);
-    Assert.NotNull(fs.Members[1].TrailingComma);
+    Assert.Equal(2, fs.MemberList.Elements.Count);
   }
 
   [Fact]

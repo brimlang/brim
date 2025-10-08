@@ -62,7 +62,7 @@ public static class GreenNodeFormatter
         _ = sb.Append($" variants={us.Variants.Count}");
         break;
       case FlagsShape fs:
-        _ = sb.Append($" flags={fs.Members.Count}");
+        _ = sb.Append($" flags={fs.MemberList.Elements.Count}");
         break;
       case NamedTupleShape nts:
         _ = sb.Append($" elems={nts.ElementList.Elements.Count}");
