@@ -23,7 +23,7 @@ rocket :rune = '🚀'
 launch :str = "Ready to launch... 🚀"
 ints   :seq[i32] = seq[i32]{ 1, 2, 3, 4, 5 }
 
-Numbers := seq[T :runtime.Num + runtime.Summable]
+Numbers[T :runtime.Num + runtime.Summable] := seq[T]
 
 panic :(str?) void = (msg) => {
   -- print msg and crash

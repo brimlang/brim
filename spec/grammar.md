@@ -300,7 +300,7 @@ TypeCore           : TypeRef
 TypeSuffix         : OPTIONAL
                    | FALLIBLE
 
-TypeRef            : IDENT GenericArgs?
+TypeRef            : QualifiedIdent GenericArgs?
                    | BOOL_KW
                    | UNIT_KW
                    | VOID_KW
@@ -316,6 +316,8 @@ TypeRef            : IDENT GenericArgs?
                    | U32_KW
                    | U64_KW
                    | SERVICE_HANDLE
+
+QualifiedIdent     : IDENT ['.' IDENT]*
 
 FunctionTypeExpr   : ParenListOpt<TypeExpr> TypeExpr
 SeqTypeExpr        : { SEQ_KW '[' } TypeExpr ']'

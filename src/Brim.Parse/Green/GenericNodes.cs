@@ -66,18 +66,9 @@ GreenNode(SyntaxKind.GenericParameterList, ParameterList.Offset)
       if (p.MatchRaw(RawKind.Plus))
         leadingPlus = p.ExpectSyntax(SyntaxKind.PlusToken);
 
-      GreenToken typeNameTok = p.ExpectSyntax(SyntaxKind.IdentifierToken);
-      GreenNode refNode = typeNameTok;
-      if (p.MatchRaw(RawKind.LBracket))
-        refNode = ParseAfterName(p, typeNameTok);
-
-      return new ConstraintRef(leadingPlus, refNode);
-    }
-
-    static TypeRef ParseAfterName(Parser p, GreenToken name)
-    {
-      GenericArgumentList args = GenericArgumentList.Parse(p);
-      return new TypeRef(name, args);
+      // Parse full TypeRef to support qualified names like runtime.Num
+      TypeRef typeRef = TypeRef.Parse(p);
+      return new ConstraintRef(leadingPlus, typeRef);
     }
   }
 }
