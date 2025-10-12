@@ -3,31 +3,95 @@ using Brim.Parse.Collections;
 namespace Brim.Parse.Green;
 
 public sealed record GenericParameterList(
-  GreenToken Open,
-  ImmutableArray<GenericParameter> Parameters,
-  GreenToken Close)
-: GreenNode(SyntaxKind.GenericParameterList, Open.Offset)
+  CommaList<GenericParameter> ParameterList) :
+GreenNode(SyntaxKind.GenericParameterList, ParameterList.Offset)
 {
-  public override int FullWidth => Close.EndOffset - Open.Offset;
+  public override int FullWidth => ParameterList.FullWidth;
   public override IEnumerable<GreenNode> GetChildren()
   {
-    yield return Open;
-    foreach (GenericParameter p in Parameters) yield return p;
-    yield return Close;
+    yield return ParameterList;
+  }
+
+  public static GenericParameterList? TryParse(Parser p)
+  {
+    if (!p.MatchRaw(RawKind.LBracket))
+      return null; // fast reject
+
+    CommaList<GenericParameter> list = CommaList<GenericParameter>.Parse(
+      p,
+      SyntaxKind.GenericOpenToken,
+      SyntaxKind.GenericCloseToken,
+      ParseParameter);
+
+    if (list.Elements.Count == 0)
+      p.AddDiagEmptyGenericParam(list.OpenToken);
+
+    return new GenericParameterList(list);
+  }
+
+  static GenericParameter ParseParameter(Parser p)
+  {
+    GreenToken paramIdTok = p.ExpectSyntax(SyntaxKind.IdentifierToken);
+    ConstraintList? constraints = ParseConstraints(p);
+    return new(paramIdTok, constraints);
+  }
+
+  static ConstraintList? ParseConstraints(Parser p)
+  {
+    if (!p.MatchRaw(RawKind.Colon))
+      return null;
+
+    GreenToken colonTok = p.ExpectSyntax(SyntaxKind.ColonToken);
+
+    ArrayBuilder<ConstraintRef> refs = [];
+
+    if (!p.MatchRaw(RawKind.RBracket) && !p.MatchRaw(RawKind.Eob) && !p.MatchRaw(RawKind.Comma))
+    {
+      refs.Add(ParseConstraintRef(p));
+
+      while (!p.MatchRaw(RawKind.RBracket) && !p.MatchRaw(RawKind.Eob) && !p.MatchRaw(RawKind.Comma))
+      {
+        Parser.StallGuard sg = p.GetStallGuard();
+        refs.Add(ParseConstraintRef(p));
+        if (sg.Stalled) break;
+      }
+    }
+
+    if (refs.Count == 0) p.AddDiagInvalidGenericConstraint();
+    return new ConstraintList(colonTok, refs);
+
+    static ConstraintRef ParseConstraintRef(Parser p)
+    {
+      GreenToken? leadingPlus = null;
+      if (p.MatchRaw(RawKind.Plus))
+        leadingPlus = p.ExpectSyntax(SyntaxKind.PlusToken);
+
+      GreenToken typeNameTok = p.ExpectSyntax(SyntaxKind.IdentifierToken);
+      GreenNode refNode = typeNameTok;
+      if (p.MatchRaw(RawKind.LBracket))
+        refNode = ParseAfterName(p, typeNameTok);
+
+      return new ConstraintRef(leadingPlus, refNode);
+    }
+
+    static TypeRef ParseAfterName(Parser p, GreenToken name)
+    {
+      GenericArgumentList args = GenericArgumentList.Parse(p);
+      return new TypeRef(name, args);
+    }
   }
 }
 
 public sealed record GenericParameter(
   GreenToken Name,
-  ConstraintList? Constraints,
-  GreenToken? TrailingComma) : GreenNode(SyntaxKind.GenericParameter, Name.Offset)
+  ConstraintList? Constraints) :
+GreenNode(SyntaxKind.GenericParameter, Name.Offset)
 {
-  public override int FullWidth => (TrailingComma?.EndOffset ?? Constraints?.EndOffset ?? Name.EndOffset) - Name.Offset;
+  public override int FullWidth => (Constraints?.EndOffset ?? Name.EndOffset) - Offset;
   public override IEnumerable<GreenNode> GetChildren()
   {
     yield return Name;
     if (Constraints is not null) yield return Constraints;
-    if (TrailingComma is not null) yield return TrailingComma;
   }
 }
 

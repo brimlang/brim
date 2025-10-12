@@ -1,9 +1,8 @@
 namespace Brim.Parse.Green;
 
 public sealed record DecimalLiteral(
-  GreenToken Token)
-: GreenNode(SyntaxKind.DecimalToken, Token.Offset)
-, IParsable<DecimalLiteral>
+  GreenToken Token) :
+GreenNode(SyntaxKind.DecimalToken, Token.Offset), IParsable<DecimalLiteral>
 {
   public override int FullWidth => Token.FullWidth;
   public override IEnumerable<GreenNode> GetChildren()
@@ -11,10 +10,6 @@ public sealed record DecimalLiteral(
     yield return Token;
   }
 
-  public static DecimalLiteral Parse(Parser p)
-  {
-    GreenToken token = p.ExpectSyntax(SyntaxKind.DecimalToken);
-    return new DecimalLiteral(token);
-  }
+  public static DecimalLiteral Parse(Parser p) => new(p.ExpectSyntax(SyntaxKind.DecimalToken));
 }
 

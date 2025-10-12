@@ -115,7 +115,7 @@ Fences labeled hgf are in 'hinky grammar format', a highly custom variant of EBN
 | `Type := %{ field :Type, ... }` | type       | Aggregate shape declaration.                               |
 | `Type%{ field = expr, ... }`    | construct  | Aggregate construction expression.                         |
 | `seq[T]{ expr, ... }`           | construct  | Growable sequence literal.                                 |
-| `buf[T* N]{ expr, ... }`        | construct  | Fixed-length buffer literal; element count must equal `N`. |
+
 
 
 ## Operator Tokens & Precedence
@@ -198,7 +198,6 @@ ERR_SHAPE      = '!!{'
 
 -- Type Keywords
 SEQ_KW         = 'seq'
-BUF_KW         = 'buf'
 VOID_KW        = 'void'
 UNIT_KW        = 'unit'
 BOOL_KW        = 'bool'

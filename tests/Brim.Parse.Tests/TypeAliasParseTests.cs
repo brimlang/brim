@@ -11,7 +11,7 @@ public class TypeAliasParseTests
   {
     string src = "[[m]];\nAlias := Foo;\n";
     var m = Parse(src);
-    var td = Assert.IsType<TypeDeclaration>(m.Members.First());
+    var td = Assert.IsType<TypeDeclaration>(m.Members[0]);
     Assert.Equal("Alias", td.Name.Identifier.GetText(src));
     // TypeExpr wraps TypeRef wraps identifier token
     var te = Assert.IsType<TypeExpr>(td.TypeNode);
@@ -26,7 +26,7 @@ public class TypeAliasParseTests
   {
     string src = "[[m]];\nAlias := Wrapper[T];\n";
     var m = Parse(src);
-    var td = Assert.IsType<TypeDeclaration>(m.Members.First());
+    var td = Assert.IsType<TypeDeclaration>(m.Members[0]);
     var te = Assert.IsType<TypeExpr>(td.TypeNode);
     var tr = Assert.IsType<TypeRef>(te.Core);
     Assert.Equal("Wrapper", tr.Name.GetText(src));
@@ -39,9 +39,9 @@ public class TypeAliasParseTests
   {
     string src = "[[m]];\nAlias[T] := Wrapper[T];\n";
     var m = Parse(src);
-    var td = Assert.IsType<TypeDeclaration>(m.Members.First());
+    var td = Assert.IsType<TypeDeclaration>(m.Members[0]);
     Assert.NotNull(td.Name.GenericParams);
-    Assert.Single(td.Name.GenericParams!.Parameters);
+    Assert.Single(td.Name.GenericParams!.ParameterList.Elements);
     var te = Assert.IsType<TypeExpr>(td.TypeNode);
     var tr = Assert.IsType<TypeRef>(te.Core);
     Assert.NotNull(tr.GenericArgs);
@@ -53,14 +53,12 @@ public class TypeAliasParseTests
   {
     string src = "[[m]];\nAlias[T: C1 + C2] := X;\n";
     var m = Parse(src);
-    var td = Assert.IsType<TypeDeclaration>(m.Members.First());
+    var td = Assert.IsType<TypeDeclaration>(m.Members[0]);
     var gp = td.Name.GenericParams!;
-    Assert.Single(gp.Parameters);
-    var p0 = gp.Parameters[0];
+    Assert.Single(gp.ParameterList.Elements);
+    var p0 = gp.ParameterList.Elements[0].Node;
     Assert.NotNull(p0.Constraints);
     Assert.Equal(2, p0.Constraints!.Constraints.Count);
-    Assert.NotNull(p0.Constraints!.Constraints[0].TrailingPlus);
-    Assert.Null(p0.Constraints!.Constraints[1].TrailingPlus);
   }
 
   [Fact]
@@ -68,7 +66,7 @@ public class TypeAliasParseTests
   {
     string src = "[[m]];\nAlias := Outer[Inner,];\n";
     var m = Parse(src);
-    var td = Assert.IsType<TypeDeclaration>(m.Members.First());
+    var td = Assert.IsType<TypeDeclaration>(m.Members[0]);
     var te = Assert.IsType<TypeExpr>(td.TypeNode);
     var tr = Assert.IsType<TypeRef>(te.Core);
     Assert.NotNull(tr.GenericArgs);
@@ -81,7 +79,7 @@ public class TypeAliasParseTests
   {
     string src = "[[m]];\nAlias := Outer[Inner[Deep]];\n";
     var m = Parse(src);
-    var td = Assert.IsType<TypeDeclaration>(m.Members.First());
+    var td = Assert.IsType<TypeDeclaration>(m.Members[0]);
     var te = Assert.IsType<TypeExpr>(td.TypeNode);
     var outer = Assert.IsType<TypeRef>(te.Core);
     Assert.NotNull(outer.GenericArgs);

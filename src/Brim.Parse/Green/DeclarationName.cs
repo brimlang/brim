@@ -6,7 +6,7 @@ public sealed record DeclarationName(
 GreenNode(SyntaxKind.DeclarationName, Identifier.Offset),
 IParsable<DeclarationName>
 {
-  public override int FullWidth => (GenericParams is null ? Identifier.EndOffset : GenericParams.EndOffset) - Identifier.Offset;
+  public override int FullWidth => (GenericParams?.EndOffset ?? Identifier.EndOffset) - Identifier.Offset;
   public override IEnumerable<GreenNode> GetChildren()
   {
     yield return Identifier;
@@ -16,7 +16,7 @@ IParsable<DeclarationName>
   public static DeclarationName Parse(Parser p)
   {
     GreenToken id = p.ExpectSyntax(SyntaxKind.IdentifierToken);
-    GenericParameterList? gp = GenericParameterListParser.TryParse(p);
+    GenericParameterList? gp = GenericParameterList.TryParse(p);
     return new DeclarationName(id, gp);
   }
 }

@@ -14,17 +14,7 @@ public sealed record TypeRef(
 
   public static TypeRef Parse(Parser p)
   {
-    GreenToken name;
-    if (p.Current.Kind == RawKind.Identifier)
-    {
-      name = p.ExpectSyntax(SyntaxKind.IdentifierToken);
-    }
-    else
-    {
-      // Type keyword: consume as IdentifierToken for uniformity
-      RawToken raw = p.ExpectRaw(p.Current.Kind);
-      name = new GreenToken(SyntaxKind.IdentifierToken, raw);
-    }
+    GreenToken name = p.ExpectSyntax(SyntaxKind.IdentifierToken);
 
     GenericArgumentList? args = null;
     if (p.MatchRaw(RawKind.LBracket))

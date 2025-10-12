@@ -165,8 +165,6 @@ public class CharBasedLexerTests
   [InlineData("str", RawKind.Identifier)]
   [InlineData("rune", RawKind.Identifier)]
   [InlineData("err", RawKind.Identifier)]
-  [InlineData("seq", RawKind.Identifier)]
-  [InlineData("buf", RawKind.Identifier)]
   public void BasicKeywords_RecognizedCorrectly(string keyword, RawKind expectedKind)
   {
     List<RawToken> tokens = Lex(keyword);

@@ -5,8 +5,8 @@ namespace Brim.Parse.Green;
 public sealed record BrimModule(
   ModuleDirective ModuleDirective,
   StructuralArray<GreenNode> Members,
-  GreenToken Eob
-) : GreenNode(SyntaxKind.Module, ModuleDirective.Offset)
+  GreenToken Eob) :
+GreenNode(SyntaxKind.Module, ModuleDirective.Offset)
 {
   public StructuralArray<Diagnostic> Diagnostics { get; init; } = [];
 

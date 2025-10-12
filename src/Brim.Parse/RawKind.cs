@@ -21,7 +21,7 @@ public enum RawKind : sbyte
   Error,
   Identifier,
   Terminator,
-  _Reserved4 = 4,
+  Missing,
 
   /// <summary>
   /// Sentinel value indicating the start of the range

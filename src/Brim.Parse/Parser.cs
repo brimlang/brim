@@ -144,7 +144,10 @@ public sealed partial class Parser(
   {
     RawKind tokenKind = MapRawKind(kind);
     if (tokenKind == RawKind.Error)
+    {
+      Advance();
       return new GreenToken(kind, Current); // non-mapped or already error
+    }
 
     if (MatchRaw(tokenKind))
     {
@@ -164,7 +167,7 @@ public sealed partial class Parser(
   {
     _diags.Add(Diagnostic.Missing(expectedRaw, Current.CoreToken));
 
-    RawToken missing = GetErrorToken();
+    RawToken missing = GetMissingToken();
     SignificantToken fabricated = new(
       missing,
       LeadingTrivia: []);
@@ -180,7 +183,7 @@ public sealed partial class Parser(
 
   internal StallGuard GetStallGuard() => new(this);
 
-  static bool IsStandaloneSyntax(RawKind kind) => kind is RawKind.Terminator or RawKind.CommentTrivia;
+  static bool IsStandaloneSyntax(RawKind kind) => kind is RawKind.CommentTrivia or RawKind.Terminator;
 
   void Advance() => _look.Advance();
 
@@ -215,6 +218,13 @@ public sealed partial class Parser(
 
   RawToken GetErrorToken() => new(
     RawKind.Error,
+    Current.CoreToken.Offset,
+    Length: 0,
+    Current.CoreToken.Line,
+    Current.CoreToken.Column);
+
+  RawToken GetMissingToken() => new(
+    RawKind.Missing,
     Current.CoreToken.Offset,
     Length: 0,
     Current.CoreToken.Line,

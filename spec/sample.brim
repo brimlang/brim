@@ -22,7 +22,8 @@ text    ::= std::text
 rocket :rune = '🚀'
 launch :str = "Ready to launch... 🚀"
 ints   :seq[i32] = seq[i32]{ 1, 2, 3, 4, 5 }
-_3_fs  :buf[f32*3] = buf{ 1.0, 2.0, 3.0 }
+
+Numbers := seq[T :runtime.Num + runtime.Summable]
 
 panic :(str?) void = (msg) => {
   -- print msg and crash

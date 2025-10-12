@@ -2,6 +2,7 @@ namespace Brim.Parse.Green;
 
 public enum SyntaxKind
 {
+  Missing = -2,
   Undefined = -1,
   // Tokens
   ErrorToken = 0,
@@ -45,6 +46,7 @@ public enum SyntaxKind
 
   // Nodes
   Module,
+  Comment,
 
   // Declarations
   TypeDeclaration,
@@ -72,8 +74,8 @@ public enum SyntaxKind
   // Type expression nodes
   TypeExpr,
   TypeRef,
+
   SeqTypeExpr,
-  BufTypeExpr,
   FunctionTypeExpr,
   StructShape,
   UnionShape,

@@ -14,7 +14,7 @@ public class GenericParseTests
     TypeDeclaration? td = m.Members.OfType<TypeDeclaration>().FirstOrDefault();
     Assert.NotNull(td);
     Assert.NotNull(td!.Name.GenericParams);
-    Assert.Equal(2, td.Name.GenericParams!.Parameters.Length);
+    Assert.Equal(2, td.Name.GenericParams!.ParameterList.Elements.Length);
   }
 
   [Fact]

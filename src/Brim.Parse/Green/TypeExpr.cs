@@ -8,30 +8,47 @@ public sealed record TypeExpr(
   public override int FullWidth => (Suffix?.EndOffset ?? Core.EndOffset) - Offset;
   public override IEnumerable<GreenNode> GetChildren()
   {
-    foreach (GreenNode child in Core.GetChildren())
-      yield return child;
+    yield return Core;
     if (Suffix is not null) yield return Suffix;
   }
 
   public static TypeExpr Parse(Parser p)
   {
     // Parse TypeCore
-    GreenNode core = p.Current.Kind switch
+    GreenNode core;
+    switch (p.Current.Kind)
     {
       // Aggregate shapes
-      RawKind.PercentLBrace => StructShape.Parse(p),
-      RawKind.PipeLBrace => UnionShape.Parse(p),
-      RawKind.HashLBrace => NamedTupleShape.Parse(p),
-      RawKind.StopLBrace => ProtocolShape.Parse(p),
-      RawKind.AtmarkLBrace => ServiceShape.Parse(p),
-      RawKind.AmpersandLBrace => FlagsShape.Parse(p),
+      case RawKind.PercentLBrace:
+        core = StructShape.Parse(p);
+        break;
+      case RawKind.PipeLBrace:
+        core = UnionShape.Parse(p);
+        break;
+      case RawKind.HashLBrace:
+        core = NamedTupleShape.Parse(p);
+        break;
+      case RawKind.StopLBrace:
+        core = ProtocolShape.Parse(p);
+        break;
+      case RawKind.AtmarkLBrace:
+        core = ServiceShape.Parse(p);
+        break;
+      case RawKind.AmpersandLBrace:
+        core = FlagsShape.Parse(p);
+        break;
 
       // Function type
-      RawKind.LParen => new FunctionTypeExpr(FunctionShape.Parse(p)),
+      case RawKind.LParen:
+        core = new FunctionTypeExpr(FunctionShape.Parse(p));
+        break;
 
-      // TypeRef (identifier or keyword)
-      _ => TypeRef.Parse(p)
-    };
+      default:
+        // TypeRef (identifier or keyword)
+        GreenNode maybeRef = TypeRef.Parse(p);
+        core = maybeRef;
+        break;
+    }
 
     // Parse optional TypeSuffix
     GreenToken? suffix = p.Current.Kind switch

@@ -81,12 +81,12 @@ public sealed partial class Parser
     SyntaxKind.ProtocolToken => RawKind.StopLBrace,
     SyntaxKind.ServiceToken => RawKind.AtmarkLBrace,
     SyntaxKind.NamedTupleToken => RawKind.HashLBrace,
-    // Keywords are not lexed; identifiers represent former keywords like 'seq'/'buf'.
     _ => RawKind.Error
   };
 
   static SyntaxKind MapStandaloneSyntaxKind(RawKind kind) => kind switch
   {
+    RawKind.CommentTrivia => SyntaxKind.Comment,
     RawKind.Terminator => SyntaxKind.TerminatorToken,
     _ => SyntaxKind.ErrorToken
   };

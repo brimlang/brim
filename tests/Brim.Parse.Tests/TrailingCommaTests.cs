@@ -58,9 +58,8 @@ public class TrailingCommaTests
     var m = Parse("[[m]];\nBox[T,U,] := %{ inner: T };\n");
     var td = m.Members.OfType<TypeDeclaration>().First();
     var gp = td.Name.GenericParams!;
-    Assert.Equal(2, gp.Parameters.Length);
-    Assert.NotNull(gp.Parameters[0].TrailingComma);
-    Assert.NotNull(gp.Parameters[1].TrailingComma);
+    Assert.Equal(2, gp.ParameterList.Elements.Length);
+    Assert.NotNull(gp.ParameterList.TrailingComma);
   }
 
   [Fact]

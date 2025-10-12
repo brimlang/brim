@@ -143,7 +143,6 @@ Primitive & built-in:
 - `rune` — Unicode scalar
 - `str` — UTF‑8 string
 - `seq[T]` — growable homogeneous sequence (append, concat)
-- `buf[T* N]` — fixed-length contiguous buffer
 - Option `T?` / Result `T!`
 - `err` — `%{ module: str, domain: str, code: u32 }`
 
