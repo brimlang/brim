@@ -74,8 +74,8 @@ public enum SyntaxKind
   // Type expression nodes
   TypeExpr,
   TypeRef,
-
   SeqTypeExpr,
+  BufTypeExpr,
   FunctionTypeExpr,
   StructShape,
   UnionShape,
@@ -95,4 +95,8 @@ public enum SyntaxKind
   CommaList,
   ListElement,
   ExportEndToken,
+  QualifiedIdentifier,
+  QualifiedIdentifierSegment,
+  Qualifier,
+  VariantType,
 }

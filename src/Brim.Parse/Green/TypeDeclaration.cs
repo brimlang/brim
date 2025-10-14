@@ -4,16 +4,15 @@ public sealed record TypeDeclaration(
   DeclarationName Name,
   GreenToken TypeBind,
   TypeExpr TypeNode,
-  GreenToken Terminator)
-  : GreenNode(SyntaxKind.TypeDeclaration, Name.Offset)
+  GreenToken Terminator) :
+GreenNode(SyntaxKind.TypeDeclaration, Name.Offset)
 {
-  public override int FullWidth => Terminator.EndOffset - Name.Offset;
+  public override int FullWidth => Terminator.EndOffset - Offset;
   public override IEnumerable<GreenNode> GetChildren()
   {
     yield return Name;
     yield return TypeBind;
-    foreach (GreenNode child in TypeNode.GetChildren())
-      yield return child;
+    yield return TypeNode;
     yield return Terminator;
   }
 

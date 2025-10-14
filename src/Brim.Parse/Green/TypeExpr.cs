@@ -60,4 +60,6 @@ public sealed record TypeExpr(
 
     return new TypeExpr(core, suffix);
   }
+
+  public override string ToString() => $"{Core.Kind}{Suffix?.ToString() ?? ""}";
 }
