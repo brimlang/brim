@@ -1,42 +1,24 @@
-using Brim.Parse.Collections;
-
 namespace Brim.Parse.Green;
 
 public sealed record UnionShape(
-  GreenToken Open,
-  StructuralArray<UnionVariantDeclaration> Variants,
-  GreenToken Close)
-  : GreenNode(SyntaxKind.UnionShape, Open.Offset)
+  CommaList<UnionVariantDeclaration> VariantList) :
+GreenNode(SyntaxKind.UnionShape, VariantList.Offset)
 {
-  public override int FullWidth => Close.EndOffset - Open.Offset;
+  public override int FullWidth => VariantList.FullWidth;
   public override IEnumerable<GreenNode> GetChildren()
   {
-    yield return Open;
-    foreach (UnionVariantDeclaration v in Variants) yield return v;
-    yield return Close;
+    yield return VariantList;
   }
 
   public static UnionShape Parse(Parser p)
   {
-    GreenToken open = p.ExpectSyntax(SyntaxKind.UnionToken);
-    ImmutableArray<UnionVariantDeclaration>.Builder vars = ImmutableArray.CreateBuilder<UnionVariantDeclaration>();
+    CommaList<UnionVariantDeclaration> variants = CommaList<UnionVariantDeclaration>.Parse(
+        p,
+        SyntaxKind.UnionToken,
+        SyntaxKind.CloseBlockToken,
+        UnionVariantDeclaration.Parse);
 
-    if (!p.MatchRaw(RawKind.RBrace) && !p.MatchRaw(RawKind.Eob))
-    {
-      while (true)
-      {
-        int before = p.Current.CoreToken.Offset;
-        UnionVariantDeclaration variant = UnionVariantDeclaration.Parse(p);
-        vars.Add(variant);
-        if (variant.TrailingComma is null) break;
-        if (p.MatchRaw(RawKind.RBrace) || p.MatchRaw(RawKind.Eob)) break;
-        if (p.Current.CoreToken.Offset == before) break; // progress guard
-      }
-    }
-
-    StructuralArray<UnionVariantDeclaration> arr = [.. vars];
-    GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
-    return new UnionShape(open, arr, close);
+    return new(variants);
   }
 }
 

@@ -2,30 +2,46 @@ namespace Brim.Parse.Green;
 
 public sealed record UnionVariantDeclaration(
   GreenToken Identifier,
-  GreenToken Colon,
-  TypeExpr Type,
-  GreenToken? TrailingComma) :
+  UnionVariantDeclaration.VariantTypeExpr? TypeExpr
+) :
 GreenNode(SyntaxKind.UnionVariantDeclaration, Identifier.Offset),
 IParsable<UnionVariantDeclaration>
 {
-  public override int FullWidth => (TrailingComma?.EndOffset ?? Type.EndOffset) - Identifier.Offset;
+  public override int FullWidth => (TypeExpr?.EndOffset ?? Identifier.EndOffset) - Offset;
   public override IEnumerable<GreenNode> GetChildren()
   {
     yield return Identifier;
-    yield return Colon;
-    foreach (GreenNode child in Type.GetChildren())
-      yield return child;
-    if (TrailingComma is not null) yield return TrailingComma;
+    if (TypeExpr is not null) yield return TypeExpr;
   }
 
   public static UnionVariantDeclaration Parse(Parser p)
   {
-    GreenToken nameTok = p.ExpectSyntax(SyntaxKind.IdentifierToken);
-    GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
-    TypeExpr ty = TypeExpr.Parse(p);
-    GreenToken? trailing = null;
-    if (p.MatchRaw(RawKind.Comma))
-      trailing = p.ExpectSyntax(SyntaxKind.CommaToken);
-    return new(nameTok, colon, ty, trailing);
+    GreenToken id = p.ExpectSyntax(SyntaxKind.IdentifierToken);
+    VariantTypeExpr? vt = null;
+    if (p.MatchRaw(RawKind.Colon))
+    {
+      vt = VariantTypeExpr.Parse(p);
+    }
+
+    return new UnionVariantDeclaration(id, vt);
+  }
+
+  public sealed record VariantTypeExpr(
+      GreenToken Colon,
+      TypeExpr TypeExpr
+  ) : GreenNode(SyntaxKind.VariantType, Colon.Offset)
+  {
+    public override int FullWidth => TypeExpr.EndOffset - Colon.Offset;
+    public override IEnumerable<GreenNode> GetChildren()
+    {
+      yield return Colon;
+      yield return TypeExpr;
+    }
+
+    public static VariantTypeExpr Parse(Parser p) =>
+      new(
+        Colon: p.ExpectSyntax(SyntaxKind.ColonToken),
+        TypeExpr: TypeExpr.Parse(p)
+      );
   }
 }

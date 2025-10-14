@@ -13,8 +13,8 @@ public class GenericUseSiteTests
     var td = m.Members.OfType<TypeDeclaration>().First();
     var tde = Assert.IsType<TypeExpr>(td.TypeNode);
     var ss = Assert.IsType<StructShape>(tde.Core);
-    var field = ss.Fields[0];
-    var fieldType = Assert.IsType<TypeExpr>(field.TypeAnnotation);
+    var field = ss.FieldList.Elements[0].Node;
+    var fieldType = Assert.IsType<TypeExpr>(field.TypeExpr);
     var tr = Assert.IsType<TypeRef>(fieldType.Core);
     Assert.NotNull(tr.GenericArgs);
     _ = Assert.Single(tr.GenericArgs!.ArgumentList.Elements);
@@ -27,8 +27,8 @@ public class GenericUseSiteTests
     var td = m.Members.OfType<TypeDeclaration>().First();
     var tde = Assert.IsType<TypeExpr>(td.TypeNode);
     var us = Assert.IsType<UnionShape>(tde.Core);
-    var ok = us.Variants[0];
-    var okType = Assert.IsType<TypeExpr>(ok.Type);
+    var ok = us.VariantList.Elements[0].Node;
+    var okType = Assert.IsType<TypeExpr>(ok.TypeExpr?.TypeExpr);
     var tr = Assert.IsType<TypeRef>(okType.Core);
     Assert.NotNull(tr.GenericArgs);
     _ = Assert.Single(tr.GenericArgs!.ArgumentList.Elements);

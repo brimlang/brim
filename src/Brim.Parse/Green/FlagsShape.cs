@@ -1,8 +1,9 @@
 namespace Brim.Parse.Green;
 
 public sealed record FlagsShape(
-  CommaList<FlagMemberDeclaration> MemberList) : GreenNode(SyntaxKind.FlagsShape, MemberList.Offset),
-  IParsable<FlagsShape>
+  CommaList<FlagMemberDeclaration> MemberList) :
+GreenNode(SyntaxKind.FlagsShape, MemberList.Offset),
+IParsable<FlagsShape>
 {
   public override int FullWidth => MemberList.FullWidth;
   public override IEnumerable<GreenNode> GetChildren()

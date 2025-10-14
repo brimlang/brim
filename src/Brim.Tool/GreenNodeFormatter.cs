@@ -43,7 +43,7 @@ public static class GreenNodeFormatter
         break;
       case TypeDeclaration td:
         _ = sb.Append(" name=").Append(Escape(td.Name.Identifier.GetText(source)));
-        _ = sb.Append(" type=").Append(td.TypeNode.Kind.ToString());
+        _ = sb.Append(" type=").Append(td.TypeNode.ToString());
         break;
       case ModuleDirective md:
         _ = sb.Append(" path=").Append(Escape(md.ModuleHeader.GetText(source)));
@@ -56,10 +56,10 @@ public static class GreenNodeFormatter
         _ = sb.Append(" from=").Append(Escape(id.Path.GetText(source)));
         break;
       case StructShape ss:
-        _ = sb.Append($" fields={ss.Fields.Count}");
+        _ = sb.Append($" fields={ss.FieldList.Elements.Count}");
         break;
       case UnionShape us:
-        _ = sb.Append($" variants={us.Variants.Count}");
+        _ = sb.Append($" variants={us.VariantList.Elements.Count}");
         break;
       case FlagsShape fs:
         _ = sb.Append($" flags={fs.MemberList.Elements.Count}");

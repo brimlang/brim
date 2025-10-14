@@ -1,7 +1,7 @@
 namespace Brim.Parse.Green;
 
 public sealed record ServiceShape(
-  CommaList<ProtocolRef> ProtocolList
+  CommaList<FieldDeclaration> ProtocolList
 ) : GreenNode(SyntaxKind.ServiceShape, ProtocolList.Offset)
 {
   public override int FullWidth => ProtocolList.FullWidth;
@@ -10,10 +10,10 @@ public sealed record ServiceShape(
 
   public static ServiceShape Parse(Parser p)
   {
-    return new ServiceShape(CommaList<ProtocolRef>.Parse(
+    return new ServiceShape(CommaList<FieldDeclaration>.Parse(
       p,
       SyntaxKind.ServiceToken,
       SyntaxKind.CloseBlockToken,
-      ProtocolRef.Parse));
+      FieldDeclaration.Parse));
   }
 }
