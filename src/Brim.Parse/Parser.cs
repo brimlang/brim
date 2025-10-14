@@ -180,6 +180,7 @@ public sealed partial class Parser(
   internal void AddDiagUnexpectedGenericBody() => _diags.Add(Diagnostic.UnexpectedGenericBody(Current.CoreToken));
   internal void AddDiagEmptyNamedTupleElementList() => _diags.Add(Diagnostic.Unexpected(Current.CoreToken, [RawKind.Identifier]));
   internal void AddDiagInvalidGenericConstraint() => _diags.Add(Diagnostic.InvalidGenericConstraint(Current.CoreToken));
+  internal void AddDiagUnsupportedModuleMember(RawToken token) => _diags.Add(Diagnostic.UnsupportedModuleMember(token));
 
   internal StallGuard GetStallGuard() => new(this);
 

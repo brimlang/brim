@@ -30,6 +30,7 @@ public sealed partial class Parser
 
     // Const value declaration: Ident ':' Type '=' Initializer Terminator
     new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.Identifier)),
+    new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.LParen)), // function type
     new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.StopLBrace)),
     new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.PercentLBrace)),
     new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.PipeLBrace)),

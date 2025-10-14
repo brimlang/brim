@@ -50,8 +50,9 @@ public class GenericConstraintTests
     var constraintRef = gp.Constraints!.Constraints[0];
     Assert.IsType<TypeRef>(constraintRef.TypeNode);
     var typeRef = (TypeRef)constraintRef.TypeNode;
-    Assert.Equal("runtime", typeRef.Name.GetText(src));
-    Assert.Equal(2, typeRef.QualifierParts.Count); // dot + identifier
+    Assert.Equal("Num", typeRef.Name.GetText(src));
+    Assert.Single(typeRef.QualifierParts); // one qualifier: runtime + dot
+    Assert.Equal("runtime", typeRef.QualifierParts[0].Name.GetText(src));
   }
 
   [Fact]
@@ -66,12 +67,14 @@ public class GenericConstraintTests
     Assert.Equal(2, gp.Constraints!.Constraints.Count);
 
     var first = (TypeRef)gp.Constraints!.Constraints[0].TypeNode;
-    Assert.Equal("runtime", first.Name.GetText(src));
-    Assert.Equal(2, first.QualifierParts.Count);
+    Assert.Equal("Num", first.Name.GetText(src));
+    Assert.Single(first.QualifierParts);
+    Assert.Equal("runtime", first.QualifierParts[0].Name.GetText(src));
 
     var second = (TypeRef)gp.Constraints!.Constraints[1].TypeNode;
-    Assert.Equal("runtime", second.Name.GetText(src));
-    Assert.Equal(2, second.QualifierParts.Count);
+    Assert.Equal("Summable", second.Name.GetText(src));
+    Assert.Single(second.QualifierParts);
+    Assert.Equal("runtime", second.QualifierParts[0].Name.GetText(src));
     Assert.NotNull(gp.Constraints!.Constraints[1].LeadingPlus);
   }
 
