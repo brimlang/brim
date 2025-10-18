@@ -175,7 +175,7 @@ public sealed record ServiceDtorDecl(
 /// </summary>
 public sealed record ServiceProtocolDecl(
   GreenNode ServiceRef,
-  GenericArgumentList? ProtocolConstraints,
+  AngleList<TypeExpr>? ProtocolConstraints,
   ServiceReceiver? Receiver,
   GreenToken OpenBrace,
   StructuralArray<GreenNode> Methods,
@@ -218,10 +218,10 @@ public sealed record ServiceProtocolDecl(
       sref = TypeRef.ParseAfterName(p, head);
 
     // Optional protocol constraints: '<' TypeRef (',' TypeRef)* '>'
-    GenericArgumentList? protocols = null;
+    AngleList<TypeExpr>? protocols = null;
     if (p.MatchRaw(RawKind.Less))
     {
-      protocols = GenericArgumentList.Parse(p);
+      protocols = AngleList<TypeExpr>.Parse(p, SyntaxKind.LessToken, SyntaxKind.GreaterToken, TypeExpr.Parse);
     }
 
     // Optional receiver: '(' ident ':' '@' ')'
@@ -363,3 +363,22 @@ public sealed record ServiceMethodParam(
     return new ServiceMethodParam(name, colon, type);
   }
 }
+
+/// <summary>
+/// Angle-bracketed comma-separated list: '<' elements* '>'
+/// Used for protocol constraints and other angle-bracket delimited lists.
+/// </summary>
+public sealed record AngleList<T>(
+  CommaList<T> List) :
+GreenNode(SyntaxKind.AngleList, List.Offset) where T : GreenNode
+{
+  public override int FullWidth => List.FullWidth;
+  public override IEnumerable<GreenNode> GetChildren() => List.GetChildren();
+
+  public static AngleList<T> Parse(Parser p, SyntaxKind openKind, SyntaxKind closeKind, Func<Parser, T> parseElement)
+  {
+    CommaList<T> list = CommaList<T>.Parse(p, openKind, closeKind, parseElement);
+    return new AngleList<T>(list);
+  }
+}
+
