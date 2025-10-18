@@ -111,9 +111,20 @@ public sealed record ServiceCtorDecl(
     int depth = 1;
     while (!p.MatchRaw(RawKind.Eob) && depth > 0)
     {
-      if (p.MatchRaw(RawKind.LBrace))
+      // Check for opening braces (including compound tokens)
+      if (p.MatchRaw(RawKind.LBrace) ||
+          p.MatchRaw(RawKind.AtmarkLBrace) ||
+          p.MatchRaw(RawKind.StarLBrace) ||
+          p.MatchRaw(RawKind.PipeLBrace) ||
+          p.MatchRaw(RawKind.HashLBrace) ||
+          p.MatchRaw(RawKind.PercentLBrace) ||
+          p.MatchRaw(RawKind.StopLBrace) ||
+          p.MatchRaw(RawKind.QuestionLBrace) ||
+          p.MatchRaw(RawKind.BangLBrace) ||
+          p.MatchRaw(RawKind.BangBangLBrace) ||
+          p.MatchRaw(RawKind.AmpersandLBrace))
       {
-        _ = p.ExpectSyntax(SyntaxKind.OpenBraceToken);
+        _ = p.ExpectRaw(p.Current.Kind);
         depth++;
         continue;
       }
