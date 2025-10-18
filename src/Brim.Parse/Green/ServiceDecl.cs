@@ -75,10 +75,11 @@ public sealed record ServiceCtorDecl(
   CommaList<ServiceMethodParam> Params,
   GreenToken AtSign,
   GreenToken Bang,
-  GreenToken OpenBrace)
+  GreenToken OpenBrace,
+  GreenToken CloseBrace)
   : GreenNode(SyntaxKind.ServiceCtorDecl, Params.Offset)
 {
-  public override int FullWidth => OpenBrace.EndOffset - Params.Offset;
+  public override int FullWidth => CloseBrace.EndOffset - Params.Offset;
 
   public override IEnumerable<GreenNode> GetChildren()
   {
@@ -86,11 +87,12 @@ public sealed record ServiceCtorDecl(
     yield return AtSign;
     yield return Bang;
     yield return OpenBrace;
+    yield return CloseBrace;
   }
 
   public static ServiceCtorDecl Parse(Parser p)
   {
-    // '(' params ')' '@' '!' BlockExpr (body skipped)
+    // '(' params ')' '@' '!' '{' ... '}'
     CommaList<ServiceMethodParam> @params = CommaList<ServiceMethodParam>.Parse(
       p,
       SyntaxKind.OpenParenToken,
@@ -100,8 +102,8 @@ public sealed record ServiceCtorDecl(
     GreenToken bang = p.ExpectSyntax(SyntaxKind.BangToken);
     GreenToken openBrace = p.ExpectSyntax(SyntaxKind.OpenBraceToken);
     SkipBlock(p);
-    _ = p.ExpectSyntax(SyntaxKind.CloseBlockToken); // Consume the closing brace
-    return new ServiceCtorDecl(@params, at, bang, openBrace);
+    GreenToken closeBrace = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
+    return new ServiceCtorDecl(@params, at, bang, openBrace, closeBrace);
   }
 
   internal static void SkipBlock(Parser p)
@@ -139,23 +141,27 @@ public sealed record ServiceDtorDecl(
   GreenToken Tilde,
   CommaList<ServiceMethodParam> Params,
   TypeExpr ReturnType,
-  GreenToken OpenBrace)
+  GreenToken OpenBrace,
+  GreenToken CloseBrace)
   : GreenNode(SyntaxKind.ServiceDtorDecl, Tilde.Offset)
 {
-  public override int FullWidth => OpenBrace.EndOffset - Tilde.Offset;
+  public override int FullWidth => CloseBrace.EndOffset - Tilde.Offset;
 
   public override IEnumerable<GreenNode> GetChildren()
   {
     yield return Tilde;
     yield return Params;
     foreach (GreenNode c in ReturnType.GetChildren())
+    {
       yield return c;
+    }
     yield return OpenBrace;
+    yield return CloseBrace;
   }
 
   public static ServiceDtorDecl Parse(Parser p)
   {
-    // '~' '(' params ')' TypeExpr BlockExpr (body skipped)
+    // '~' '(' params ')' TypeExpr '{' ... '}'
     GreenToken tilde = p.ExpectSyntax(SyntaxKind.TildeToken);
     CommaList<ServiceMethodParam> @params = CommaList<ServiceMethodParam>.Parse(
       p,
@@ -165,8 +171,8 @@ public sealed record ServiceDtorDecl(
     TypeExpr retType = TypeExpr.Parse(p);
     GreenToken openBrace = p.ExpectSyntax(SyntaxKind.OpenBraceToken);
     ServiceCtorDecl.SkipBlock(p);
-    _ = p.ExpectSyntax(SyntaxKind.CloseBlockToken); // Consume the closing brace
-    return new ServiceDtorDecl(tilde, @params, retType, openBrace);
+    GreenToken closeBrace = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
+    return new ServiceDtorDecl(tilde, @params, retType, openBrace, closeBrace);
   }
 }
 
@@ -302,10 +308,11 @@ public sealed record ServiceMethodDecl(
   GreenToken Colon,
   CommaList<ServiceMethodParam> Params,
   TypeExpr ReturnType,
-  GreenToken OpenBrace)
+  GreenToken OpenBrace,
+  GreenToken CloseBrace)
   : GreenNode(SyntaxKind.ServiceMethodDecl, Name.Offset)
 {
-  public override int FullWidth => OpenBrace.EndOffset - Name.Offset;
+  public override int FullWidth => CloseBrace.EndOffset - Name.Offset;
 
   public override IEnumerable<GreenNode> GetChildren()
   {
@@ -313,13 +320,16 @@ public sealed record ServiceMethodDecl(
     yield return Colon;
     yield return Params;
     foreach (GreenNode c in ReturnType.GetChildren())
+    {
       yield return c;
+    }
     yield return OpenBrace;
+    yield return CloseBrace;
   }
 
   public static ServiceMethodDecl Parse(Parser p)
   {
-    // Ident ':' ParamList TypeExpr BlockExpr (body skipped)
+    // Ident ':' ParamList TypeExpr '{' ... '}'
     GreenToken name = p.ExpectSyntax(SyntaxKind.IdentifierToken);
     GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
     CommaList<ServiceMethodParam> @params = CommaList<ServiceMethodParam>.Parse(
@@ -330,8 +340,8 @@ public sealed record ServiceMethodDecl(
     TypeExpr retType = TypeExpr.Parse(p);
     GreenToken openBrace = p.ExpectSyntax(SyntaxKind.OpenBraceToken);
     ServiceCtorDecl.SkipBlock(p);
-    _ = p.ExpectSyntax(SyntaxKind.CloseBlockToken); // Consume the closing brace
-    return new ServiceMethodDecl(name, colon, @params, retType, openBrace);
+    GreenToken closeBrace = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
+    return new ServiceMethodDecl(name, colon, @params, retType, openBrace, closeBrace);
   }
 }
 
