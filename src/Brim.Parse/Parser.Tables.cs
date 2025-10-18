@@ -15,6 +15,12 @@ public sealed partial class Parser
     new(ValueDeclaration.Parse, (RawKind.Hat, RawKind.Identifier, RawKind.Colon)),
     new(ServiceImpl.Parse, RawKind.Atmark),
 
+    // Service lifecycle/protocol declarations: Ident [<...>]? [(receiver)]? '{'
+    // We need LL(2) to distinguish from type/value declarations
+    new(ServiceLifecycleDecl.Parse, (RawKind.Identifier, RawKind.LBrace)),
+    new(ServiceProtocolDecl.Parse, (RawKind.Identifier, RawKind.Less)),
+    new(ServiceProtocolDecl.Parse, (RawKind.Identifier, RawKind.LParen)),
+
     // Type shape declaration: Ident ':=' Shape
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.Identifier)),
     new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.StopLBrace)),

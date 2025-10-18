@@ -99,4 +99,11 @@ public enum SyntaxKind
   QualifiedIdentifierSegment,
   Qualifier,
   VariantType,
+  ServiceLifecycleDecl,
+  ServiceCtorDecl,
+  ServiceDtorDecl,
+  ServiceProtocolDecl,
+  ServiceReceiver,
+  ServiceMethodDecl,
+  ServiceMethodParam,
 }
