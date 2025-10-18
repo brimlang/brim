@@ -47,7 +47,7 @@ status: draft
 
 ### Brim
 ```brim
-[[[acme::hello]]]
+=[acme::hello]=
 <<< greet
 
 text  = std::text

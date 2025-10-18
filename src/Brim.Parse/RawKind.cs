@@ -45,11 +45,11 @@ public enum RawKind : sbyte
   Atmark, AtmarkLParen, AtmarkLBrace, // @ @( @{
   Less, LessLess, // < <<
   Greater, GreaterGreater, // > >>
-  Equal, EqualGreater, // = =>
+  Equal, EqualGreater, EqualLBracket, // = => =[
   Star, StarLBrace, // * *{
   Tilde, TildeEqual, // ~ ~=
-  LBracket, LBracketLBracket, // [ [[
-  RBracket, RBracketRBracket, // ] ]]
+  LBracket, // [
+  RBracket, RBracketEqual, // ] ]=
   Colon, ColonColonEqual, ColonEqual, ColonColon, // : ::= := ::
   Pipe, PipeLParen, PipeLBrace, // | |( |{
   Hash, HashLParen, HashLBrace, // # #( #{

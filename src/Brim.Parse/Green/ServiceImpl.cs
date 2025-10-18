@@ -40,7 +40,7 @@ public sealed record ServiceImpl(
     GreenToken sigil = p.ExpectSyntax(SyntaxKind.ServiceImplToken);
     GreenToken head = p.ExpectSyntax(SyntaxKind.IdentifierToken);
     GreenNode sref = head;
-    if (p.MatchRaw(RawKind.LBracket) && !p.MatchRaw(RawKind.LBracketLBracket))
+    if (p.MatchRaw(RawKind.LBracket))
       sref = TypeRef.ParseAfterName(p, head);
 
     GreenToken recvOpen = p.ExpectSyntax(SyntaxKind.LessToken);

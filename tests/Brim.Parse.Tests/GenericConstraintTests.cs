@@ -9,7 +9,7 @@ public class GenericConstraintTests
   [Fact]
   public void SingleConstraintParses()
   {
-    var m = Parse("[[m]];\nFoo[T:Proto] := %{ a:T };");
+    var m = Parse("=[m]=;\nFoo[T:Proto] := %{ a:T };");
     var decl = m.Members.OfType<TypeDeclaration>().FirstOrDefault();
     Assert.NotNull(decl);
     Assert.NotNull(decl!.Name.GenericParams);
@@ -22,7 +22,7 @@ public class GenericConstraintTests
   [Fact]
   public void MultiConstraintParses()
   {
-    var m = Parse("[[m]];\nFoo[T:Proto+Other] := %{ a:T };");
+    var m = Parse("=[m]=;\nFoo[T:Proto+Other] := %{ a:T };");
     var decl = m.Members.OfType<TypeDeclaration>().FirstOrDefault();
     Assert.NotNull(decl);
     var gp = decl!.Name.GenericParams!.ParameterList.Elements[0].Node;
@@ -33,14 +33,14 @@ public class GenericConstraintTests
   [Fact]
   public void MissingConstraintAfterColonEmitsDiagnostic()
   {
-    var m = Parse("[[m]];\nFoo[T:] := %{ a:T };");
+    var m = Parse("=[m]=;\nFoo[T:] := %{ a:T };");
     Assert.Contains(m.Diagnostics, d => d.Code == DiagCode.InvalidGenericConstraint);
   }
 
   [Fact]
   public void QualifiedConstraintParses()
   {
-    string src = "[[m]];\nFoo[T:runtime.Num] := T;";
+    string src = "=[m]=;\nFoo[T:runtime.Num] := T;";
     var m = Parse(src);
     var decl = m.Members.OfType<TypeDeclaration>().FirstOrDefault();
     Assert.NotNull(decl);
@@ -58,7 +58,7 @@ public class GenericConstraintTests
   [Fact]
   public void MultipleQualifiedConstraintsParses()
   {
-    string src = "[[m]];\nNumbers[T:runtime.Num+runtime.Summable] := seq[T];";
+    string src = "=[m]=;\nNumbers[T:runtime.Num+runtime.Summable] := seq[T];";
     var m = Parse(src);
     var decl = m.Members.OfType<TypeDeclaration>().FirstOrDefault();
     Assert.NotNull(decl);
@@ -81,7 +81,7 @@ public class GenericConstraintTests
   [Fact]
   public void ConstraintWithGenericArgumentsParses()
   {
-    string src = "[[m]];\nContainer[T:Collection[Item] ] := seq[T];";
+    string src = "=[m]=;\nContainer[T:Collection[Item] ] := seq[T];";
     var m = Parse(src);
     var decl = m.Members.OfType<TypeDeclaration>().FirstOrDefault();
     Assert.NotNull(decl);

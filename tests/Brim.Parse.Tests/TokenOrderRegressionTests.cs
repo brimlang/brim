@@ -28,7 +28,7 @@ public class TokenOrderRegressionTests
   [Fact(Skip = "TODO: Investigate zero-width error tokens in complex nested generics after CommaList refactor")]
   public void SignificantTokens_Match_GreenTokens_In_Order()
   {
-    string src = "[[m]];\n"
+    string src = "=[m]=;\n"
       + "Alias[T: C1 + C2] := Outer[Inner,];\n"
       + "P := .{ m1:(A,B,) C, };\n"
       + "SvcT := @{ P, Q[R], };\n"

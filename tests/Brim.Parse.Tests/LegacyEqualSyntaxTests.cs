@@ -7,7 +7,7 @@ public class LegacyEqualSyntaxTests
   [Fact]
   public void LegacyEqualStructIsUnexpected()
   {
-    var m = Parse("[[m]];\nOld = %{ a:i32 };");
+    var m = Parse("=[m]=;\nOld = %{ a:i32 };");
     Assert.Contains(m.Diagnostics, d => d.Code == DiagCode.UnexpectedToken);
   }
 }

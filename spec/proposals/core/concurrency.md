@@ -20,7 +20,7 @@ This consolidates Brim’s concurrency surface *outside* the core. Futures/strea
 ## 1) Futures & Streams as stdlib services
 
 ```brim
-[[[std::task]]]
+=[std::task]=
 <<< Fut
 <<< Strm
 <<< spawn
@@ -61,7 +61,7 @@ select = (...) unit { /* see signature in §4 */ }
 ## 2) Channels as services + capability protocols
 
 ```brim
-[[[std::chan]]]
+=[std::chan]=
 <<< bounded
 <<< unbounded
 <<< Tx

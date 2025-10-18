@@ -66,6 +66,7 @@ public static class RawKindTable
       ]);
     _lookup['='] = new(RawKind.Equal,
       [
+        ("=[", RawKind.EqualLBracket),
         ("==", RawKind.EqualEqual),
         ("=>", RawKind.EqualGreater)
       ]);
@@ -87,13 +88,10 @@ public static class RawKindTable
       [
         ("~=", RawKind.TildeEqual)
       ]);
-    _lookup['['] = new(RawKind.LBracket,
-      [
-        ("[[", RawKind.LBracketLBracket)
-      ]);
+    _lookup['['] = new(RawKind.LBracket, []);
     _lookup[']'] = new(RawKind.RBracket,
       [
-        ("]]", RawKind.RBracketRBracket)
+        ("]=", RawKind.RBracketEqual)
       ]);
     _lookup['-'] = new(RawKind.Minus, []);
     _lookup['('] = new(RawKind.LParen, []);

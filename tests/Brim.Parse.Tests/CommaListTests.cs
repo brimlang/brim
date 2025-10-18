@@ -84,9 +84,9 @@ public class CommaListTests
   {
     string[] layouts =
     [
-      "[[m]];\n<<one,two,three>>;\n",
-      "[[m]];\n<<\none,\ntwo,\nthree\n>>;\n",
-      "[[m]];\n<<\none,\ntwo,\nthree,\n>>;\n",
+      "=[m]=;\n<<one,two,three>>;\n",
+      "=[m]=;\n<<\none,\ntwo,\nthree\n>>;\n",
+      "=[m]=;\n<<\none,\ntwo,\nthree,\n>>;\n",
     ];
 
     foreach (string src in layouts)

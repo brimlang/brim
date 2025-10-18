@@ -246,8 +246,8 @@ public class CharBasedLexerTests
   }
 
   [Theory]
-  [InlineData("[[", RawKind.LBracketLBracket)]
-  [InlineData("]]", RawKind.RBracketRBracket)]
+  [InlineData("=[", RawKind.EqualLBracket)]
+  [InlineData("]=", RawKind.RBracketEqual)]
   [InlineData("!{", RawKind.BangLBrace)]
   [InlineData("!!{", RawKind.BangBangLBrace)]
   [InlineData("?{", RawKind.QuestionLBrace)]
@@ -716,15 +716,15 @@ public class CharBasedLexerTests
   [Fact]
   public void ModuleDeclaration_LexesCorrectly()
   {
-    string input = "[[unicode::test]]";
+    string input = "=[unicode::test]=";
     var tokens = LexWithText(input);
 
     Assert.Equal(5, tokens.Count);
-    Assert.Equal((RawKind.LBracketLBracket, "[["), tokens[0]);
+    Assert.Equal((RawKind.EqualLBracket, "=["), tokens[0]);
     Assert.Equal((RawKind.Identifier, "unicode"), tokens[1]);
     Assert.Equal((RawKind.ColonColon, "::"), tokens[2]);
     Assert.Equal((RawKind.Identifier, "test"), tokens[3]);
-    Assert.Equal((RawKind.RBracketRBracket, "]]"), tokens[4]);
+    Assert.Equal((RawKind.RBracketEqual, "]="), tokens[4]);
   }
 
   [Fact]
@@ -770,7 +770,7 @@ result .{ success: true, value: x }";
   public void AllOperatorTokens_CanBeLexed()
   {
     // Test all compound operators in one go
-    string input = "::= :: :> := && || == != <= >= >> << [[ ]] !{ !!{ ?{ #{ #( .{ @{ @( *{ |{ |( %{ %( &{ &( => ~= .. ??";
+    string input = "::= :: :> := && || == != <= >= >> << =[ ]= !{ !!{ ?{ #{ #( .{ @{ @( *{ |{ |( %{ %( &{ &( => ~= .. ??";
     var tokens = LexWithText(input);
 
     var operatorTokens = tokens.Where(t => t.Kind != RawKind.WhitespaceTrivia).ToList();
@@ -781,7 +781,7 @@ result .{ success: true, value: x }";
       RawKind.ColonColonEqual, RawKind.ColonColon, RawKind.ColonGreater, RawKind.ColonEqual,
       RawKind.AmpersandAmpersand, RawKind.PipePipe, RawKind.EqualEqual, RawKind.BangEqual,
       RawKind.LessEqual, RawKind.GreaterEqual, RawKind.GreaterGreater, RawKind.LessLess,
-      RawKind.LBracketLBracket, RawKind.RBracketRBracket, RawKind.BangLBrace, RawKind.BangBangLBrace,
+      RawKind.EqualLBracket, RawKind.RBracketEqual, RawKind.BangLBrace, RawKind.BangBangLBrace,
       RawKind.QuestionLBrace, RawKind.HashLBrace, RawKind.HashLParen, RawKind.StopLBrace, RawKind.AtmarkLBrace,
       RawKind.AtmarkLParen, RawKind.StarLBrace, RawKind.PipeLBrace, RawKind.PipeLParen, RawKind.PercentLBrace,
       RawKind.PercentLParen, RawKind.AmpersandLBrace, RawKind.AmpersandLParen, RawKind.EqualGreater,

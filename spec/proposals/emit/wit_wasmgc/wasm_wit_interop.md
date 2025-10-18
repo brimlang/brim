@@ -28,7 +28,7 @@ This document is not authoritative with respect to the brim syntax.
 ## Imports and Exports
 
 ```brim
-[[[acme::math]]]
+=[acme::math]=
 <<< Adder
 >> util = std::util
 ```
@@ -77,7 +77,7 @@ The adapter presents the core module with a GC `array<u8>`; pointer pairs are ne
 Brim:
 
 ```brim
-[[[acme::math]]]
+=[acme::math]=
 <<< Adder
 
 Adder = ^{ }

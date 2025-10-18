@@ -9,7 +9,7 @@ public class ModuleAndImportTests
   [Fact]
   public void ImportAlias_Parses_BasicPath()
   {
-    string src = "[[m]];\nio ::= std::io;\n";
+    string src = "=[m]=;\nio ::= std::io;\n";
     var m = Parse(src);
     var imp = Assert.IsType<ImportDeclaration>(m.Members.First());
     Assert.Equal("io", imp.Identifier.GetText(src));
@@ -27,7 +27,7 @@ public class ModuleAndImportTests
   [Fact]
   public void ImportAlias_Parses_MultiSegmentPath()
   {
-    string src = "[[m]];\nio ::= std::net::http;\n";
+    string src = "=[m]=;\nio ::= std::net::http;\n";
     var m = Parse(src);
     var imp = Assert.IsType<ImportDeclaration>(m.Members.First());
     var parts = imp.Path.Parts;
@@ -40,7 +40,7 @@ public class ModuleAndImportTests
   [Fact]
   public void ImportAlias_TrailingSep_EmitsMissingIdentifier()
   {
-    string src = "[[m]];\nio ::= std::\n";
+    string src = "=[m]=;\nio ::= std::\n";
     var m = Parse(src);
     Assert.Contains(m.Diagnostics, d => d.Code == DiagCode.MissingToken);
   }
@@ -48,7 +48,7 @@ public class ModuleAndImportTests
   [Fact]
   public void TypeAlias_NamedTupleEmpty_EmitsUnexpected()
   {
-    string src = "[[m]];\nAlias := #{};\n";
+    string src = "=[m]=;\nAlias := #{};\n";
     var m = Parse(src);
     Assert.Contains(m.Diagnostics, d => d.Code == DiagCode.UnexpectedToken);
   }

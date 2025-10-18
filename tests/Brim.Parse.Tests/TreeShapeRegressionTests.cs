@@ -9,7 +9,7 @@ public class TreeShapeRegressionTests
   [Fact]
   public void IdentifierWrapperNodeRemoved_FromDeclarationsAndGenerics()
   {
-    string src = "[[m]];\nFoo[T]: %{\n  field: Bar[Baz]\n};\nBar[X,Y]: |{\n  A: Qux,\n  B: Qux[Z]\n};\nFlags[A]: & prim {\n  ONE, TWO\n};\nTuple[K]: #{ Alpha, Beta[Gamma] };\n";
+    string src = "=[m]=;\nFoo[T]: %{\n  field: Bar[Baz]\n};\nBar[X,Y]: |{\n  A: Qux,\n  B: Qux[Z]\n};\nFlags[A]: & prim {\n  ONE, TWO\n};\nTuple[K]: #{ Alpha, Beta[Gamma] };\n";
 
     var module = Parse(src);
 

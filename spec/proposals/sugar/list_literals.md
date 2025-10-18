@@ -44,5 +44,5 @@ Elements         ::= Expr (',' Expr)* (',')?
 ## Notes
 
 - This sugar does not add indexing, slicing, or any other bracket-based operators.
-- `[[` continues to denote module headers; this sugar uses single brackets only in term space.
+- `=[` continues to denote module headers; this sugar uses single brackets only in term space.
 - Trailing comma rules follow the global policy; at most one optional trailing comma is permitted.

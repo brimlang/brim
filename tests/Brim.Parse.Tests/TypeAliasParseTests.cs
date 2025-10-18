@@ -9,7 +9,7 @@ public class TypeAliasParseTests
   [Fact]
   public void Alias_SimpleType_Parses()
   {
-    string src = "[[m]];\nAlias := Foo;\n";
+    string src = "=[m]=;\nAlias := Foo;\n";
     var m = Parse(src);
     var td = Assert.IsType<TypeDeclaration>(m.Members[0]);
     Assert.Equal("Alias", td.Name.Identifier.GetText(src));
@@ -24,7 +24,7 @@ public class TypeAliasParseTests
   [Fact]
   public void Alias_GenericType_Parses()
   {
-    string src = "[[m]];\nAlias := Wrapper[T];\n";
+    string src = "=[m]=;\nAlias := Wrapper[T];\n";
     var m = Parse(src);
     var td = Assert.IsType<TypeDeclaration>(m.Members[0]);
     var te = Assert.IsType<TypeExpr>(td.TypeNode);
@@ -37,7 +37,7 @@ public class TypeAliasParseTests
   [Fact]
   public void Alias_WithGenericParamsOnName_Parses()
   {
-    string src = "[[m]];\nAlias[T] := Wrapper[T];\n";
+    string src = "=[m]=;\nAlias[T] := Wrapper[T];\n";
     var m = Parse(src);
     var td = Assert.IsType<TypeDeclaration>(m.Members[0]);
     Assert.NotNull(td.Name.GenericParams);
@@ -51,7 +51,7 @@ public class TypeAliasParseTests
   [Fact]
   public void GenericParam_Constraints_Preserve_Plus_Separators()
   {
-    string src = "[[m]];\nAlias[T: C1 + C2] := X;\n";
+    string src = "=[m]=;\nAlias[T: C1 + C2] := X;\n";
     var m = Parse(src);
     var td = Assert.IsType<TypeDeclaration>(m.Members[0]);
     var gp = td.Name.GenericParams!;
@@ -64,7 +64,7 @@ public class TypeAliasParseTests
   [Fact]
   public void Alias_GenericArgs_TrailingComma_Allows()
   {
-    string src = "[[m]];\nAlias := Outer[Inner,];\n";
+    string src = "=[m]=;\nAlias := Outer[Inner,];\n";
     var m = Parse(src);
     var td = Assert.IsType<TypeDeclaration>(m.Members[0]);
     var te = Assert.IsType<TypeExpr>(td.TypeNode);
@@ -77,7 +77,7 @@ public class TypeAliasParseTests
   [Fact]
   public void Alias_NestedGeneric_Parses()
   {
-    string src = "[[m]];\nAlias := Outer[Inner[Deep]];\n";
+    string src = "=[m]=;\nAlias := Outer[Inner[Deep]];\n";
     var m = Parse(src);
     var td = Assert.IsType<TypeDeclaration>(m.Members[0]);
     var te = Assert.IsType<TypeExpr>(td.TypeNode);

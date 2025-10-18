@@ -61,7 +61,7 @@ What a new brimmian should know immediately.
 ## Basics Primer
 
 ```brim
-[[acme::demo]]
+=[acme::demo]=
 << Main
 
 io ::= std::io           -- import alias (module bind)
@@ -96,13 +96,13 @@ Modules are single files with a `.brim` extension.
 They are the compilation unit.
 
 ```brim
-[[acme::io::temp]]
+=[acme::io::temp]=
 << TempFile
 io ::= std::io
 ^limit :i32 = 0
 ```
 
--- **Header:** `[[pkg::ns::leaf]]` on line 1. Required.
+-- **Header:** `=[pkg::ns::leaf]=` on line 1. Required.
 -- **Exports:** wrap exported names in a block: `<<` … `>>`, one const-bound symbol per line.
   - Only const bound symbols may be exported.
   - There are no implicit exports, and no wildcard exports.
