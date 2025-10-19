@@ -136,4 +136,7 @@ public enum SyntaxKind
   LiteralExpr,
   ParenthesizedExpr,
   ArgumentList,
+  ExpressionStatement,
+  AssignmentTarget,
+  AssignmentStatement,
 }

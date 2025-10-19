@@ -157,7 +157,35 @@ public sealed partial class Parser
     return new FunctionLiteral(sigil, parameters, body);
   }
 
-  ExprNode ParseBlockExpression() => BlockExpr.SkipBlock(this);
+  ExprNode ParseBlockExpression() => BlockExpr.Parse(this);
+
+  internal bool LooksLikeAssignment()
+  {
+    int offset = 0;
+    if (MatchRaw(RawKind.Hat, offset))
+      offset++;
+
+    if (!MatchRaw(RawKind.Identifier, offset))
+      return false;
+
+    offset++;
+
+    while (MatchRaw(RawKind.Stop, offset) && MatchRaw(RawKind.Identifier, offset + 1))
+    {
+      offset += 2;
+    }
+
+    return MatchRaw(RawKind.Equal, offset);
+  }
+
+  internal AssignmentStatement ParseAssignmentStatement()
+  {
+    AssignmentTarget target = AssignmentTarget.Parse(this);
+    GreenToken equal = ExpectSyntax(SyntaxKind.EqualToken);
+    ExprNode value = ParseExpression();
+    GreenToken terminator = ExpectSyntax(SyntaxKind.TerminatorToken);
+    return new AssignmentStatement(target, equal, value, terminator);
+  }
 
   static bool IsPrefixOperator(RawKind kind) => kind is RawKind.Minus or RawKind.Bang;
 

@@ -1,10 +1,12 @@
 using Brim.Parse.Collections;
+using Brim.Parse;
 
 namespace Brim.Parse.Green;
 
 public sealed record BlockExpr(
   GreenToken OpenBrace,
   StructuralArray<GreenNode> Statements,
+  ExprNode Result,
   GreenToken CloseBrace) :
 ExprNode(SyntaxKind.BlockExpr, OpenBrace.Offset)
 {
@@ -13,7 +15,48 @@ ExprNode(SyntaxKind.BlockExpr, OpenBrace.Offset)
   {
     yield return OpenBrace;
     foreach (GreenNode stmt in Statements) yield return stmt;
+    yield return Result;
     yield return CloseBrace;
+  }
+
+  internal static BlockExpr Parse(Parser p)
+  {
+    GreenToken openBrace = p.ExpectSyntax(SyntaxKind.OpenBraceToken);
+
+    ArrayBuilder<GreenNode> statements = [];
+
+    while (!p.MatchRaw(RawKind.RBrace) && !p.MatchRaw(RawKind.Eob))
+    {
+      if (p.MatchRaw(RawKind.Terminator))
+      {
+        _ = p.ExpectSyntax(SyntaxKind.TerminatorToken);
+        continue;
+      }
+
+      if (p.LooksLikeAssignment())
+      {
+        AssignmentStatement assignment = p.ParseAssignmentStatement();
+        statements.Add(assignment);
+        continue;
+      }
+
+      ExprNode expr = p.ParseExpression();
+
+      if (p.MatchRaw(RawKind.Terminator))
+      {
+        GreenToken term = p.ExpectSyntax(SyntaxKind.TerminatorToken);
+        statements.Add(new ExpressionStatement(expr, term));
+        continue;
+      }
+
+      ExprNode result = expr;
+      GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
+      return new BlockExpr(openBrace, statements.ToImmutable(), result, close);
+    }
+
+    ExprNode missing = new LiteralExpr(p.FabricateMissing(SyntaxKind.IdentifierToken, RawKind.Identifier));
+    GreenToken closeBrace = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
+    return new BlockExpr(openBrace, statements.ToImmutable(), missing, closeBrace);
   }
 
   internal static BlockExpr SkipBlock(Parser p)
@@ -55,6 +98,7 @@ ExprNode(SyntaxKind.BlockExpr, OpenBrace.Offset)
     }
 
     GreenToken closeBrace = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
-    return new BlockExpr(openBrace, tokens, closeBrace);
+    LiteralExpr placeholder = new(new GreenToken(SyntaxKind.ErrorToken, new RawToken(RawKind.Error, closeBrace.Token.Offset, 0, closeBrace.Token.Line, closeBrace.Token.Column)));
+    return new BlockExpr(openBrace, StructuralArray<GreenNode>.Empty, placeholder, closeBrace);
   }
 }
