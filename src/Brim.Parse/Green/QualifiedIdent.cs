@@ -10,8 +10,7 @@ GreenNode(SyntaxKind.QualifiedIdentifier, Qualifiers.Count > 0 ? Qualifiers[0].O
   public override int FullWidth => Name.EndOffset - Offset;
   public override IEnumerable<GreenNode> GetChildren()
   {
-    foreach (Qualifier q in Qualifiers)
-      yield return q;
+    foreach (Qualifier q in Qualifiers) yield return q;
     yield return Name;
   }
 
@@ -23,7 +22,11 @@ GreenNode(SyntaxKind.QualifiedIdentifier, Qualifiers.Count > 0 ? Qualifiers[0].O
       qualifiers.Add(Qualifier.Parse(p));
     }
 
-    GreenToken name = p.ExpectSyntax(SyntaxKind.IdentifierToken);
+    // Special case: allows @ as an identifier
+    GreenToken name = p.MatchRaw(RawKind.Atmark)
+      ? new GreenToken(SyntaxKind.IdentifierToken, p.ExpectRaw(RawKind.Atmark))
+      : p.ExpectSyntax(SyntaxKind.IdentifierToken);
+
     return new QualifiedIdent(qualifiers, name);
   }
 

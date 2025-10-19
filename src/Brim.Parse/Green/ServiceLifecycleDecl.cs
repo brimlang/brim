@@ -14,37 +14,26 @@ public sealed record ServiceLifecycleDecl(
   GreenToken CloseBrace)
   : GreenNode(SyntaxKind.ServiceLifecycleDecl, ServiceRef.Offset)
 {
-  public override int FullWidth => CloseBrace.EndOffset - ServiceRef.Offset;
+  public override int FullWidth => CloseBrace.EndOffset - Offset;
 
   public override IEnumerable<GreenNode> GetChildren()
   {
     yield return ServiceRef;
     yield return OpenBrace;
-    foreach (GreenNode m in Members)
-      yield return m;
+    foreach (GreenNode m in Members) yield return m;
     yield return CloseBrace;
   }
 
   public static ServiceLifecycleDecl Parse(Parser p)
   {
     // TypeRef '{' (ServiceCtorDecl | ServiceDtorDecl)* '}'
-    GreenToken head = p.ExpectSyntax(SyntaxKind.IdentifierToken);
-    GreenNode sref = head;
-    if (p.MatchRaw(RawKind.LBracket))
-      sref = TypeRef.ParseAfterName(p, head);
+    TypeRef tref = TypeRef.Parse(p);
 
     GreenToken ob = p.ExpectSyntax(SyntaxKind.OpenBraceToken);
 
-    ImmutableArray<GreenNode>.Builder members = ImmutableArray.CreateBuilder<GreenNode>();
+    ArrayBuilder<GreenNode> members = [];
     while (!p.MatchRaw(RawKind.RBrace) && !p.MatchRaw(RawKind.Eob))
     {
-      // Skip terminators and comments
-      if (p.MatchRaw(RawKind.Terminator) || p.MatchRaw(RawKind.CommentTrivia))
-      {
-        _ = p.ExpectRaw(p.Current.Kind);
-        continue;
-      }
-
       // Constructor: '(' params ')' '@' '!' BlockExpr
       if (p.MatchRaw(RawKind.LParen))
       {
@@ -64,30 +53,28 @@ public sealed record ServiceLifecycleDecl(
     }
 
     GreenToken cb = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
-    return new ServiceLifecycleDecl(sref, ob, members.ToImmutable(), cb);
+    return new ServiceLifecycleDecl(tref, ob, members.ToImmutable(), cb);
   }
 }
 
 /// <summary>
 /// Service constructor: '(' params ')' '@' '!' BlockExpr
 /// </summary>
-public sealed record ServiceCtorDecl(
-  CommaList<ServiceMethodParam> Params,
+public sealed partial record ServiceCtorDecl(
+  CommaList<ServiceMethodParam> ParamList,
   GreenToken AtSign,
   GreenToken Bang,
-  GreenToken OpenBrace,
-  GreenToken CloseBrace)
-  : GreenNode(SyntaxKind.ServiceCtorDecl, Params.Offset)
+  BlockExpr Block)
+  : GreenNode(SyntaxKind.ServiceCtorDecl, ParamList.Offset)
 {
-  public override int FullWidth => CloseBrace.EndOffset - Params.Offset;
+  public override int FullWidth => Block.EndOffset - ParamList.Offset;
 
   public override IEnumerable<GreenNode> GetChildren()
   {
-    yield return Params;
+    yield return ParamList;
     yield return AtSign;
     yield return Bang;
-    yield return OpenBrace;
-    yield return CloseBrace;
+    yield return Block;
   }
 
   public static ServiceCtorDecl Parse(Parser p)
@@ -98,50 +85,11 @@ public sealed record ServiceCtorDecl(
       SyntaxKind.OpenParenToken,
       SyntaxKind.CloseParenToken,
       ServiceMethodParam.Parse);
+
     GreenToken at = p.ExpectSyntax(SyntaxKind.ServiceImplToken);
     GreenToken bang = p.ExpectSyntax(SyntaxKind.BangToken);
-    GreenToken openBrace = p.ExpectSyntax(SyntaxKind.OpenBraceToken);
-    SkipBlock(p);
-    GreenToken closeBrace = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
-    return new ServiceCtorDecl(@params, at, bang, openBrace, closeBrace);
-  }
-
-  internal static void SkipBlock(Parser p)
-  {
-    int depth = 1;
-    while (!p.MatchRaw(RawKind.Eob) && depth > 0)
-    {
-      // Check for opening braces (including compound tokens)
-      if (p.MatchRaw(RawKind.LBrace) ||
-          p.MatchRaw(RawKind.AtmarkLBrace) ||
-          p.MatchRaw(RawKind.StarLBrace) ||
-          p.MatchRaw(RawKind.PipeLBrace) ||
-          p.MatchRaw(RawKind.HashLBrace) ||
-          p.MatchRaw(RawKind.PercentLBrace) ||
-          p.MatchRaw(RawKind.StopLBrace) ||
-          p.MatchRaw(RawKind.QuestionLBrace) ||
-          p.MatchRaw(RawKind.BangLBrace) ||
-          p.MatchRaw(RawKind.BangBangLBrace) ||
-          p.MatchRaw(RawKind.AmpersandLBrace))
-      {
-        _ = p.ExpectRaw(p.Current.Kind);
-        depth++;
-        continue;
-      }
-      if (p.MatchRaw(RawKind.RBrace))
-      {
-        depth--;
-        if (depth == 0)
-        {
-          break; // Leave the closing brace for the caller to consume
-        }
-        _ = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
-        continue;
-      }
-      _ = p.ExpectRaw(p.Current.Kind);
-    }
-    // Note: We do NOT consume the final closing brace here.
-    // The caller should consume it.
+    BlockExpr expr = BlockExpr.SkipBlock(p);
+    return new ServiceCtorDecl(@params, at, bang, expr);
   }
 }
 
@@ -152,22 +100,17 @@ public sealed record ServiceDtorDecl(
   GreenToken Tilde,
   CommaList<ServiceMethodParam> Params,
   TypeExpr ReturnType,
-  GreenToken OpenBrace,
-  GreenToken CloseBrace)
+  BlockExpr Block)
   : GreenNode(SyntaxKind.ServiceDtorDecl, Tilde.Offset)
 {
-  public override int FullWidth => CloseBrace.EndOffset - Tilde.Offset;
+  public override int FullWidth => Block.EndOffset - Offset;
 
   public override IEnumerable<GreenNode> GetChildren()
   {
     yield return Tilde;
     yield return Params;
-    foreach (GreenNode c in ReturnType.GetChildren())
-    {
-      yield return c;
-    }
-    yield return OpenBrace;
-    yield return CloseBrace;
+    yield return ReturnType;
+    yield return Block;
   }
 
   public static ServiceDtorDecl Parse(Parser p)
@@ -180,10 +123,8 @@ public sealed record ServiceDtorDecl(
       SyntaxKind.CloseParenToken,
       ServiceMethodParam.Parse);
     TypeExpr retType = TypeExpr.Parse(p);
-    GreenToken openBrace = p.ExpectSyntax(SyntaxKind.OpenBraceToken);
-    ServiceCtorDecl.SkipBlock(p);
-    GreenToken closeBrace = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
-    return new ServiceDtorDecl(tilde, @params, retType, openBrace, closeBrace);
+    BlockExpr expr = BlockExpr.SkipBlock(p);
+    return new ServiceDtorDecl(tilde, @params, retType, expr);
   }
 }
 
@@ -192,7 +133,7 @@ public sealed record ServiceDtorDecl(
 /// </summary>
 public sealed record ServiceProtocolDecl(
   GreenNode ServiceRef,
-  AngleList<TypeExpr>? ProtocolConstraints,
+  ProtocolList? ProtocolConstraints,
   ServiceReceiver? Receiver,
   GreenToken OpenBrace,
   StructuralArray<GreenNode> Methods,
@@ -204,41 +145,27 @@ public sealed record ServiceProtocolDecl(
   public override IEnumerable<GreenNode> GetChildren()
   {
     yield return ServiceRef;
-    if (ProtocolConstraints is not null)
-    {
-      foreach (GreenNode c in ProtocolConstraints.GetChildren())
-      {
-        yield return c;
-      }
-    }
-    if (Receiver is not null)
-    {
-      foreach (GreenNode c in Receiver.GetChildren())
-      {
-        yield return c;
-      }
-    }
+    if (ProtocolConstraints is not null) yield return ProtocolConstraints;
+    if (Receiver is not null) yield return Receiver;
     yield return OpenBrace;
     foreach (GreenNode m in Methods)
     {
       yield return m;
     }
+
     yield return CloseBrace;
   }
 
   public static ServiceProtocolDecl Parse(Parser p)
   {
     // TypeRef [AngleList<TypeRef>]? [Receiver]? '{' methods* '}'
-    GreenToken head = p.ExpectSyntax(SyntaxKind.IdentifierToken);
-    GreenNode sref = head;
-    if (p.MatchRaw(RawKind.LBracket))
-      sref = TypeRef.ParseAfterName(p, head);
+    GreenNode sref = TypeRef.Parse(p);
 
     // Optional protocol constraints: '<' TypeRef (',' TypeRef)* '>'
-    AngleList<TypeExpr>? protocols = null;
+    ProtocolList? protocols = null;
     if (p.MatchRaw(RawKind.Less))
     {
-      protocols = AngleList<TypeExpr>.Parse(p, SyntaxKind.LessToken, SyntaxKind.GreaterToken, TypeExpr.Parse);
+      protocols = ProtocolList.Parse(p);
     }
 
     // Optional receiver: '(' ident ':' '@' ')'
@@ -251,16 +178,9 @@ public sealed record ServiceProtocolDecl(
     GreenToken ob = p.ExpectSyntax(SyntaxKind.OpenBraceToken);
 
     // Parse method declarations
-    ImmutableArray<GreenNode>.Builder methods = ImmutableArray.CreateBuilder<GreenNode>();
+    ArrayBuilder<GreenNode> methods = [];
     while (!p.MatchRaw(RawKind.RBrace) && !p.MatchRaw(RawKind.Eob))
     {
-      // Skip terminators and comments
-      if (p.MatchRaw(RawKind.Terminator) || p.MatchRaw(RawKind.CommentTrivia))
-      {
-        _ = p.ExpectRaw(p.Current.Kind);
-        continue;
-      }
-
       // Method: Ident ':' ParamList TypeExpr BlockExpr
       if (p.MatchRaw(RawKind.Identifier))
       {
@@ -273,7 +193,7 @@ public sealed record ServiceProtocolDecl(
     }
 
     GreenToken cb = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
-    return new ServiceProtocolDecl(sref, protocols, receiver, ob, methods.ToImmutable(), cb);
+    return new ServiceProtocolDecl(sref, protocols, receiver, ob, methods, cb);
   }
 }
 
@@ -319,23 +239,18 @@ public sealed record ServiceMethodDecl(
   GreenToken Colon,
   CommaList<ServiceMethodParam> Params,
   TypeExpr ReturnType,
-  GreenToken OpenBrace,
-  GreenToken CloseBrace)
+  BlockExpr Block)
   : GreenNode(SyntaxKind.ServiceMethodDecl, Name.Offset)
 {
-  public override int FullWidth => CloseBrace.EndOffset - Name.Offset;
+  public override int FullWidth => Block.EndOffset - Offset;
 
   public override IEnumerable<GreenNode> GetChildren()
   {
     yield return Name;
     yield return Colon;
     yield return Params;
-    foreach (GreenNode c in ReturnType.GetChildren())
-    {
-      yield return c;
-    }
-    yield return OpenBrace;
-    yield return CloseBrace;
+    yield return ReturnType;
+    yield return Block;
   }
 
   public static ServiceMethodDecl Parse(Parser p)
@@ -349,10 +264,8 @@ public sealed record ServiceMethodDecl(
       SyntaxKind.CloseParenToken,
       ServiceMethodParam.Parse);
     TypeExpr retType = TypeExpr.Parse(p);
-    GreenToken openBrace = p.ExpectSyntax(SyntaxKind.OpenBraceToken);
-    ServiceCtorDecl.SkipBlock(p);
-    GreenToken closeBrace = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
-    return new ServiceMethodDecl(name, colon, @params, retType, openBrace, closeBrace);
+    BlockExpr expr = BlockExpr.SkipBlock(p);
+    return new ServiceMethodDecl(name, colon, @params, retType, expr);
   }
 }
 
@@ -382,24 +295,6 @@ public sealed record ServiceMethodParam(
     GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
     TypeExpr type = TypeExpr.Parse(p);
     return new ServiceMethodParam(name, colon, type);
-  }
-}
-
-/// <summary>
-/// Angle-bracketed comma-separated list: '<' elements* '>'
-/// Used for protocol constraints and other angle-bracket delimited lists.
-/// </summary>
-public sealed record AngleList<T>(
-  CommaList<T> List) :
-GreenNode(SyntaxKind.AngleList, List.Offset) where T : GreenNode
-{
-  public override int FullWidth => List.FullWidth;
-  public override IEnumerable<GreenNode> GetChildren() => List.GetChildren();
-
-  public static AngleList<T> Parse(Parser p, SyntaxKind openKind, SyntaxKind closeKind, Func<Parser, T> parseElement)
-  {
-    CommaList<T> list = CommaList<T>.Parse(p, openKind, closeKind, parseElement);
-    return new AngleList<T>(list);
   }
 }
 

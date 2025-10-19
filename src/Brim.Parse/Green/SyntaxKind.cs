@@ -106,5 +106,5 @@ public enum SyntaxKind
   ServiceReceiver,
   ServiceMethodDecl,
   ServiceMethodParam,
-  AngleList,
+  ProtocolList,
 }

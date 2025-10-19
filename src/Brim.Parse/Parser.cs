@@ -39,7 +39,7 @@ public sealed partial class Parser(
   {
     ModuleDirective header = ModuleDirective.Parse(this);
 
-    ImmutableArray<GreenNode>.Builder members = ImmutableArray.CreateBuilder<GreenNode>();
+    ArrayBuilder<GreenNode> members = [];
     ParserProgress progress = new(Current);
     ExpectedSet expectedSet = default; // reused accumulator
 
