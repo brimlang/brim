@@ -93,7 +93,10 @@ public static class RawKindTable
       [
         ("]=", RawKind.RBracketEqual)
       ]);
-    _lookup['-'] = new(RawKind.Minus, []);
+    _lookup['-'] = new(RawKind.Minus,
+      [
+        ("->", RawKind.MinusGreater)
+      ]);
     _lookup['('] = new(RawKind.LParen, []);
     _lookup[')'] = new(RawKind.RParen, []);
     _lookup['{'] = new(RawKind.LBrace, []);

@@ -1,4 +1,4 @@
-- [ ] **PRIORITY PHASE - PRESERVE ALL SIGNIFICANT TOKENS IN ORDER IN GREEN NODES**
+- [X] **PRIORITY PHASE - PRESERVE ALL SIGNIFICANT TOKENS IN ORDER IN GREEN NODES**
     - [x] Current state and gaps
         - [x] Already preserved as trailing commas on list elements:
             - [x] Generic args/params: `GenericArgument`, `GenericParameter` include `TrailingComma?`.
@@ -6,22 +6,19 @@
             - [x] Protocol methods: `MethodSignature` includes `TrailingComma?`.
             - [x] `ModulePath` preserves separators as explicit tokens in `Parts`.
             - [x] Terminators are explicit `GreenToken` members in the module body.
-        - [ ] Gaps to fix to meet the rule uniformly:
-            - [ ] FunctionType parameter list: currently stores `StructuralArray<GreenNode>` (commas dropped). Needs element nodes with optional `TrailingComma`.
-            - [ ] ServiceShape protocol refs list: currently drops commas. Needs element nodes with optional `TrailingComma`.
-    - [ ] Service impl:
-        - [ ] StateBlock field list: currently drops commas. `ServiceStateField` should carry optional `TrailingComma`.
+        - [X] Gaps to fix to meet the rule uniformly:
+            - [X] FunctionType parameter list: currently stores `StructuralArray<GreenNode>` (commas dropped). Needs element nodes with optional `TrailingComma`.
+            - [X] ServiceShape protocol refs list: currently drops commas. Needs element nodes with optional `TrailingComma`.
+    - [X] Service impl:
+        - [X] StateBlock field list: currently drops commas. `ServiceStateField` should carry optional `TrailingComma`.
 
 - [ ] **PRIORITY PHASE – Module-level typed value bindings**
     - [x] Surface: support `Ident ':' Type '=' Initializer Terminator` and `'@' Ident ':' Type '=' Initializer Terminator` at module scope (init required).
     - [x] Parser: add a Module member prediction for `Identifier ':'` (const) and `'@' Identifier ':'` (mutable); parse header and capture initializer through the next Terminator (structure-only for now).
     - [x] AST: add `ValueDeclaration` node with optional `@` mutability, header tokens, `=` and `Terminator`.
-    - [ ] Diagnostics (future semantic pass):
-        - [ ] Reject exports of mutable symbols (or document semantics).
-        - [ ] Consistent error for stray `:` without a following `=` at module scope.
     - [ ] Tests:
         - [ ] Parse: `pi :f32 = 3.14`, `^limit :i32 = 10`.
-        - [ ] Error: `x :i32` (no initializer), `<< @varName` (policy-dependent), malformed operators.
+        - [ ] Error: `x :i32` (no initializer), `<< varName` (policy-dependent), malformed operators.
     - [ ] Docs: expand Fundamentals/Grammar/Expressions once expression parsing lands.
 - [ ] **Phase 4 (Option/Result Type Postfix)**
     - [ ] Add type parser support for postfix `?` / `!` creating `OptionTypeNode` / `ResultTypeNode`.
@@ -31,19 +28,27 @@
     - [ ] Parse protocols: `Proto[...]? : .{ methodSig (, methodSig)* }`.
     - [ ] Parse services: `Service[...]? : ^recv{ state... } (: Proto ('+' Proto)*)? = { members }`.
     - [ ] Members: constructors `^(forms)`, methods (reuse `FunctionDeclaration` after expression layer), destructor `~()`.
-    - [ ] Diagnostics: missing receiver, duplicate protocols, invalid implements lists.
-- [ ] **Phase 6 (Define basic operators and precedence)**
-    - [ ] Define a minimal set of operators (e.g., arithmetic, logical, comparison) with clear precedence and associativity rules.
-    - [ ] Implement parsing rules to respect operator precedence and associativity.
-    - [ ] Add diagnostics for common operator misuse (e.g., mixing incompatible types).
-    - [ ] Precedence table: As operators evolve, add a single authoritative precedence/associativity table (even if sparse now) to avoid drift between files. -- TODO
-- [ ] **Phase 7 (Expression Layer Foundations)**
+- [ ] **Phase 6 – Expression Layer & Operators**
+    - [ ] Confirm operator catalogue, precedence tiers, and document a single authoritative table to avoid drift.
     - [ ] Minimal expression parser: identifiers, literals, aggregate constructions `Type%{}`, `Type|{ Variant }`, flags `Type&{}`, tuple `Type#{}`, option/result constructors.
-    - [ ] Postfix propagation operators bind tighter than application.
+    - [ ] Ensure postfix propagation operators bind tighter than application.
+    - [ ] Capture expression grammar invariants and inventory operator/token coverage for LL(k≤4).
+    - [x] Adopt `->` lambda sigil across lexer/parser/docs and retire speculative `(params) =>` handling.
+    - [ ] Build expression green node hierarchy and extend `SyntaxKind`/`Parser.MapRawKind` accordingly.
+    - [ ] Implement primary/call/propagation parsing helpers in a dedicated `Parser.Expressions.cs` partial.
+    - [ ] Introduce prefix and binary operator parsing via precedence climbing while respecting streaming constraints.
+    - [ ] Rework block, function literal, and match parsing to emit structured expression nodes instead of placeholders.
+    - [ ] Extend diagnostics and recovery paths for expression parsing failures (unexpected postfix, missing operands, stall guard).
+    - [ ] Add parser tests plus docs/sample updates confirming expression coverage and error handling.
 - [ ] **Phase 8 (Match, Patterns, Loops)**
     - [ ] Pattern AST: Wildcard, Identifier, TuplePattern, VariantPattern, Option/Result Patterns, FlagPattern.
     - [ ] Parse match arms: pattern (guard?) => expr.
-    - [ ] Loop parsing: `@{ ... @}` with `@>` (continue) and `<@ expr` (break).
+    - [ ] CUT: Loop parsing: `@{ ... @}` with `@>` (continue) and `<@ expr` (break).
     - [ ] List rest patterns: Nail down `..rest` rules and exhaustiveness interactions; add 2–3 canonical examples. -- TODO
+- [ ] **Semantic Backlog (post-parse)**
+    - [ ] Module bindings: reject exports of mutable symbols (or document semantics).
+    - [ ] Module bindings: consistent error for stray `:` without a following `=` at module scope.
+    - [ ] Services & protocols: diagnostics for missing receiver, duplicate protocols, invalid implements lists.
+    - [ ] Expressions: diagnostics for common operator misuse (e.g., mixing incompatible types).
 - [ ] **At any time**
     - [ ] Improve comment attachment in `SignficantProducer`.

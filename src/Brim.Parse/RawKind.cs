@@ -38,6 +38,7 @@ public enum RawKind : sbyte
   Hat, //^
   Plus, // +
   Minus, // -
+  MinusGreater, // ->
   Slash, // /
   Backslash, // \
 

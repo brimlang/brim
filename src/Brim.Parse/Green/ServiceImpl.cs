@@ -81,13 +81,18 @@ public sealed record ServiceImpl(
       GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
       TypeExpr ftype = TypeExpr.Parse(p);
       GreenToken eq = p.ExpectSyntax(SyntaxKind.EqualToken);
-
-      // Consume initializer structurally until Terminator
-      while (!p.MatchRaw(RawKind.Terminator) && !p.MatchRaw(RawKind.Eob) && !p.MatchRaw(RawKind.RBrace))
-        _ = p.ExpectRaw(p.Current.Kind);
-
+      ExprNode initializer;
+      if (p.MatchRaw(RawKind.Terminator) || p.MatchRaw(RawKind.Eob) || p.MatchRaw(RawKind.RBrace))
+      {
+        GreenToken missing = p.FabricateMissing(SyntaxKind.IdentifierToken, RawKind.Identifier);
+        initializer = new IdentifierExpr(missing);
+      }
+      else
+      {
+        initializer = p.ParseExpression();
+      }
       GreenToken term = p.ExpectSyntax(SyntaxKind.TerminatorToken);
-      inits.Add(new ServiceFieldInit(mutator, fname, colon, ftype, eq, term));
+      inits.Add(new ServiceFieldInit(mutator, fname, colon, ftype, eq, initializer, term));
     }
 
     // Optional destructor immediately after init section
@@ -184,6 +189,7 @@ public sealed record ServiceFieldInit(
   GreenToken Colon,
   TypeExpr Type,
   GreenToken Equal,
+  ExprNode Initializer,
   GreenToken Terminator)
   : GreenNode(SyntaxKind.FieldDeclaration, (Mutator ?? Name).Offset)
 {
@@ -196,6 +202,7 @@ public sealed record ServiceFieldInit(
     foreach (GreenNode child in Type.GetChildren())
       yield return child;
     yield return Equal;
+    yield return Initializer;
     yield return Terminator;
   }
 }

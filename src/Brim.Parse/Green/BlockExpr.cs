@@ -6,7 +6,7 @@ public sealed record BlockExpr(
   GreenToken OpenBrace,
   StructuralArray<GreenNode> Statements,
   GreenToken CloseBrace) :
-GreenNode(SyntaxKind.BlockExpr, OpenBrace.Offset)
+ExprNode(SyntaxKind.BlockExpr, OpenBrace.Offset)
 {
   public override int FullWidth => CloseBrace.EndOffset - Offset;
   public override IEnumerable<GreenNode> GetChildren()
@@ -58,4 +58,3 @@ GreenNode(SyntaxKind.BlockExpr, OpenBrace.Offset)
     return new BlockExpr(openBrace, tokens, closeBrace);
   }
 }
-

@@ -1,5 +1,3 @@
-using Brim.Parse.Collections;
-
 namespace Brim.Parse.Green;
 
 public sealed record ValueDeclaration(
@@ -8,7 +6,7 @@ public sealed record ValueDeclaration(
   GreenToken Colon,
   TypeExpr TypeNode,
   GreenToken Equal,
-  StructuralArray<GreenNode> Initializer,
+  ExprNode Initializer,
   GreenToken Terminator)
   : GreenNode(SyntaxKind.ValueDeclaration, (Mutator ?? Name).Offset)
 {
@@ -22,7 +20,7 @@ public sealed record ValueDeclaration(
     foreach (GreenNode child in TypeNode.GetChildren())
       yield return child;
     yield return Equal;
-    foreach (GreenNode n in Initializer) yield return n;
+    yield return Initializer;
     yield return Terminator;
   }
 
@@ -44,47 +42,26 @@ public sealed record ValueDeclaration(
       p.AddDiagUnsupportedModuleMember(name.Token);
 
       GreenToken terminator = p.ExpectSyntax(SyntaxKind.TerminatorToken);
+      GreenToken errorEq = new(SyntaxKind.ErrorToken, p.Current);
+      ExprNode errorInit = new LiteralExpr(errorEq);
       return new ValueDeclaration(mutator, name, colon, typeExpr,
-        new GreenToken(SyntaxKind.ErrorToken, p.Current), [], terminator);
+        errorEq, errorInit, terminator);
     }
 
     GreenToken eq = p.ExpectSyntax(SyntaxKind.EqualToken);
 
-    ArrayBuilder<GreenNode> init = [];
-    // Consume initializer tokens structurally until a Terminator (structure-only phase)
-    // Handle blocks specially to consume them entirely including their closing brace
-    while (!p.MatchRaw(RawKind.Terminator) && !p.MatchRaw(RawKind.Eob))
+    ExprNode initializer;
+    if (p.MatchRaw(RawKind.Terminator) || p.MatchRaw(RawKind.Eob))
     {
-      if (p.MatchRaw(RawKind.LBrace))
-      {
-        // Consume block structurally
-        init.Add(new GreenToken(SyntaxKind.Undefined, p.ExpectRaw(RawKind.LBrace)));
-        int depth = 1;
-        while (depth > 0 && !p.MatchRaw(RawKind.Eob))
-        {
-          if (p.MatchRaw(RawKind.LBrace))
-          {
-            depth++;
-            init.Add(new GreenToken(SyntaxKind.Undefined, p.ExpectRaw(RawKind.LBrace)));
-          }
-          else if (p.MatchRaw(RawKind.RBrace))
-          {
-            depth--;
-            init.Add(new GreenToken(SyntaxKind.Undefined, p.ExpectRaw(RawKind.RBrace)));
-          }
-          else
-          {
-            init.Add(new GreenToken(SyntaxKind.Undefined, p.ExpectRaw(p.Current.CoreToken.Kind)));
-          }
-        }
-      }
-      else
-      {
-        init.Add(new GreenToken(SyntaxKind.Undefined, p.ExpectRaw(p.Current.CoreToken.Kind)));
-      }
+      GreenToken missing = p.FabricateMissing(SyntaxKind.IdentifierToken, RawKind.Identifier);
+      initializer = new IdentifierExpr(missing);
+    }
+    else
+    {
+      initializer = p.ParseExpression();
     }
 
     GreenToken term = p.ExpectSyntax(SyntaxKind.TerminatorToken);
-    return new ValueDeclaration(mutator, name, colon, typeExpr, eq, init, term);
+    return new ValueDeclaration(mutator, name, colon, typeExpr, eq, initializer, term);
   }
 }
