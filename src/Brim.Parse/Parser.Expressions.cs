@@ -17,7 +17,20 @@ public sealed partial class Parser
     byte Precedence,
     OperatorAssociativity Associativity);
 
-  internal ExprNode ParseExpression() => ParseBinaryExpression(0);
+  internal ExprNode ParseExpression() => ParseMatchExpression();
+
+  ExprNode ParseMatchExpression()
+  {
+    ExprNode scrutinee = ParseBinaryExpression(0);
+    if (MatchRaw(RawKind.EqualGreater))
+    {
+      GreenToken arrow = ExpectSyntax(SyntaxKind.ArrowToken);
+      MatchArmList arms = ParseMatchArmList();
+      return new MatchExpr(scrutinee, arrow, arms);
+    }
+
+    return scrutinee;
+  }
 
   ExprNode ParseBinaryExpression(byte minPrecedence)
   {
@@ -203,6 +216,54 @@ public sealed partial class Parser
   }
 
   BlockExpr ParseBlockExpression() => BlockExpr.Parse(this);
+
+  MatchArmList ParseMatchArmList()
+  {
+    ArrayBuilder<MatchArm> arms = [];
+
+    while (true)
+    {
+      while (MatchRaw(RawKind.Terminator))
+        _ = ExpectSyntax(SyntaxKind.TerminatorToken);
+
+      if (MatchRaw(RawKind.Eob))
+        break;
+
+      Parser.StallGuard guard = GetStallGuard();
+      MatchArm arm = ParseMatchArm();
+      arms.Add(arm);
+
+      if (arm.Terminator is null)
+        break;
+
+      if (guard.Stalled)
+        break;
+    }
+
+    return new MatchArmList(arms.ToImmutable());
+  }
+
+  MatchArm ParseMatchArm()
+  {
+    ExprNode pattern = ParseBinaryExpression(0);
+
+    MatchGuard? guard = null;
+    if (MatchRaw(RawKind.QuestionQuestion))
+    {
+      GreenToken guardToken = ExpectSyntax(SyntaxKind.MatchGuardToken);
+      ExprNode condition = ParseBinaryExpression(0);
+      guard = new MatchGuard(guardToken, condition);
+    }
+
+    GreenToken arrow = ExpectSyntax(SyntaxKind.ArrowToken);
+    ExprNode target = ParseMatchExpression();
+
+    GreenToken? terminator = null;
+    if (MatchRaw(RawKind.Terminator))
+      terminator = ExpectSyntax(SyntaxKind.TerminatorToken);
+
+    return new MatchArm(pattern, guard, arrow, target, terminator);
+  }
 
   internal bool LooksLikeAssignment()
   {

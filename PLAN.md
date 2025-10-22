@@ -37,7 +37,8 @@
     - [ ] Build expression green node hierarchy and extend `SyntaxKind`/`Parser.MapRawKind` accordingly.
     - [ ] Implement primary/call/propagation parsing helpers in a dedicated `Parser.Expressions.cs` partial.
     - [ ] Introduce prefix and binary operator parsing via precedence climbing while respecting streaming constraints.
-    - [ ] Rework function literal and match parsing to emit structured nodes; block expressions now produce statement/value structure.
+    - [ ] Rework function literal parsing to emit structured nodes; block expressions now produce statement/value structure.
+    - [x] Parse match expressions (`scrutinee => arms`) with guards and expression targets.
     - [ ] Extend diagnostics and recovery paths for expression parsing failures (unexpected postfix, missing operands, stall guard).
     - [ ] Add parser tests plus docs/sample updates confirming expression coverage and error handling.
 - [ ] **Phase 8 (Match, Patterns, Loops)**

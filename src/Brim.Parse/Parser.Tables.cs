@@ -51,6 +51,7 @@ public sealed partial class Parser
     SyntaxKind.TerminatorToken => RawKind.Terminator,
     SyntaxKind.QuestionToken => RawKind.Question,
     SyntaxKind.BangToken => RawKind.Bang,
+    SyntaxKind.MatchGuardToken => RawKind.QuestionQuestion,
     SyntaxKind.ExportOpenToken => RawKind.LessLess,
     SyntaxKind.ModulePathOpenToken => RawKind.EqualLBracket,
     SyntaxKind.ModulePathCloseToken => RawKind.RBracketEqual,

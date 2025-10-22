@@ -17,6 +17,7 @@ public enum SyntaxKind
   RuneToken,
   QuestionToken,
   BangToken,
+  MatchGuardToken,
   EqualToken,
   TypeBindToken,
   LessToken,
