@@ -25,7 +25,7 @@ ints   :seq[i32] = seq[i32]{ 1, 2, 3, 4, 5 }
 
 Numbers[T :runtime.Num + runtime.Summable] := seq[T]
 
-panic :(str?) void = ->(msg) {
+panic :(str?) void = |msg|> {
   -- print msg and crash
 }
 
@@ -117,11 +117,13 @@ check :(uname :str, pass :str, perms :Perms) bool {
     _        => false
 }
 
+get_one :() int32 = ||> 42
+ident[T] :(T) T = |x|> x
 adder := (i32, i32) i32
-add_a :adder = ->(a, b) a + b
-add_b :(a :i32, b :i32) i32 => a + b
+add_a :adder = |a, b|> a + b
+add_b :(a :i32, b :i32) i32 = |a, b|> a + b
 add_d :(a :i32, b :i32) i32 {
-  a + b
+  fold(ints, a + b, |x, y|> x + y)
 }
 
 fold :(xs :seq[i32], seed :i32, f :(i32, i32) i32) i32 {

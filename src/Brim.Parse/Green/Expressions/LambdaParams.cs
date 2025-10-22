@@ -1,42 +1,41 @@
-using Brim.Parse;
+using Brim.Parse.Collections;
 
 namespace Brim.Parse.Green;
 
 public sealed record LambdaParams(
-  GreenToken? SingleParameter,
-  CommaList<GreenToken>? ParameterList)
-  : GreenNode(SyntaxKind.LambdaParams, SingleParameter is not null ? SingleParameter.Offset : ParameterList!.Offset)
+  int OffsetValue,
+  StructuralArray<LambdaParams.Parameter> Parameters)
+  : GreenNode(SyntaxKind.LambdaParams, OffsetValue)
 {
-  public override int FullWidth => SingleParameter?.FullWidth ?? ParameterList!.FullWidth;
+  public override int FullWidth => Parameters.Length > 0
+    ? Parameters[^1].EndOffset - Offset
+    : 0;
 
   public override IEnumerable<GreenNode> GetChildren()
   {
-    if (SingleParameter is not null)
-    {
-      yield return SingleParameter;
-      yield break;
-    }
-
-    if (ParameterList is not null)
-      yield return ParameterList;
+    foreach (Parameter parameter in Parameters)
+      yield return parameter;
   }
 
-  public static LambdaParams ParseAfterArrow(Parser p)
+  public static LambdaParams From(ArrayBuilder<Parameter> builder, int offset)
+    => new(offset, builder.ToImmutable());
+
+  public static LambdaParams Empty(int offset)
+    => new(offset, StructuralArray<Parameter>.Empty);
+
+  public sealed record Parameter(
+    GreenToken? LeadingComma,
+    GreenToken Identifier)
+    : GreenNode(SyntaxKind.ListElement, (LeadingComma ?? Identifier).Offset)
   {
-    if (p.MatchRaw(RawKind.LParen))
+    public override int FullWidth => Identifier.EndOffset - Offset;
+
+    public override IEnumerable<GreenNode> GetChildren()
     {
-      CommaList<GreenToken> list = CommaList<GreenToken>.Parse(
-        p,
-        SyntaxKind.OpenParenToken,
-        SyntaxKind.CloseParenToken,
-        ParseParameterElement);
+      if (LeadingComma is not null)
+        yield return LeadingComma;
 
-      return new LambdaParams(null, list);
+      yield return Identifier;
     }
-
-    GreenToken single = p.ExpectSyntax(SyntaxKind.IdentifierToken);
-    return new LambdaParams(single, null);
   }
-
-  static GreenToken ParseParameterElement(Parser parser) => parser.ExpectSyntax(SyntaxKind.IdentifierToken);
 }

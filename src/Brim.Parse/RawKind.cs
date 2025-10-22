@@ -67,6 +67,8 @@ public enum RawKind : sbyte
   GreaterEqual, // >=
   EqualEqual, // ==
   PipePipe, // ||
+  PipeGreater, // |>
+  PipePipeGreater, // ||>
 
   /// <summary>
   /// Sentinel values indicating unused range for future use.

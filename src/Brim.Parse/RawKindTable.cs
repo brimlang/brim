@@ -29,6 +29,8 @@ public static class RawKindTable
       ]);
     _lookup['|'] = new(RawKind.Pipe,
       [
+        ("||>", RawKind.PipePipeGreater),
+        ("|>", RawKind.PipeGreater),
         ("||", RawKind.PipePipe),
         ("|{", RawKind.PipeLBrace),
         ("|(", RawKind.PipeLParen)

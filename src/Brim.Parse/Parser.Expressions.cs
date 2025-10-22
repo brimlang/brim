@@ -1,4 +1,4 @@
-using System;
+using Brim.Parse.Collections;
 using Brim.Parse.Green;
 
 namespace Brim.Parse;
@@ -112,7 +112,8 @@ public sealed partial class Parser
         return new LiteralExpr(ExpectSyntax(SyntaxKind.StrToken));
       case RawKind.RuneLiteral:
         return new LiteralExpr(ExpectSyntax(SyntaxKind.RuneToken));
-      case RawKind.MinusGreater:
+      case RawKind.Pipe:
+      case RawKind.PipePipeGreater:
         return ParseLambdaExpression();
       case RawKind.LParen:
         return ParseParenthesizedExpression();
@@ -137,7 +138,7 @@ public sealed partial class Parser
     return new ArgumentList(list);
   }
 
-  ExprNode ParseParenthesizedExpression()
+  ParenthesizedExpr ParseParenthesizedExpression()
   {
     GreenToken open = ExpectSyntax(SyntaxKind.OpenParenToken);
     ExprNode inner = ParseExpression();
@@ -145,19 +146,63 @@ public sealed partial class Parser
     return new ParenthesizedExpr(open, inner, close);
   }
 
-  ExprNode ParseLambdaExpression()
+  FunctionLiteral ParseLambdaExpression()
   {
-    GreenToken sigil = ExpectSyntax(SyntaxKind.LambdaArrowToken);
-    LambdaParams parameters = LambdaParams.ParseAfterArrow(this);
+    if (MatchRaw(RawKind.PipePipeGreater))
+    {
+      RawToken combined = ExpectRaw(RawKind.PipePipeGreater);
+      RawToken openRaw = new(RawKind.Pipe, combined.Offset, 1, combined.Line, combined.Column);
+      RawToken closeRaw = new(RawKind.PipeGreater, combined.Offset + 1, combined.Length - 1, combined.Line, combined.Column + 1);
+
+      GreenToken open = new(SyntaxKind.LambdaOpenToken, openRaw);
+      GreenToken close = new(SyntaxKind.LambdaCloseToken, closeRaw);
+      LambdaParams parameters = LambdaParams.Empty(open.Offset + open.FullWidth);
+
+      ExprNode bodyZero = MatchRaw(RawKind.LBrace)
+        ? ParseBlockExpression()
+        : ParseExpression();
+
+      return new FunctionLiteral(open, parameters, close, bodyZero);
+    }
+
+    GreenToken openToken = ExpectSyntax(SyntaxKind.LambdaOpenToken);
+    ArrayBuilder<LambdaParams.Parameter> builder = [];
+    bool first = true;
+    int parametersOffset = openToken.EndOffset;
+    while (!MatchRaw(RawKind.PipeGreater))
+    {
+      GreenToken? comma = null;
+      if (!first)
+      {
+        comma = ExpectSyntax(SyntaxKind.CommaToken);
+      }
+      else
+      {
+        first = false;
+      }
+
+      GreenToken ident = ExpectSyntax(SyntaxKind.IdentifierToken);
+      if (builder.Count == 0)
+        parametersOffset = comma is not null ? comma.Offset : ident.Offset;
+      builder.Add(new LambdaParams.Parameter(comma, ident));
+
+      if (!MatchRaw(RawKind.Comma))
+        break;
+    }
+
+    GreenToken closeToken = ExpectSyntax(SyntaxKind.LambdaCloseToken);
+    LambdaParams parametersList = builder.Count > 0
+      ? LambdaParams.From(builder, parametersOffset)
+      : LambdaParams.Empty(closeToken.Offset);
 
     ExprNode body = MatchRaw(RawKind.LBrace)
       ? ParseBlockExpression()
       : ParseExpression();
 
-    return new FunctionLiteral(sigil, parameters, body);
+    return new FunctionLiteral(openToken, parametersList, closeToken, body);
   }
 
-  ExprNode ParseBlockExpression() => BlockExpr.Parse(this);
+  BlockExpr ParseBlockExpression() => BlockExpr.Parse(this);
 
   internal bool LooksLikeAssignment()
   {
@@ -214,7 +259,7 @@ public sealed partial class Parser
     _ => SyntaxKind.ErrorToken,
   };
 
-  static readonly BinaryOperatorInfo[] BinaryOperatorTable =
+  static readonly BinaryOperatorInfo[] _binaryOperatorTable =
   [
     new BinaryOperatorInfo(RawKind.Star, 80, OperatorAssociativity.Left),
     new BinaryOperatorInfo(RawKind.Slash, 80, OperatorAssociativity.Left),
@@ -231,7 +276,7 @@ public sealed partial class Parser
     new BinaryOperatorInfo(RawKind.PipePipe, 45, OperatorAssociativity.Left),
   ];
 
-  static ReadOnlySpan<BinaryOperatorInfo> BinaryOperators => BinaryOperatorTable;
+  static ReadOnlySpan<BinaryOperatorInfo> BinaryOperators => _binaryOperatorTable;
 
   internal static bool TryGetBinaryOperatorInfo(RawKind kind, out BinaryOperatorInfo info)
   {

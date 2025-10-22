@@ -98,7 +98,7 @@ Fences labeled hgf are in 'hinky grammar format', a highly custom variant of EBN
 | Surface                                    | Category     | Notes                                      |
 | ---------------------------------          | ------------ | -------                                    |
 | `(Type, ...) Ret`                          | type         | Function type.                             |
-| `->(params) expr` / `->param expr`         | expression   | Function literal with optional block body. |
+| `|params|> expr` / `||> expr`              | expression   | Function literal with optional block body. |
 | `f :(Type, ...) Ret = ...`                 | declaration  | Named function/value binding.              |
 | `expr.member(args?)`                       | expression   | Member access or method invocation.        |
 | `=[pkg::ns]=`                              | module       | Module header; must be first declaration.  |
@@ -174,7 +174,9 @@ MOD_PATH_CLOSE = ']='
 EXPORT_OPEN    = '<<'
 EXPORT_CLOSE   = '>>'
 ARROW          = '=>'
-LAMBDA_ARROW   = '->'
+LAMBDA_OPEN    = '|'
+LAMBDA_CLOSE   = '|>'
+LAMBDA_EMPTY   = '||>'
 CAST           = ':>'
 MUTABLE        = '^'
 SERVICE_HANDLE = '@'
@@ -400,9 +402,9 @@ Expr             : BinaryExpr
                  | FunctionLiteral
                  | BlockExpr
 
-FunctionLiteral  : LAMBDA_ARROW LambdaParams LambdaBody
-LambdaParams     : IDENT
-                 | '(' CommaListOpt<IDENT> ')'
+FunctionLiteral  : LAMBDA_EMPTY LambdaBody
+                 | LAMBDA_OPEN LambdaParams LAMBDA_CLOSE LambdaBody
+LambdaParams     : IDENT (',' IDENT)*
 LambdaBody       : Expr
                  | BlockExpr
 FunctionBody     : ARROW Expr
