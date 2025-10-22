@@ -21,28 +21,11 @@ public sealed partial class Parser
     new(ServiceProtocolDecl.Parse, (RawKind.Identifier, RawKind.Less)),
     new(ServiceProtocolDecl.Parse, (RawKind.Identifier, RawKind.LParen)),
 
-    // Type shape declaration: Ident ':=' Shape
-    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.Identifier)),
-    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.StopLBrace)),
-    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.AtmarkLBrace)),
-    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.LParen)),
-    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.PercentLBrace)),
-    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.PipeLBrace)),
-    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.Ampersand)),
-    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.AmpersandLBrace)),
-    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.ColonEqual, RawKind.HashLBrace)),
-    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.Identifier, RawKind.Any)),
-    new(TypeDeclaration.Parse, (RawKind.Identifier, RawKind.LBracket, RawKind.RBracket)), // empty generic param list
+    // Identifier-headed declarations (types, canonical values, etc.)
+    new(ParseIdentifierHead, RawKind.Identifier),
 
-    // Const value declaration: Ident ':' Type '=' Initializer Terminator
-    new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.Identifier)),
-    new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.LParen)), // function type
-    new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.StopLBrace)),
-    new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.PercentLBrace)),
-    new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.PipeLBrace)),
-    new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.Ampersand)),
-    new(ValueDeclaration.Parse, (RawKind.Identifier, RawKind.Colon, RawKind.HashLBrace)),
-   ];
+    // Type shape declaration: Ident ':=' Shape
+  ];
 
   internal static readonly PredictionTable ModuleMembersTable = PredictionTable.Build(ModuleMemberPredictions);
 

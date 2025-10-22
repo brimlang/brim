@@ -3,21 +3,19 @@ namespace Brim.Parse.Tests;
 public class ParserPredictionTests
 {
   [Fact]
-  public void ModuleMemberPredictions_Contain_AliasForm()
+  public void ModuleMemberPredictions_Contain_Dispatcher()
   {
-    // Ensure there is a prediction for (Identifier, ColonEqual, Identifier)
-    bool found = Parser.ModuleMemberPredictions.Any(p =>
-    p.Sequence[0] == RawKind.Identifier &&
-    p.Sequence[1] == RawKind.ColonEqual &&
-    p.Sequence[2] == RawKind.Identifier);
-    Assert.True(found);
+    Assert.Contains(Parser.ModuleMemberPredictions,
+      p => p.Action == Parser.ParseIdentifierHead);
   }
 
   [Fact]
-  public void ModuleMemberPredictions_Contain_ProtocolType()
+  public void ModuleMemberPredictions_RetainServiceProtocols()
   {
     bool proto = Parser.ModuleMemberPredictions.Any(p =>
-      p.Sequence[0] == RawKind.Identifier && p.Sequence[1] == RawKind.ColonEqual && p.Sequence[2] == RawKind.StopLBrace);
+      p.Sequence.Length > 1 &&
+      p.Sequence[0] == RawKind.Identifier &&
+      p.Sequence[1] == RawKind.Less);
     Assert.True(proto);
   }
 }

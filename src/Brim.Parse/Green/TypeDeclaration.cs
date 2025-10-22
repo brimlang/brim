@@ -19,6 +19,11 @@ GreenNode(SyntaxKind.TypeDeclaration, Name.Offset)
   public static TypeDeclaration Parse(Parser p)
   {
     DeclarationName name = DeclarationName.Parse(p);
+    return ParseAfterName(p, name);
+  }
+
+  internal static TypeDeclaration ParseAfterName(Parser p, DeclarationName name)
+  {
     GreenToken bind = p.ExpectSyntax(SyntaxKind.TypeBindToken);
     TypeExpr typeExpr = TypeExpr.Parse(p);
     GreenToken term = p.ExpectSyntax(SyntaxKind.TerminatorToken);
