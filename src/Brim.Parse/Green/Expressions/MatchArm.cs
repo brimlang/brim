@@ -8,8 +8,7 @@ public sealed record MatchArm(
   GreenToken? Terminator)
   : GreenNode(SyntaxKind.MatchArm, Pattern.Offset)
 {
-  public override int FullWidth
-  {
+  public override int FullWidth {
     get
     {
       int end = Terminator?.EndOffset ?? Target.EndOffset;

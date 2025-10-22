@@ -1,5 +1,5 @@
-using Brim.Parse.Collections;
 using Brim.Parse;
+using Brim.Parse.Collections;
 
 namespace Brim.Parse.Green;
 

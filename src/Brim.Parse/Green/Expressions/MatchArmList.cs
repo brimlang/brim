@@ -5,8 +5,7 @@ namespace Brim.Parse.Green;
 public sealed record MatchArmList(StructuralArray<MatchArm> Arms)
   : GreenNode(SyntaxKind.MatchArmList, Arms.Length > 0 ? Arms[0].Offset : 0)
 {
-  public override int FullWidth
-  {
+  public override int FullWidth {
     get
     {
       if (Arms.Length == 0)
