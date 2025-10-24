@@ -6,8 +6,7 @@ public sealed record ProtocolRef(
   public override int FullWidth => TypeNode.FullWidth;
   public override IEnumerable<GreenNode> GetChildren()
   {
-    foreach (GreenNode child in TypeNode.GetChildren())
-      yield return child;
+    yield return TypeNode;
   }
 
   public static ProtocolRef Parse(Parser p) => new(TypeExpr.Parse(p));

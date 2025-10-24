@@ -17,8 +17,7 @@ public sealed record ValueDeclaration(
     if (Mutator is not null) yield return Mutator;
     yield return Name;
     yield return Colon;
-    foreach (GreenNode child in TypeNode.GetChildren())
-      yield return child;
+    yield return TypeNode;
     yield return Equal;
     yield return Initializer;
     yield return Terminator;

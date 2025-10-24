@@ -114,7 +114,7 @@ public sealed partial class Parser
     switch (Current.Kind)
     {
       case RawKind.Identifier:
-        return new IdentifierExpr(ExpectSyntax(SyntaxKind.IdentifierToken));
+        return ParseIdentifierOrConstruct();
 
       case RawKind.IntegerLiteral:
       case RawKind.DecimalLiteral:
@@ -139,6 +139,15 @@ public sealed partial class Parser
 
       case RawKind.LBrace:
         return ParseBlockExpression();
+
+      case RawKind.QuestionLBrace:
+        return ParseOptionConstruct();
+
+      case RawKind.BangLBrace:
+        return ParseResultConstruct();
+
+      case RawKind.BangBangLBrace:
+        return ParseErrorConstruct();
 
       default:
         RawToken unexpected = ExpectRaw(Current.Kind);
@@ -344,5 +353,140 @@ public sealed partial class Parser
 
     info = default;
     return false;
+  }
+
+  ExprNode ParseIdentifierOrConstruct()
+  {
+    GreenToken ident = ExpectSyntax(SyntaxKind.IdentifierToken);
+
+    return Current.Kind switch
+    {
+      RawKind.PercentLBrace => ParseStructConstruct(ident),
+      RawKind.PipeLBrace => ParseUnionConstruct(ident),
+      RawKind.HashLBrace => ParseTupleConstruct(ident),
+      RawKind.AmpersandLBrace => ParseFlagsConstruct(ident),
+      RawKind.AtmarkLBrace => ParseServiceConstruct(ident),
+      RawKind.LBracket => ParseSeqConstruct(ident),
+      _ => new IdentifierExpr(ident),
+    };
+  }
+
+  ExprNode ParseStructConstruct(GreenToken typeIdent)
+  {
+    QualifiedIdent qualifiedIdent = new([], typeIdent);
+    TypeRef typeRef = new(qualifiedIdent, null);
+
+    CommaList<FieldInit> fields = CommaList<FieldInit>.Parse(
+      this,
+      SyntaxKind.StructToken,
+      SyntaxKind.CloseBlockToken,
+      p => FieldInit.Parse(p));
+
+    return new StructConstruct(typeRef, fields);
+  }
+
+  ExprNode ParseUnionConstruct(GreenToken typeIdent)
+  {
+    QualifiedIdent qualifiedIdent = new([], typeIdent);
+    TypeRef typeRef = new(qualifiedIdent, null);
+
+    GreenToken unionOpen = ExpectSyntax(SyntaxKind.UnionToken);
+    VariantInit variant = VariantInit.Parse(this);
+    GreenToken closeBrace = ExpectSyntax(SyntaxKind.CloseBlockToken);
+
+    return new UnionConstruct(typeRef, unionOpen, variant, closeBrace);
+  }
+
+  ExprNode ParseTupleConstruct(GreenToken typeIdent)
+  {
+    QualifiedIdent qualifiedIdent = new([], typeIdent);
+    TypeRef typeRef = new(qualifiedIdent, null);
+
+    CommaList<ExprNode> elements = CommaList<ExprNode>.Parse(
+      this,
+      SyntaxKind.NamedTupleToken,
+      SyntaxKind.CloseBlockToken,
+      p => p.ParseExpression());
+
+    return new TupleConstruct(typeRef, elements);
+  }
+
+  ExprNode ParseFlagsConstruct(GreenToken typeIdent)
+  {
+    QualifiedIdent qualifiedIdent = new([], typeIdent);
+    TypeRef typeRef = new(qualifiedIdent, null);
+
+    CommaList<GreenToken> flags = CommaList<GreenToken>.Parse(
+      this,
+      SyntaxKind.FlagsToken,
+      SyntaxKind.CloseBlockToken,
+      p => p.ExpectSyntax(SyntaxKind.IdentifierToken));
+
+    return new FlagsConstruct(typeRef, flags);
+  }
+
+  ExprNode ParseServiceConstruct(GreenToken typeIdent)
+  {
+    QualifiedIdent qualifiedIdent = new([], typeIdent);
+    TypeRef typeRef = new(qualifiedIdent, null);
+
+    CommaList<FieldInit> fields = CommaList<FieldInit>.Parse(
+      this,
+      SyntaxKind.ServiceToken,
+      SyntaxKind.CloseBlockToken,
+      p => FieldInit.Parse(p));
+
+    return new ServiceConstruct(typeRef, fields);
+  }
+
+  ExprNode ParseSeqConstruct(GreenToken seqIdent)
+  {
+    GenericArgumentList? genericArgs = null;
+    if (MatchRaw(RawKind.LBracket))
+      genericArgs = GenericArgumentList.Parse(this);
+
+    CommaList<ExprNode> elements = CommaList<ExprNode>.Parse(
+      this,
+      SyntaxKind.OpenBraceToken,
+      SyntaxKind.CloseBlockToken,
+      p => p.ParseExpression());
+
+    return new SeqConstruct(seqIdent, genericArgs, elements);
+  }
+
+  ExprNode ParseOptionConstruct()
+  {
+    RawToken questionLBrace = ExpectRaw(RawKind.QuestionLBrace);
+    RawToken questionRaw = new(RawKind.Question, questionLBrace.Offset, 1, questionLBrace.Line, questionLBrace.Column);
+    GreenToken questionOpen = new(SyntaxKind.QuestionToken, questionRaw);
+
+    ExprNode? value = null;
+    if (!MatchRaw(RawKind.RBrace))
+      value = ParseExpression();
+
+    GreenToken closeBrace = ExpectSyntax(SyntaxKind.CloseBlockToken);
+    return new OptionConstruct(questionOpen, value, closeBrace);
+  }
+
+  ExprNode ParseResultConstruct()
+  {
+    RawToken bangLBrace = ExpectRaw(RawKind.BangLBrace);
+    RawToken bangRaw = new(RawKind.Bang, bangLBrace.Offset, 1, bangLBrace.Line, bangLBrace.Column);
+    GreenToken bangOpen = new(SyntaxKind.BangToken, bangRaw);
+
+    ExprNode value = ParseExpression();
+    GreenToken closeBrace = ExpectSyntax(SyntaxKind.CloseBlockToken);
+    return new ResultConstruct(bangOpen, value, closeBrace);
+  }
+
+  ExprNode ParseErrorConstruct()
+  {
+    RawToken bangBangLBrace = ExpectRaw(RawKind.BangBangLBrace);
+    RawToken bangBangRaw = new(RawKind.Bang, bangBangLBrace.Offset, 2, bangBangLBrace.Line, bangBangLBrace.Column);
+    GreenToken bangBangOpen = new(SyntaxKind.BangToken, bangBangRaw);
+
+    ExprNode value = ParseExpression();
+    GreenToken closeBrace = ExpectSyntax(SyntaxKind.CloseBlockToken);
+    return new ErrorConstruct(bangBangOpen, value, closeBrace);
   }
 }

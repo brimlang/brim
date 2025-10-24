@@ -105,8 +105,7 @@ public sealed record GenericArgument(
   public override int FullWidth => TypeNode.FullWidth;
   public override IEnumerable<GreenNode> GetChildren()
   {
-    foreach (GreenNode child in TypeNode.GetChildren())
-      yield return child;
+    yield return TypeNode;
   }
 }
 

@@ -80,12 +80,12 @@
     - [X] Diagnostics and recovery paths for expression parsing failures present.
     - [X] Parser tests in ExpressionParsingTests.cs; spec/sample.brim and spec/grammar.md updated.
 
-- [ ] **Phase 7 (Construct Expressions & Aggregates)**
+- [X] **Phase 7 (Construct Expressions & Aggregates)**
     - [X] Basic aggregate construction syntax parsed (struct `%{}`, union `|{}`, tuple `#{}`, flags `&{}`).
-    - [ ] Field initialization nodes for struct/service constructions.
-    - [ ] Variant initialization for union constructions.
-    - [ ] Linear collection constructions: `seq[T]{ ... }`, `buf[T]{ ... }`.
-    - [ ] Option/Result wrapper constructions: `?{ expr }`, `!{ expr }`, `!!{ expr }`.
+    - [X] Field initialization nodes for struct/service constructions.
+    - [X] Variant initialization for union constructions.
+    - [X] Linear collection constructions: `seq[T]{ ... }`, `buf[T]{ ... }`.
+    - [X] Option/Result wrapper constructions: `?{ expr }`, `!{ expr }`, `!!{ expr }`.
 
 - [P] **Phase 8 (Match, Patterns, Loops)**
     - [X] Match expressions with guards implemented (MatchExpr, MatchArm, MatchGuard).

@@ -7,8 +7,7 @@ GreenNode(SyntaxKind.FunctionParameter, TypeNode.Offset)
   public override int FullWidth => TypeNode.EndOffset - Offset;
   public override IEnumerable<GreenNode> GetChildren()
   {
-    foreach (GreenNode child in TypeNode.GetChildren())
-      yield return child;
+    yield return TypeNode;
   }
 
   public static FunctionParameter Parse(Parser p) =>
