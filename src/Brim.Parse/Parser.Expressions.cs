@@ -89,9 +89,7 @@ public sealed partial class Parser
 
       if (MatchRaw(RawKind.Question) || MatchRaw(RawKind.Bang))
       {
-        SyntaxKind opKind = Current.Kind == RawKind.Question
-          ? SyntaxKind.QuestionToken
-          : SyntaxKind.BangToken;
+        SyntaxKind opKind = MatchRaw(RawKind.Question) ? SyntaxKind.QuestionToken : SyntaxKind.BangToken;
         GreenToken op = ExpectSyntax(opKind);
         expr = new PropagationExpr(expr, op);
         continue;
@@ -117,21 +115,31 @@ public sealed partial class Parser
     {
       case RawKind.Identifier:
         return new IdentifierExpr(ExpectSyntax(SyntaxKind.IdentifierToken));
+
       case RawKind.IntegerLiteral:
-        return new LiteralExpr(ExpectSyntax(SyntaxKind.IntToken));
       case RawKind.DecimalLiteral:
-        return new LiteralExpr(ExpectSyntax(SyntaxKind.DecimalToken));
       case RawKind.StringLiteral:
-        return new LiteralExpr(ExpectSyntax(SyntaxKind.StrToken));
       case RawKind.RuneLiteral:
-        return new LiteralExpr(ExpectSyntax(SyntaxKind.RuneToken));
+        SyntaxKind literalKind = Current.Kind switch
+        {
+          RawKind.IntegerLiteral => SyntaxKind.IntToken,
+          RawKind.DecimalLiteral => SyntaxKind.DecimalToken,
+          RawKind.StringLiteral => SyntaxKind.StrToken,
+          RawKind.RuneLiteral => SyntaxKind.RuneToken,
+          _ => SyntaxKind.ErrorToken,
+        };
+        return new LiteralExpr(ExpectSyntax(literalKind));
+
       case RawKind.Pipe:
       case RawKind.PipePipeGreater:
         return ParseLambdaExpression();
+
       case RawKind.LParen:
         return ParseParenthesizedExpression();
+
       case RawKind.LBrace:
         return ParseBlockExpression();
+
       default:
         RawToken unexpected = ExpectRaw(Current.Kind);
         _diags.Add(Diagnostic.Unexpected(unexpected, []));
@@ -171,36 +179,26 @@ public sealed partial class Parser
       GreenToken close = new(SyntaxKind.LambdaCloseToken, closeRaw);
       LambdaParams parameters = LambdaParams.Empty(open.Offset + open.FullWidth);
 
-      ExprNode bodyZero = MatchRaw(RawKind.LBrace)
-        ? ParseBlockExpression()
-        : ParseExpression();
-
-      return new FunctionLiteral(open, parameters, close, bodyZero);
+      ExprNode emptyBody = MatchRaw(RawKind.LBrace) ? ParseBlockExpression() : ParseExpression();
+      return new FunctionLiteral(open, parameters, close, emptyBody);
     }
 
     GreenToken openToken = ExpectSyntax(SyntaxKind.LambdaOpenToken);
     ArrayBuilder<LambdaParams.Parameter> builder = [];
-    bool first = true;
     int parametersOffset = openToken.EndOffset;
-    while (!MatchRaw(RawKind.PipeGreater))
+
+    if (!MatchRaw(RawKind.PipeGreater))
     {
-      GreenToken? comma = null;
-      if (!first)
-      {
-        comma = ExpectSyntax(SyntaxKind.CommaToken);
-      }
-      else
-      {
-        first = false;
-      }
+      GreenToken firstIdent = ExpectSyntax(SyntaxKind.IdentifierToken);
+      parametersOffset = firstIdent.Offset;
+      builder.Add(new LambdaParams.Parameter(null, firstIdent));
 
-      GreenToken ident = ExpectSyntax(SyntaxKind.IdentifierToken);
-      if (builder.Count == 0)
-        parametersOffset = comma is not null ? comma.Offset : ident.Offset;
-      builder.Add(new LambdaParams.Parameter(comma, ident));
-
-      if (!MatchRaw(RawKind.Comma))
-        break;
+      while (MatchRaw(RawKind.Comma) && !MatchRaw(RawKind.PipeGreater, 1))
+      {
+        GreenToken comma = ExpectSyntax(SyntaxKind.CommaToken);
+        GreenToken ident = ExpectSyntax(SyntaxKind.IdentifierToken);
+        builder.Add(new LambdaParams.Parameter(comma, ident));
+      }
     }
 
     GreenToken closeToken = ExpectSyntax(SyntaxKind.LambdaCloseToken);
@@ -208,10 +206,7 @@ public sealed partial class Parser
       ? LambdaParams.From(builder, parametersOffset)
       : LambdaParams.Empty(closeToken.Offset);
 
-    ExprNode body = MatchRaw(RawKind.LBrace)
-      ? ParseBlockExpression()
-      : ParseExpression();
-
+    ExprNode body = MatchRaw(RawKind.LBrace) ? ParseBlockExpression() : ParseExpression();
     return new FunctionLiteral(openToken, parametersList, closeToken, body);
   }
 
@@ -221,23 +216,20 @@ public sealed partial class Parser
   {
     ArrayBuilder<MatchArm> arms = [];
 
-    while (true)
+    while (MatchRaw(RawKind.Terminator))
+      _ = ExpectSyntax(SyntaxKind.TerminatorToken);
+
+    while (!MatchRaw(RawKind.Eob))
     {
-      while (MatchRaw(RawKind.Terminator))
-        _ = ExpectSyntax(SyntaxKind.TerminatorToken);
-
-      if (MatchRaw(RawKind.Eob))
-        break;
-
       Parser.StallGuard guard = GetStallGuard();
       MatchArm arm = ParseMatchArm();
       arms.Add(arm);
 
-      if (arm.Terminator is null)
+      if (arm.Terminator is null || guard.Stalled)
         break;
 
-      if (guard.Stalled)
-        break;
+      while (MatchRaw(RawKind.Terminator))
+        _ = ExpectSyntax(SyntaxKind.TerminatorToken);
     }
 
     return new MatchArmList(arms.ToImmutable());
