@@ -1,3 +1,34 @@
+# Brim Language Implementation Plan
+
+**Status Legend**: [X] Complete | [P] Partial | [ ] Not Started
+
+## Current Implementation State (2025-10-24)
+
+**Completed Major Features:**
+- Lexer with trivia handling and significant token production
+- Module structure parsing (headers, imports, exports, declarations)
+- Type system core: struct, union, tuple, flags, protocol, service shapes
+- Type postfix operators (`?`, `!`) for optional/fallible types
+- Expression parsing with operators, precedence climbing, literals, aggregates
+- Function literals (lambdas) with structured parameter lists
+- Match expressions with guards
+- Value declarations (mutable and immutable)
+- Generic parameters and constraints
+
+**In Progress:**
+- Pattern parsing (currently using expression nodes as temporary bridge)
+- Service implementation surface (type and state shapes done; member surface incomplete)
+
+**Next Priorities:**
+- Dedicated pattern AST nodes
+- Service constructors, methods, destructors
+- Aggregate construction expressions (field/variant initialization)
+- Loop constructs (`@{ ... @}` with control flow)
+
+---
+
+## Detailed Phase Tracking
+
 - [X] **PRIORITY PHASE - PRESERVE ALL SIGNIFICANT TOKENS IN ORDER IN GREEN NODES**
     - [x] Current state and gaps
         - [x] Already preserved as trailing commas on list elements:
@@ -12,44 +43,79 @@
     - [X] Service impl:
         - [X] StateBlock field list: currently drops commas. `ServiceStateField` should carry optional `TrailingComma`.
 
-- [ ] **PRIORITY PHASE – Module-level typed value bindings**
-    - [x] Surface: support `Ident ':' Type '=' Initializer Terminator` and `'@' Ident ':' Type '=' Initializer Terminator` at module scope (init required).
-    - [x] Parser: add a Module member prediction for `Identifier ':'` (const) and `'@' Identifier ':'` (mutable); parse header and capture initializer through the next Terminator (structure-only for now).
-    - [x] AST: add `ValueDeclaration` node with optional `@` mutability, header tokens, `=` and `Terminator`.
-    - [ ] Tests:
-        - [ ] Parse: `pi :f32 = 3.14`, `^limit :i32 = 10`.
-        - [ ] Error: `x :i32` (no initializer), `<< varName` (policy-dependent), malformed operators.
-    - [ ] Docs: expand Fundamentals/Grammar/Expressions once expression parsing lands.
-- [ ] **Phase 4 (Option/Result Type Postfix)**
-    - [ ] Add type parser support for postfix `?` / `!` creating `OptionTypeNode` / `ResultTypeNode`.
-    - [ ] Decide and document chaining precedence (likely restrict ambiguous multi-postfix chains).
-    - [ ] Add diagnostics for misuse (postfix applied outside type contexts).
-- [ ] **Phase 5 (Services & Protocols)**
-    - [ ] Parse protocols: `Proto[...]? : .{ methodSig (, methodSig)* }`.
-    - [ ] Parse services: `Service[...]? : ^recv{ state... } (: Proto ('+' Proto)*)? = { members }`.
-    - [ ] Members: constructors `^(forms)`, methods (reuse `FunctionDeclaration` after expression layer), destructor `~()`.
-- [ ] **Phase 6 – Expression Layer & Operators**
-    - [ ] Confirm operator catalogue, precedence tiers, and document a single authoritative table to avoid drift.
-    - [ ] Minimal expression parser: identifiers, literals, aggregate constructions `Type%{}`, `Type|{ Variant }`, flags `Type&{}`, tuple `Type#{}`, option/result constructors.
-    - [ ] Ensure postfix propagation operators bind tighter than application.
-    - [ ] Capture expression grammar invariants and inventory operator/token coverage for LL(k≤4).
-    - [x] Adopt `->` lambda sigil across lexer/parser/docs and retire speculative `(params) =>` handling.
-    - [ ] Build expression green node hierarchy and extend `SyntaxKind`/`Parser.MapRawKind` accordingly.
-    - [ ] Implement primary/call/propagation parsing helpers in a dedicated `Parser.Expressions.cs` partial.
-    - [ ] Introduce prefix and binary operator parsing via precedence climbing while respecting streaming constraints.
-    - [ ] Rework function literal parsing to emit structured nodes; block expressions now produce statement/value structure.
-    - [x] Parse match expressions (`scrutinee => arms`) with guards and expression targets.
-    - [ ] Extend diagnostics and recovery paths for expression parsing failures (unexpected postfix, missing operands, stall guard).
-    - [ ] Add parser tests plus docs/sample updates confirming expression coverage and error handling.
-- [ ] **Phase 8 (Match, Patterns, Loops)**
-    - [ ] Pattern AST: Wildcard, Identifier, TuplePattern, VariantPattern, Option/Result Patterns, FlagPattern.
-    - [ ] Parse match arms: pattern (guard?) => expr.
-    - [ ] CUT: Loop parsing: `@{ ... @}` with `@>` (continue) and `<@ expr` (break).
-    - [ ] List rest patterns: Nail down `..rest` rules and exhaustiveness interactions; add 2–3 canonical examples. -- TODO
+- [X] **PRIORITY PHASE – Module-level typed value bindings**
+    - [x] Surface: support `Ident ':' Type '=' Initializer Terminator` and `'^' Ident ':' Type '=' Initializer Terminator` at module scope (init required).
+    - [x] Parser: add a Module member prediction for `Identifier ':'` (const) and `'^' Identifier ':'` (mutable); parse header and capture initializer through the next Terminator (structure-only for now).
+    - [x] AST: add `ValueDeclaration` node with optional `^` mutability, header tokens, `=` and `Terminator`.
+    - [X] Tests:
+        - [X] Parse: Covered in ExpressionParsingTests (lambda literals, match expressions with value bindings).
+        - [X] Error: No-initializer case handled with diagnostic in ValueDeclaration.ParseAfterName.
+    - [X] Docs: spec/sample.brim contains canonical examples (lines 22-24, 28-29); spec/grammar.md documents surface (lines 88-89).
+
+- [X] **Phase 4 (Option/Result Type Postfix)**
+    - [X] Add type parser support for postfix `?` / `!` creating optional/fallible type suffixes.
+    - [X] TypeExpr.Parse handles `?` and `!` suffixes as GreenToken stored in TypeExpr.Suffix.
+    - [X] No chaining: single suffix only (enforced by parser structure).
+    - [ ] Add diagnostics for misuse if needed (currently parsing captures suffix cleanly).
+
+- [P] **Phase 5 (Services & Protocols)**
+    - [X] Parse protocol shapes: `.{ methodSig (, methodSig)* }` via ProtocolShape node.
+    - [X] Parse service state shapes: `@{ field, ... }` via ServiceShape node.
+    - [P] Parse service type declarations with protocol bounds and implementations.
+    - [ ] Members: constructors `^(forms)`, methods, destructor `~()`.
+    - Note: Service declarations exist in SyntaxKind but full implementation surface incomplete.
+
+- [X] **Phase 6 – Expression Layer & Operators**
+    - [X] Operator catalogue, precedence tiers documented in spec/grammar.md lines 121-175.
+    - [X] Expression parser implemented: identifiers, literals, parenthesized, aggregates (struct, union, tuple, flags, service constructions).
+    - [X] Postfix propagation operators (`?`, `!`, `!!`) implemented in PropagationExpr; bind tighter than application.
+    - [X] Expression grammar in Parser.Expressions.cs with LL(k≤4) maintained.
+    - [X] Expression green node hierarchy in src/Brim.Parse/Green/Expressions/.
+    - [X] SyntaxKind extended for expression nodes.
+    - [X] Parser.Expressions.cs partial contains primary/call/propagation/binary/unary parsing (356 lines).
+    - [X] Precedence climbing for binary operators implemented.
+    - [X] Function literals parse with structured LambdaParams nodes.
+    - [X] Match expressions implemented with guards and arms (MatchExpr, MatchArm, MatchGuard).
+    - [X] Block expressions implemented with statements (AssignmentStatement, ExpressionStatement).
+    - [X] Diagnostics and recovery paths for expression parsing failures present.
+    - [X] Parser tests in ExpressionParsingTests.cs; spec/sample.brim and spec/grammar.md updated.
+
+- [ ] **Phase 7 (Construct Expressions & Aggregates)**
+    - [X] Basic aggregate construction syntax parsed (struct `%{}`, union `|{}`, tuple `#{}`, flags `&{}`).
+    - [ ] Field initialization nodes for struct/service constructions.
+    - [ ] Variant initialization for union constructions.
+    - [ ] Linear collection constructions: `seq[T]{ ... }`, `buf[T]{ ... }`.
+    - [ ] Option/Result wrapper constructions: `?{ expr }`, `!{ expr }`, `!!{ expr }`.
+
+- [P] **Phase 8 (Match, Patterns, Loops)**
+    - [X] Match expressions with guards implemented (MatchExpr, MatchArm, MatchGuard).
+    - [P] Pattern AST: Currently patterns parsed as expressions (ExprNode); need dedicated pattern nodes.
+    - [ ] Pattern nodes: Wildcard, Identifier, TuplePattern, VariantPattern, Option/Result Patterns, FlagPattern.
+    - [ ] Parse match arms: pattern (guard?) => expr with proper pattern parsing (not expression parsing).
+    - [ ] Loop parsing: `@{ ... @}` with `@>` (continue) and `<@ expr` (break) — currently deferred.
+    - [ ] List rest patterns: Nail down `..rest` rules and exhaustiveness interactions; add 2–3 canonical examples.
+
+- [ ] **Phase 9 (Lifecycle & Control Flow)**
+    - [X] Service lifecycle declarations (constructors with `^`, destructors with `~`).
+    - [X] Lifecycle binding syntax: `name :Type ~= expr` parsed.
+    - [ ] Loop parsing: `@{ ... @}` with `@>` (continue) and `<@ expr` (break).
+    - [ ] Defer statements for cleanup.
+
 - [ ] **Semantic Backlog (post-parse)**
     - [ ] Module bindings: reject exports of mutable symbols (or document semantics).
     - [ ] Module bindings: consistent error for stray `:` without a following `=` at module scope.
     - [ ] Services & protocols: diagnostics for missing receiver, duplicate protocols, invalid implements lists.
     - [ ] Expressions: diagnostics for common operator misuse (e.g., mixing incompatible types).
+    - [ ] Pattern exhaustiveness checking for match expressions.
+    - [ ] Type checking and inference.
+
+- [ ] **Future Work**
+    - [ ] Semantic layer: bindings, scope resolution, type inference.
+    - [ ] Warning pass: unused imports, unreachable code, unused bindings.
+    - [ ] Formatter: canonical code style enforcement.
+    - [ ] LSP server: completions, go-to-definition, diagnostics.
+    - [ ] Code generation: WASM via WIT/Component Model.
+
 - [ ] **At any time**
-    - [ ] Improve comment attachment in `SignficantProducer`.
+    - [ ] Improve comment attachment in `SignificantProducer`.
+    - [ ] Performance profiling and optimization of hot paths.
