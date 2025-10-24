@@ -28,7 +28,7 @@ GreenNode(SyntaxKind.TypeRef, QualifiedIdent.Offset)
     return new TypeRef(qualifiedIdent, args);
   }
 
-  public static TypeRef ParseAfterName(Parser p, GreenToken name)
+  public static TypeRef WithGenericArgs(Parser p, GreenToken name)
   {
     GenericArgumentList args = GenericArgumentList.Parse(p);
     QualifiedIdent qualifiedIdent = new([], name);

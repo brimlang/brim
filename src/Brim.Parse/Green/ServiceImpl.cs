@@ -41,7 +41,7 @@ public sealed record ServiceImpl(
     GreenToken head = p.ExpectSyntax(SyntaxKind.IdentifierToken);
     GreenNode sref = head;
     if (p.MatchRaw(RawKind.LBracket))
-      sref = TypeRef.ParseAfterName(p, head);
+      sref = TypeRef.WithGenericArgs(p, head);
 
     GreenToken recvOpen = p.ExpectSyntax(SyntaxKind.LessToken);
     GreenToken rid = p.ExpectSyntax(SyntaxKind.IdentifierToken); // allow '_'
