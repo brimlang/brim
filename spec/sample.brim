@@ -111,6 +111,7 @@ UserService<UserProtocol,AuthProtocol>(svc :@) {
   }
 }
 
+-- shorthand function syntax
 check :(uname :str, pass :str, perms :Perms) bool {
   perms =>
     &(+exec) => true

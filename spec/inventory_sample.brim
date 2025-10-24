@@ -22,9 +22,9 @@ validate ::= std::validation
 
 -- Type definitions
 
-ItemId := u64
+ItemId   := u64
 Quantity := i32
-Price := f64
+Price    := f64
 
 ItemCategory := |{
   Electronics :str,
@@ -56,28 +56,28 @@ StockLevel := |{
 }
 
 InventoryItem := %{
-  id          :ItemId,
-  name        :str,
-  description :str?,
-  category    :ItemCategory,
-  status      :ItemStatus,
-  location    :WarehouseLocation,
-  stock_level :StockLevel,
-  price       :Price,
-  last_updated:time.Timestamp,
+  id           :ItemId,
+  name         :str,
+  description  :str?,
+  category     :ItemCategory,
+  status       :ItemStatus,
+  location     :WarehouseLocation,
+  stock_level  :StockLevel,
+  price        :Price,
+  last_updated :time.Timestamp,
 }
 
 -- Validation functions
 
-validate_quantity :(qty :Quantity) bool = |qty|> {
+validate_quantity :(Quantity) bool = |qty|> {
   qty >= 0
 }
 
-validate_price :(price :Price) bool = |price|> {
+validate_price :(Price) bool = |price|> {
   price >= 0.0
 }
 
-is_low_stock :(level :StockLevel) bool = |level|> {
+is_low_stock :(StockLevel) bool = |level|> {
   level =>
     LowStock = n ?? n < 10 => true
     InStock = n ?? n < 20  => true
@@ -216,7 +216,7 @@ InventoryService {
     log.info("Initializing inventory service")
     @{
       items = initial_items,
-      next_id = seqops.length(initial_items) :> u64,
+      next_id = seqops.length(initial_items) :> ItemId,
       audit_log = seq[str]{ "Service initialized" },
     }
   }
@@ -255,22 +255,22 @@ InventoryService<InventoryProtocol>(svc :@) {
   update_item :(id :ItemId, delta :Quantity) InventoryItem! {
     item := get_item(id)?
     updated := update_stock(item, delta)?
-    
+
     idx := find_index(svc.items, id)
     svc.items = seqops.update_at(svc.items, idx, updated)
     svc.audit_log = seqops.append(svc.audit_log, "Updated stock for item: " + item.name)
-    
+
     !{ updated }
   }
 
   set_price :(id :ItemId, price :Price) InventoryItem! {
     item := get_item(id)?
     updated := update_price(item, price)?
-    
+
     idx := find_index(svc.items, id)
     svc.items = seqops.update_at(svc.items, idx, updated)
     svc.audit_log = seqops.append(svc.audit_log, "Updated price for item: " + item.name)
-    
+
     !{ updated }
   }
 
