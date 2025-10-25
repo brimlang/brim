@@ -2,13 +2,20 @@
 
 > Pre-release Policy: Brim is in its initial pre-release phase. All language, toolchain, and library surfaces are subject to change without deprecation cycles or migration shims. Specs and this file always describe the current state; do not preserve legacy syntax or behaviors. Remove outdated guidance instead of marking it deprecated. Once a formal 1.0 stabilization plan begins, an explicit compatibility policy will be added here.
 
+**CRITICAL:** Use the repo-local `tmp/` directory for all temporary files. NEVER use global `/tmp/` or other system temp directories.
+
 1. Setup: `mise trust && mise install` (installs dotnet 9 + tasks).
 2. Build: `mise run build` (or `dotnet build`); AOT: `mise run aot:linux-x64:publish`.
 3. Lint (verify): `mise run lint`; Auto-format: `mise run format` (CI fails on unformatted code).
 4. Test all: `mise run test`; Single test project: `dotnet test tests/Brim.Parse.Tests -c Release -f net9.0 --filter FullyQualifiedName~ParserPredictionTests`.
 5. Fast inner-loop examples: lex `mise rx lex ./demo.brim`; parse `mise rx parse ./demo.brim`; diagnostics `mise rx parse --diagnostics ./demo.brim`.
-6. Language/Compiler rules: grammar must remain LL(k≤4); no lookahead >4; prefer table-driven predictions over nested switches. Keep `spec/sample.brim`, `spec/grammar.md`, `spec/fundamentals.md`, and `spec/unicode.md` in agreement; review the entire set whenever one changes, and if you find a mismatch or unclear direction, stop and ask the requester which version to follow before continuing.
-6.1 Lexer policy (for prediction stability):
+6. Language/Compiler rules: grammar must remain LL(k≤4); no lookahead >4; prefer table-driven predictions over nested switches. Keep `spec/sample.brim`, `spec/grammar.md`, `spec/fundamentals.md`, `spec/unicode.md`, and `spec/functions.md` in agreement; review the entire set whenever one changes, and if you find a mismatch or unclear direction, stop and ask the requester which version to follow before continuing.
+6.1 **Brim function syntax is unique and has three distinct forms** (see spec/functions.md):
+    - **Type declaration**: `Name := (Type, ...) Ret` creates a function type alias (no param names)
+    - **Value declaration**: `name :(Type, ...) Ret = expr` binds a function value (often a lambda)
+    - **Combined declaration**: `name :(param :Type, ...) Ret { body }` shorthand with named params (block required, NOT YET IMPLEMENTED)
+    - Do NOT conflate these forms or assume conventions from other languages apply
+6.2 Lexer policy (for prediction stability):
     - Greedy matching of compound glyphs using an ASCII table; longest-match wins. Sequences up to 3 characters (e.g., `::=`, `<<`, `|{`, `*{`, `!!{`, `[[`, `]]`, `.{`, `??`) are single tokens. A 4th char may be added in future; never regress to shorter fragments. Example: `[[` is a single token, never two `[` tokens.
     - Runs collapse to one token: non-terminator whitespace → one `WhitespaceTrivia`; newline runs → one `Terminator`.
     - Identifiers lex as single tokens (Unicode-aware start/part rules). Comments (`-- …\n`) lex as single `CommentTrivia`.
