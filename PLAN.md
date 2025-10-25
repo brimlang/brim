@@ -57,12 +57,13 @@
     - [X] TypeExpr.Parse handles `?` and `!` suffixes as GreenToken stored in TypeExpr.Suffix.
     - [X] No chaining: single suffix only (enforced by parser structure).
 
-- [P] **Phase 5 (Services & Protocols)**
+- [X] **Phase 5 (Services & Protocols)**
     - [X] Parse protocol shapes: `.{ methodSig (, methodSig)* }` via ProtocolShape node.
     - [X] Parse service state shapes: `@{ field, ... }` via ServiceShape node.
-    - [P] Parse service type declarations with protocol bounds and implementations.
-    - [ ] Members: constructors `(params) @!`, methods, destructor `~(params) Type`.
-    - Note: Service declarations exist in SyntaxKind but full implementation surface incomplete.
+    - [X] Parse service type declarations with protocol bounds and implementations.
+    - [X] Service lifecycle declarations: constructors `(params) @! { ... }`, destructors `~(params) Type { ... }`.
+    - [X] Service protocol implementations: `ServiceType<Protocols>(receiver) { methods }`.
+    - Implementation: ServiceLifecycleDecl, ServiceProtocolDecl, ServiceMethodDecl nodes fully functional.
 
 - [X] **Phase 6 – Expression Layer & Operators**
     - [X] Operator catalogue, precedence tiers documented in spec/grammar.md lines 121-175.
