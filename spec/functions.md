@@ -70,35 +70,41 @@ ident[T] :(T) T = |x|> x
 
 ## 3. Function Combined Declaration (Shorthand)
 
-Declares and defines a function in one statement with **named parameters**. This is syntactic sugar that combines type and implementation.
+Declares and defines a function in one statement with **named parameters**. This is syntactic sugar that combines type and implementation. **Block body is required.**
 
 **Syntax:**
 ```
 name :(param :Type, ...) ReturnType { body }
-name :(param :Type, ...) ReturnType => expression
 ```
 
 **Examples:**
 ```brim
--- Block body
+-- Block body (required form)
 add_d :(a :i32, b :i32) i32 {
   fold(ints, a + b, |x, y|> x + y)
 }
 
--- Arrow expression body
-get_one :() i32 => 42
+-- Single expression (still needs braces)
+square :(x :i32) i32 { x * x }
 
 -- With generics
-apply[T] :(f :(T) T, x :T) T => f(x)
+apply[T] :(f :(T) T, x :T) T { f(x) }
 ```
 
 **Key characteristics:**
 - Uses colon `:` followed by parameter list with **named** parameters
 - Parameters are `name :Type` pairs
 - No bind operator between signature and body
-- Body is either `{ ... }` block or `=> expr` arrow expression
+- Body **must be** a block `{ ... }` (no arrow form)
 - Generic parameters go on the **function name**
 - This is **NOT** a value binding—it's its own declaration form
+
+**Rationale for block-only:**
+- Same token count as arrow form (`{ expr }` vs `=> expr`)
+- Keeps `=>` exclusively for match expressions
+- Clear visual distinction from value declarations with lambdas
+- Simpler grammar and implementation
+- Forces consistency—all combined declarations look the same
 
 ## Comparison Table
 
@@ -106,7 +112,7 @@ apply[T] :(f :(T) T, x :T) T => f(x)
 |------|---------|--------|------------|----------|
 | Type Decl | `:=` | Types only | Type expression | Define reusable function type |
 | Value Decl | `=` | In lambda | Expression (often lambda) | Bind function value to name |
-| Combined | none | Named in sig | Block or arrow expr | Define function with body |
+| Combined | none | Named in sig | Block (required) | Define function with body |
 
 ## Complete Example
 
@@ -120,13 +126,13 @@ add :BinaryOp = |a, b|> a + b
 -- 2. Value declaration with inline type
 sub :(i32, i32) i32 = |a, b|> a - b
 
--- 3. Combined declaration with block
+-- 3. Combined declaration with block (required form)
 mul :(a :i32, b :i32) i32 {
   a * b
 }
 
--- 3. Combined declaration with arrow
-div :(a :i32, b :i32) i32 => a / b
+-- 3. Combined declaration with single expression (still needs braces)
+div :(a :i32, b :i32) i32 { a / b }
 ```
 
 ## Grammar Rules
@@ -144,8 +150,7 @@ FunctionDecl    : IDENT GenericParams? ':' ParamList ReturnType FunctionBody
 -- Supporting productions
 ParamList       : ParenListOpt<ParamDecl>
 ParamDecl       : IDENT ':' TypeExpr
-FunctionBody    : '=>' Expr
-                | BlockExpr
+FunctionBody    : BlockExpr                    -- Block is required (no arrow form)
 FunctionType    : ParenListOpt<TypeExpr> TypeExpr
 ```
 
