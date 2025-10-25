@@ -100,8 +100,7 @@ Fences labeled hgf are in 'hinky grammar format', a highly custom variant of EBN
 | `(Type, ...) Ret`                          | type         | Function type expression.                                    |
 | `Name := (Type, ...) Ret`                  | type decl    | Function type alias (params are types only).                 |
 | `name :(Type, ...) Ret = expr`             | value decl   | Function value binding (often with lambda).                  |
-| `name :(param :Type, ...) Ret { body }`    | combined     | Function declaration shorthand (params are named). **NOT IMPLEMENTED** |
-| `name :(param :Type, ...) Ret => expr`     | combined     | Function declaration with arrow body. **NOT IMPLEMENTED**    |
+| `name :(param :Type, ...) Ret { body }`    | combined     | Function declaration shorthand (params are named, block required). **NOT IMPLEMENTED** |
 | `|params|> expr` / `||> expr`              | expression   | Function literal with optional block body.                   |
 | `expr.member(args?)`                       | expression   | Member access or method invocation.                          |
 | `=[pkg::ns]=`                              | module       | Module header; must be first declaration.                    |
@@ -370,11 +369,13 @@ TypeDecl        : IDENT GenericParams? BIND_TYPE TypeExpr
 FunctionDecl    : IDENT GenericParams? ':' ParamList TypeExpr FunctionBody
                   -- Examples:
                   --   add :(a :i32, b :i32) i32 { a + b }
-                  --   get[T] :(x :T) T => x
+                  --   get[T] :(x :T) T { x }
                   -- NOTE: This form is NOT YET IMPLEMENTED
+                  -- NOTE: Block form is REQUIRED (no arrow form)
 
 ParamList       : ParenListOpt<ParamDecl>
 ParamDecl       : IDENT ':' TypeExpr
+FunctionBody    : BlockExpr
 
 ExportDecl      : EXPORT_OPEN CommaList<IDENT> EXPORT_CLOSE
 
