@@ -7,7 +7,7 @@ public sealed record FunctionParam(
   : GreenNode(SyntaxKind.FunctionParameter, Name.Offset)
 {
   public override int FullWidth => Type.EndOffset - Name.Offset;
-  
+
   public override IEnumerable<GreenNode> GetChildren()
   {
     yield return Name;
@@ -34,7 +34,7 @@ public sealed record FunctionDeclaration(
   : GreenNode(SyntaxKind.FunctionDeclaration, Name.Offset)
 {
   public override int FullWidth => Terminator.EndOffset - Name.Offset;
-  
+
   public override IEnumerable<GreenNode> GetChildren()
   {
     yield return Name;
@@ -48,7 +48,7 @@ public sealed record FunctionDeclaration(
   public static FunctionDeclaration ParseAfterName(Parser p, DeclarationName name)
   {
     GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
-    
+
     CommaList<FunctionParam> parameters = CommaList<FunctionParam>.Parse(
       p,
       SyntaxKind.OpenParenToken,

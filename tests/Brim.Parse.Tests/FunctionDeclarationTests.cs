@@ -14,10 +14,10 @@ public class FunctionDeclarationTests
 
     FunctionDeclaration decl = ParserTestHelpers.GetMember<FunctionDeclaration>(module, 0);
     Assert.Equal(2, decl.Parameters.Elements.Length);
-    
+
     FunctionParam firstParam = decl.Parameters.Elements[0].Node;
     Assert.Equal("a", firstParam.Name.Token.Value(src));
-    
+
     BlockExpr body = Assert.IsType<BlockExpr>(decl.Body);
     Assert.IsType<BinaryExpr>(body.Result);
   }
@@ -38,7 +38,7 @@ public class FunctionDeclarationTests
   [Fact]
   public void FunctionDecl_DistinctFromValueDecl()
   {
-    string src = Header + 
+    string src = Header +
       "add_val :(i32, i32) i32 = |a, b|> a + b\n" +
       "add_fn :(a :i32, b :i32) i32 { a + b }\n";
     BrimModule module = ParserTestHelpers.ParseModule(src);

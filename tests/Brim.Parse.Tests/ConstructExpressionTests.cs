@@ -14,7 +14,7 @@ public class ConstructExpressionTests
 
     ValueDeclaration decl = ParserTestHelpers.GetMember<ValueDeclaration>(module, 0);
     SeqConstruct seq = Assert.IsType<SeqConstruct>(decl.Initializer);
-    
+
     Assert.NotNull(seq.GenericArgs);
     Assert.Equal(5, seq.Elements.Elements.Length);
   }
@@ -26,7 +26,7 @@ public class ConstructExpressionTests
     BrimModule module = ParserTestHelpers.ParseModule(src);
 
     ValueDeclaration decl = ParserTestHelpers.GetMember<ValueDeclaration>(module, 0);
-    
+
     // seq without generic args is parsed as identifier (no construct form)
     Assert.IsType<IdentifierExpr>(decl.Initializer);
   }
@@ -39,9 +39,9 @@ public class ConstructExpressionTests
 
     ValueDeclaration decl = ParserTestHelpers.GetMember<ValueDeclaration>(module, 0);
     StructConstruct construct = Assert.IsType<StructConstruct>(decl.Initializer);
-    
+
     Assert.Equal(2, construct.Fields.Elements.Length);
-    
+
     FieldInit nameField = construct.Fields.Elements[0].Node;
     Assert.Equal("name", nameField.Name.Token.Value(src));
     Assert.IsType<LiteralExpr>(nameField.Value);
@@ -55,7 +55,7 @@ public class ConstructExpressionTests
 
     ValueDeclaration decl = ParserTestHelpers.GetMember<ValueDeclaration>(module, 0);
     UnionConstruct construct = Assert.IsType<UnionConstruct>(decl.Initializer);
-    
+
     Assert.Equal("Admin", construct.Variant.Name.Token.Value(src));
     Assert.NotNull(construct.Variant.EqualsToken);
     Assert.NotNull(construct.Variant.Value);
@@ -69,7 +69,7 @@ public class ConstructExpressionTests
 
     ValueDeclaration decl = ParserTestHelpers.GetMember<ValueDeclaration>(module, 0);
     UnionConstruct construct = Assert.IsType<UnionConstruct>(decl.Initializer);
-    
+
     Assert.Equal("Banned", construct.Variant.Name.Token.Value(src));
     Assert.Null(construct.Variant.EqualsToken);
     Assert.Null(construct.Variant.Value);
@@ -83,11 +83,11 @@ public class ConstructExpressionTests
 
     ValueDeclaration decl = ParserTestHelpers.GetMember<ValueDeclaration>(module, 0);
     MatchExpr match = Assert.IsType<MatchExpr>(decl.Initializer);
-    
+
     MatchArm firstArm = match.Arms.Arms[0];
     FlagsConstruct flags = Assert.IsType<FlagsConstruct>(firstArm.Target);
     Assert.Equal(3, flags.Flags.Elements.Length);
-    
+
     MatchArm secondArm = match.Arms.Arms[1];
     FlagsConstruct singleFlag = Assert.IsType<FlagsConstruct>(secondArm.Target);
     Assert.Equal(1, singleFlag.Flags.Elements.Length);
@@ -101,7 +101,7 @@ public class ConstructExpressionTests
 
     ValueDeclaration decl = ParserTestHelpers.GetMember<ValueDeclaration>(module, 0);
     OptionConstruct opt = Assert.IsType<OptionConstruct>(decl.Initializer);
-    
+
     Assert.NotNull(opt.Value);
     Assert.IsType<LiteralExpr>(opt.Value);
   }
@@ -114,7 +114,7 @@ public class ConstructExpressionTests
 
     ValueDeclaration decl = ParserTestHelpers.GetMember<ValueDeclaration>(module, 0);
     OptionConstruct opt = Assert.IsType<OptionConstruct>(decl.Initializer);
-    
+
     Assert.Null(opt.Value);
   }
 
@@ -126,7 +126,7 @@ public class ConstructExpressionTests
 
     ValueDeclaration decl = ParserTestHelpers.GetMember<ValueDeclaration>(module, 0);
     ResultConstruct result = Assert.IsType<ResultConstruct>(decl.Initializer);
-    
+
     Assert.IsType<LiteralExpr>(result.Value);
   }
 
@@ -138,7 +138,7 @@ public class ConstructExpressionTests
 
     ValueDeclaration decl = ParserTestHelpers.GetMember<ValueDeclaration>(module, 0);
     ErrorConstruct error = Assert.IsType<ErrorConstruct>(decl.Initializer);
-    
+
     Assert.IsType<LiteralExpr>(error.Value);
   }
 
@@ -151,7 +151,7 @@ public class ConstructExpressionTests
     ValueDeclaration decl = ParserTestHelpers.GetMember<ValueDeclaration>(module, 0);
     FunctionLiteral lambda = Assert.IsType<FunctionLiteral>(decl.Initializer);
     BlockExpr block = Assert.IsType<BlockExpr>(lambda.Body);
-    
+
     StructConstruct construct = Assert.IsType<StructConstruct>(block.Result);
     Assert.Equal(2, construct.Fields.Elements.Length);
   }
@@ -164,7 +164,7 @@ public class ConstructExpressionTests
 
     ValueDeclaration decl = ParserTestHelpers.GetMember<ValueDeclaration>(module, 0);
     TupleConstruct tuple = Assert.IsType<TupleConstruct>(decl.Initializer);
-    
+
     Assert.Equal(3, tuple.Elements.Elements.Length);
   }
 
@@ -176,7 +176,7 @@ public class ConstructExpressionTests
 
     ValueDeclaration decl = ParserTestHelpers.GetMember<ValueDeclaration>(module, 0);
     ServiceConstruct service = Assert.IsType<ServiceConstruct>(decl.Initializer);
-    
+
     Assert.Equal(2, service.Fields.Elements.Length);
   }
 
@@ -188,9 +188,9 @@ public class ConstructExpressionTests
 
     ValueDeclaration decl = ParserTestHelpers.GetMember<ValueDeclaration>(module, 0);
     ServiceConstruct service = Assert.IsType<ServiceConstruct>(decl.Initializer);
-    
+
     Assert.Equal(2, service.Fields.Elements.Length);
-    
+
     FieldInit countField = service.Fields.Elements[0].Node;
     Assert.Equal("count", countField.Name.Token.Value(src));
   }
@@ -204,24 +204,24 @@ public class ConstructExpressionTests
     FunctionDeclaration func = ParserTestHelpers.GetMember<FunctionDeclaration>(module, 0);
     BlockExpr block = Assert.IsType<BlockExpr>(func.Body);
     ServiceConstruct service = Assert.IsType<ServiceConstruct>(block.Result);
-    
+
     Assert.Single(service.Fields.Elements);
   }
 
   [Fact]
   public void ServiceConstruct_BareForm_InConstructorBody()
   {
-    string src = Header + 
+    string src = Header +
       "MyService := @{ count :i32 }\n" +
       "MyService { (initial :i32) @! { @{ count = initial } } }\n";
     BrimModule module = ParserTestHelpers.ParseModule(src);
 
     ServiceLifecycleDecl lifecycle = ParserTestHelpers.GetMember<ServiceLifecycleDecl>(module, 1);
     ServiceCtorDecl ctor = Assert.IsType<ServiceCtorDecl>(lifecycle.Members[0]);
-    
+
     BlockExpr block = Assert.IsType<BlockExpr>(ctor.Block);
     ServiceConstruct service = Assert.IsType<ServiceConstruct>(block.Result);
-    
+
     Assert.Single(service.Fields.Elements);
   }
 
@@ -233,9 +233,9 @@ public class ConstructExpressionTests
 
     ValueDeclaration decl = ParserTestHelpers.GetMember<ValueDeclaration>(module, 0);
     ServiceConstruct outer = Assert.IsType<ServiceConstruct>(decl.Initializer);
-    
+
     Assert.Equal(3, outer.Fields.Elements.Length);
-    
+
     FieldInit nestedField = outer.Fields.Elements[2].Node;
     ServiceConstruct inner = Assert.IsType<ServiceConstruct>(nestedField.Value);
     Assert.Single(inner.Fields.Elements);

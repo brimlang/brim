@@ -10,220 +10,167 @@ public static class GreenNodeFormatter
   public static Markup RenderTree(string source, GreenNode root)
   {
     StringBuilder sb = new();
-    WriteNode(sb, source, root, [], isLast: true);
+    Walk(sb, source, root, "", isLast: true);
     return new Markup(sb.ToString());
   }
 
-  static void WriteNode(StringBuilder sb, string source, GreenNode node, List<bool> ancestorStates, bool isLast)
+  static void Walk(StringBuilder sb, string source, GreenNode node, string indent, bool isLast)
   {
-    // tree branch prefix - track which ancestor levels need continuation lines
-    // ancestorStates has one entry per ancestor level above this node
-    // The root has empty ancestorStates and no prefix; all others get a prefix
-    if (ancestorStates.Count > 0)
-    {
-      _ = sb.Append(' ');
-      // Print continuation lines for all ancestors except the immediate parent
-      for (int i = 0; i < ancestorStates.Count - 1; i++)
-        _ = sb.Append(ancestorStates[i] ? "    " : "│   ");
+    // Draw tree branch
+    _ = sb.Append(indent);
+    if (indent.Length > 0)
       _ = sb.Append(isLast ? "└── " : "├── ");
-    }
 
+    // Node name with color
+    string color = GetColor(node.Kind);
+    _ = sb.Append($"[{color}]").Append(node.Kind).Append("[/]");
+
+    // Location metadata
+    (int line, int col) = GetLocation(node);
     int width = node.FullWidth;
-    (int line, int col) = GetPrimaryLocation(node);
-    _ = sb
-      .Append(NodeColor(node.Kind))
-      .Append(node.Kind)
-      .Append("[/]")
-      .Append($" [dim]@{line}:{col}[[{width}]][/]");
+    _ = sb.Append($" [grey46]@{line}:{col}[[{width}]][/]");
 
-    GreenToken? tokenForComments = null;
-    switch (node)
+    // Token value if applicable
+    if (node is GreenToken token)
     {
-      case ServiceImpl si:
-        _ = sb.Append(" [yellow]svc=[/]").Append(Escape(si.ServiceRef.GetText(source)));
-        _ = sb.Append(" [yellow]recv=[/]").Append(Escape(si.ReceiverIdent.GetText(source)));
-        _ = sb.Append($" [dim]init_fields={si.InitDecls.Count} members={si.Members.Count}[/]");
-        break;
-      case TypeDeclaration td:
-        _ = sb.Append(" [yellow]name=[/]").Append(Escape(td.Name.Identifier.GetText(source)));
-        _ = sb.Append(" [yellow]type=[/]").Append(td.TypeNode.ToString());
-        break;
-      case ModuleDirective md:
-        _ = sb.Append(" [yellow]path=[/]").Append(Escape(md.ModuleHeader.GetText(source)));
-        break;
-      case ExportList ed:
-        _ = sb.Append(" [yellow]name=[/]").Append(Escape(ed.GetIdentifiersText(source)));
-        break;
-      case ImportDeclaration id:
-        _ = sb.Append(" [yellow]name=[/]").Append(Escape(id.Identifier.GetText(source)));
-        _ = sb.Append(" [yellow]from=[/]").Append(Escape(id.Path.GetText(source)));
-        break;
-      case StructShape ss:
-        _ = sb.Append($" [dim]fields={ss.FieldList.Elements.Count}[/]");
-        break;
-      case UnionShape us:
-        _ = sb.Append($" [dim]variants={us.VariantList.Elements.Count}[/]");
-        break;
-      case FlagsShape fs:
-        _ = sb.Append($" [dim]flags={fs.MemberList.Elements.Count}[/]");
-        break;
-      case NamedTupleShape nts:
-        _ = sb.Append($" [dim]elems={nts.ElementList.Elements.Count}[/]");
-        break;
-      case ProtocolShape ps:
-        _ = sb.Append($" [dim]methods={ps.MethodList.Elements.Count}[/]");
-        break;
-      case ServiceShape svs:
-        _ = sb.Append($" [dim]protos={svs.ProtocolList.Elements.Count}[/]");
-        break;
-      case GreenToken t:
-        _ = sb.Append(' ').Append(TokenSummary(t, source));
-        tokenForComments = t;
-        break;
-      default:
-        break;
+      string text = token.GetText(source);
+      if (token.SyntaxKind == SyntaxKind.TerminatorToken)
+        text = text.Replace("\r", "\\r").Replace("\n", "\\n");
+      _ = sb.Append(" [grey78]'").Append(Escape(text)).Append("'[/]");
     }
 
     _ = sb.Append('\n');
 
-    // append comments after newline so they are on their own lines
-    if (tokenForComments is not null)
-      AppendComments(sb, tokenForComments, source, ancestorStates, isLast);
-
-    // children - build proper ancestor tracking for indentation
+    // Process children
     List<GreenNode> children = [.. node.GetChildren()];
-    if (children.Count > 0)
-    {
-      // Root node (ancestorStates empty): add a sentinel to trigger prefix for children
-      // Other nodes: extend ancestor chain with this node's continuation state
-      List<bool> childAncestors = ancestorStates.Count == 0
-        ? [false]  // Sentinel: root's children get ` ├──` prefix with no continuation bars above
-        : [.. ancestorStates, isLast];
-        
-      for (int i = 0; i < children.Count; i++)
-        WriteNode(sb, source, children[i], childAncestors, i == children.Count - 1);
-    }
-  }
 
-  static string TokenSummary(GreenToken t, string source)
-  {
-    // if (t.Token.Kind == RawKind.Error) return "[red]<error>[/]";
-    string text = t.GetText(source);
-    if (t.SyntaxKind == SyntaxKind.TerminatorToken)
+    // For tokens with trivia, show trivia as pseudo-children first
+    int triviaCount = 0;
+    if (node is GreenToken tok && tok.HasLeading)
     {
-      // visualize newline(s)
-      text = text.Replace("\r", "\\r").Replace("\n", "\\n");
-    }
-    text = Escape(text);
-    return $"'{text}'"; // line:col now shown with the node header
-  }
-
-  static (int line, int col) GetPrimaryLocation(GreenNode node)
-  {
-    // For tokens, use their own coordinates
-    if (node is GreenToken gt)
-      return (gt.Token.Line, gt.Token.Column);
-
-    // Walk first-token descendant
-    foreach (GreenNode child in node.GetChildren())
-    {
-      (int line, int col) loc = GetPrimaryLocation(child);
-      if (loc.line != 0 || loc.col != 0) return loc; // found
-    }
-    return (0, 0); // unknown
-  }
-
-  static void AppendComments(StringBuilder sb, GreenToken token, string source, List<bool> ancestorStates, bool isLast)
-  {
-    if (!token.HasLeading) return;
-    foreach (RawToken trivia in token.LeadingTrivia)
-    {
-      if (trivia.Kind == RawKind.CommentTrivia)
+      SourceText sourceText = SourceText.From(source);
+      foreach (RawToken trivia in tok.LeadingTrivia)
       {
-        _ = sb.Append(' ');
-        // Draw continuation lines for all ancestors
-        for (int i = 0; i < ancestorStates.Count; i++)
-          _ = sb.Append(ancestorStates[i] ? "    " : "│   ");
-        // The token itself: if it's not the last child, draw continuation; otherwise spaces
-        _ = sb.Append(isLast ? "    " : "│   ");
-        // Add extra indentation since comment is conceptually inside the token
-        _ = sb.Append("    ");
-
-        SourceText sourceText = SourceText.From(source);
-        string txt = trivia.Value(sourceText.Span).Trim().ToString();
-        txt = Escape(txt);
-        _ = sb.Append("[dim]# ").Append(txt).Append($" @{trivia.Line}:{trivia.Column}[/]\n");
+        if (trivia.Kind == RawKind.CommentTrivia)
+          triviaCount++;
       }
     }
+
+    int totalChildren = children.Count + triviaCount;
+    string childIndent = indent.Length == 0
+      ? " "
+      : indent + (isLast ? "    " : "│   ");
+
+    // Render trivia first
+    if (node is GreenToken tkn && tkn.HasLeading)
+    {
+      SourceText sourceText = SourceText.From(source);
+      int triviaIndex = 0;
+      foreach (RawToken trivia in tkn.LeadingTrivia)
+      {
+        if (trivia.Kind == RawKind.CommentTrivia)
+        {
+          _ = sb.Append(childIndent);
+          bool isLastTrivia = (triviaIndex == triviaCount - 1) && children.Count == 0;
+          _ = sb.Append(isLastTrivia ? "└── " : "├── ");
+
+          string comment = trivia.Value(sourceText.Span).Trim().ToString();
+          _ = sb.Append("[green3]# ").Append(Escape(comment)).Append("[/]")
+            .Append($" [grey46]@{trivia.Line}:{trivia.Column}[[{trivia.Length}]][/]\n");
+          triviaIndex++;
+        }
+      }
+    }
+
+    // Then render actual children
+    for (int i = 0; i < children.Count; i++)
+      Walk(sb, source, children[i], childIndent, i == children.Count - 1);
+  }
+
+  static (int line, int col) GetLocation(GreenNode node)
+  {
+    if (node is GreenToken token)
+      return (token.Token.Line, token.Token.Column);
+
+    foreach (GreenNode child in node.GetChildren())
+    {
+      (int line, int col) = GetLocation(child);
+      if (line != 0 || col != 0)
+        return (line, col);
+    }
+    return (0, 0);
   }
 
   static string Escape(string s) => s.Replace("[", "[[").Replace("]", "]]");
 
-  static string NodeColor(SyntaxKind kind) => kind switch
+  static string GetColor(SyntaxKind kind) => kind switch
   {
-    // Error tokens - bright red
-    SyntaxKind.ErrorToken => "[red bold]",
+    // Structural - bold blue
+    SyntaxKind.Module => "blue bold",
+    SyntaxKind.ModuleDirective => "dodgerblue1",
 
-    // Key structural nodes - bold
-    SyntaxKind.Module => "[blue bold]",
-    SyntaxKind.ModuleDirective => "[green bold]",
+    // Declarations - distinct bright colors
+    SyntaxKind.FunctionDeclaration => "hotpink",
+    SyntaxKind.TypeDeclaration => "cyan1",
+    SyntaxKind.ValueDeclaration => "yellow1",
+    SyntaxKind.ImportDeclaration => "lime",
+    SyntaxKind.ExportList => "lime",
 
-    // Declarations - distinct colors
-    SyntaxKind.FunctionDeclaration => "[magenta]",
-    SyntaxKind.TypeDeclaration => "[cyan]",
-    SyntaxKind.ValueDeclaration => "[yellow]",
-    SyntaxKind.ImportDeclaration => "[green]",
-    SyntaxKind.ExportList => "[green]",
-    
-    // Service/Protocol specific
-    SyntaxKind.ProtocolDeclaration or
-    SyntaxKind.ServiceDeclaration or
-    SyntaxKind.ServiceLifecycleDecl or
-    SyntaxKind.ServiceProtocolDecl => "[teal]",
+    // Service/Protocol - teal/aqua tones
+    SyntaxKind.ServiceDeclaration => "aquamarine1",
+    SyntaxKind.ProtocolDeclaration => "turquoise2",
+    SyntaxKind.ServiceLifecycleDecl => "cyan3",
+    SyntaxKind.ServiceProtocolDecl => "cadetblue",
 
-    // Type shapes - yellow tones
-    SyntaxKind.StructShape or
-    SyntaxKind.UnionShape or
-    SyntaxKind.FlagsShape or
-    SyntaxKind.NamedTupleShape or
-    SyntaxKind.ProtocolShape or
-    SyntaxKind.FunctionShape or
-    SyntaxKind.ServiceShape => "[yellow]",
+    // Type shapes - orange/yellow tones
+    SyntaxKind.StructShape => "orange1",
+    SyntaxKind.UnionShape => "darkorange",
+    SyntaxKind.FlagsShape => "gold1",
+    SyntaxKind.NamedTupleShape => "yellow3",
+    SyntaxKind.ProtocolShape => "khaki1",
+    SyntaxKind.FunctionShape => "sandybrown",
+    SyntaxKind.ServiceShape => "lightsalmon1",
 
-    // Field/variant declarations
-    SyntaxKind.FieldDeclaration or
-    SyntaxKind.UnionVariantDeclaration or
-    SyntaxKind.FlagMemberDeclaration => "[olive]",
+    // Field/variant declarations - olive/green
+    SyntaxKind.FieldDeclaration => "darkseagreen",
+    SyntaxKind.UnionVariantDeclaration => "palegreen3",
+    SyntaxKind.FlagMemberDeclaration => "darkolivegreen1",
 
-    // Expressions - purple tones
-    SyntaxKind.BlockExpr or
-    SyntaxKind.CallExpr or
-    SyntaxKind.MatchExpr => "[purple]",
+    // Expressions - purple/magenta tones
+    SyntaxKind.BlockExpr => "mediumpurple1",
+    SyntaxKind.CallExpr => "orchid",
+    SyntaxKind.MatchExpr => "plum2",
 
-    SyntaxKind.ServiceConstruct or
-    SyntaxKind.StructConstruct or
-    SyntaxKind.SeqConstruct => "[mediumpurple]",
+    // Constructs - violet tones
+    SyntaxKind.ServiceConstruct => "violet",
+    SyntaxKind.StructConstruct => "mediumorchid1",
+    SyntaxKind.SeqConstruct => "thistle1",
 
-    // Lists and containers - muted purple
-    SyntaxKind.CommaList or
-    SyntaxKind.ListElement or
-    SyntaxKind.ParameterList or
-    SyntaxKind.FieldList => "[grey69]",
+    // Lists and containers - muted greys
+    SyntaxKind.CommaList => "grey69",
+    SyntaxKind.ListElement => "grey62",
+    SyntaxKind.ParameterList => "grey66",
+    SyntaxKind.FieldList => "grey63",
 
-    // Generic parameters - muted
-    SyntaxKind.GenericParameterList or
-    SyntaxKind.GenericArgumentList => "[grey69]",
+    // Generic parameters - light grey
+    SyntaxKind.GenericParameterList => "grey70",
+    SyntaxKind.GenericArgumentList => "grey70",
 
-    // Type references and identifiers
-    SyntaxKind.TypeRef or
-    SyntaxKind.QualifiedIdentifier => "[grey78]",
-    SyntaxKind.IdentifierToken => "[cyan]",
+    // Type references - steel/slate
+    SyntaxKind.TypeRef => "lightsteelblue",
+    SyntaxKind.QualifiedIdentifier => "lightskyblue3",
 
-    // Tokens - very muted
-    SyntaxKind.TerminatorToken => "[grey50]",
-    _ when kind.ToString().EndsWith("Token") => "[grey58]",
+    // Tokens - color by category
+    SyntaxKind.IdentifierToken => "cornflowerblue",
+    SyntaxKind.IntToken => "lightcoral",
+    SyntaxKind.StrToken => "lightgreen",
+    SyntaxKind.TerminatorToken => "grey50",
 
-    // Everything else - light grey
-    _ => "[grey74]",
+    // Keywords and operators - various
+    SyntaxKind.ErrorToken => "red bold",
+    _ when kind.ToString().EndsWith("Token") => "grey58",
+
+    // Default
+    _ => "grey74",
   };
 }
