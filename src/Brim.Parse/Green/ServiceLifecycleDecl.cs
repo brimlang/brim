@@ -88,7 +88,7 @@ public sealed partial record ServiceCtorDecl(
 
     GreenToken at = p.ExpectSyntax(SyntaxKind.ServiceImplToken);
     GreenToken bang = p.ExpectSyntax(SyntaxKind.BangToken);
-    BlockExpr expr = BlockExpr.SkipBlock(p);
+    BlockExpr expr = BlockExpr.Parse(p);
     return new ServiceCtorDecl(@params, at, bang, expr);
   }
 }
@@ -123,7 +123,7 @@ public sealed record ServiceDtorDecl(
       SyntaxKind.CloseParenToken,
       ServiceMethodParam.Parse);
     TypeExpr retType = TypeExpr.Parse(p);
-    BlockExpr expr = BlockExpr.SkipBlock(p);
+    BlockExpr expr = BlockExpr.Parse(p);
     return new ServiceDtorDecl(tilde, @params, retType, expr);
   }
 }
@@ -264,7 +264,7 @@ public sealed record ServiceMethodDecl(
       SyntaxKind.CloseParenToken,
       ServiceMethodParam.Parse);
     TypeExpr retType = TypeExpr.Parse(p);
-    BlockExpr expr = BlockExpr.SkipBlock(p);
+    BlockExpr expr = BlockExpr.Parse(p);
     return new ServiceMethodDecl(name, colon, @params, retType, expr);
   }
 }

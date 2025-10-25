@@ -179,4 +179,65 @@ public class ConstructExpressionTests
     
     Assert.Equal(2, service.Fields.Elements.Length);
   }
+
+  [Fact]
+  public void ServiceConstruct_BareForm()
+  {
+    string src = Header + "svc :MyService = @{ count = 42, name = \"test\" }\n";
+    BrimModule module = ParserTestHelpers.ParseModule(src);
+
+    ValueDeclaration decl = ParserTestHelpers.GetMember<ValueDeclaration>(module, 0);
+    ServiceConstruct service = Assert.IsType<ServiceConstruct>(decl.Initializer);
+    
+    Assert.Equal(2, service.Fields.Elements.Length);
+    
+    FieldInit countField = service.Fields.Elements[0].Node;
+    Assert.Equal("count", countField.Name.Token.Value(src));
+  }
+
+  [Fact]
+  public void ServiceConstruct_BareForm_InBlockExpression()
+  {
+    string src = Header + "make :(x :i32) MyService { @{ count = x } }\n";
+    BrimModule module = ParserTestHelpers.ParseModule(src);
+
+    FunctionDeclaration func = ParserTestHelpers.GetMember<FunctionDeclaration>(module, 0);
+    BlockExpr block = Assert.IsType<BlockExpr>(func.Body);
+    ServiceConstruct service = Assert.IsType<ServiceConstruct>(block.Result);
+    
+    Assert.Single(service.Fields.Elements);
+  }
+
+  [Fact]
+  public void ServiceConstruct_BareForm_InConstructorBody()
+  {
+    string src = Header + 
+      "MyService := @{ count :i32 }\n" +
+      "MyService { (initial :i32) @! { @{ count = initial } } }\n";
+    BrimModule module = ParserTestHelpers.ParseModule(src);
+
+    ServiceLifecycleDecl lifecycle = ParserTestHelpers.GetMember<ServiceLifecycleDecl>(module, 1);
+    ServiceCtorDecl ctor = Assert.IsType<ServiceCtorDecl>(lifecycle.Members[0]);
+    
+    BlockExpr block = Assert.IsType<BlockExpr>(ctor.Block);
+    ServiceConstruct service = Assert.IsType<ServiceConstruct>(block.Result);
+    
+    Assert.Single(service.Fields.Elements);
+  }
+
+  [Fact]
+  public void ServiceConstruct_BareForm_NestedFields()
+  {
+    string src = Header + "data :MyService = @{ x = 1, y = 2, nested = @{ z = 3 } }\n";
+    BrimModule module = ParserTestHelpers.ParseModule(src);
+
+    ValueDeclaration decl = ParserTestHelpers.GetMember<ValueDeclaration>(module, 0);
+    ServiceConstruct outer = Assert.IsType<ServiceConstruct>(decl.Initializer);
+    
+    Assert.Equal(3, outer.Fields.Elements.Length);
+    
+    FieldInit nestedField = outer.Fields.Elements[2].Node;
+    ServiceConstruct inner = Assert.IsType<ServiceConstruct>(nestedField.Value);
+    Assert.Single(inner.Fields.Elements);
+  }
 }

@@ -149,6 +149,9 @@ public sealed partial class Parser
       case RawKind.BangBangLBrace:
         return ParseErrorConstruct();
 
+      case RawKind.AtmarkLBrace:
+        return ParseBareServiceConstruct();
+
       default:
         RawToken unexpected = ExpectRaw(Current.Kind);
         _diags.Add(Diagnostic.Unexpected(unexpected, []));
@@ -428,6 +431,23 @@ public sealed partial class Parser
   ExprNode ParseServiceConstruct(GreenToken typeIdent)
   {
     QualifiedIdent qualifiedIdent = new([], typeIdent);
+    TypeRef typeRef = new(qualifiedIdent, null);
+
+    CommaList<FieldInit> fields = CommaList<FieldInit>.Parse(
+      this,
+      SyntaxKind.ServiceToken,
+      SyntaxKind.CloseBlockToken,
+      p => FieldInit.Parse(p));
+
+    return new ServiceConstruct(typeRef, fields);
+  }
+
+  ExprNode ParseBareServiceConstruct()
+  {
+    // Bare @{ field = expr, ... } without type prefix
+    // Create a missing/empty type reference
+    GreenToken missingType = FabricateMissing(SyntaxKind.IdentifierToken, RawKind.Identifier);
+    QualifiedIdent qualifiedIdent = new([], missingType);
     TypeRef typeRef = new(qualifiedIdent, null);
 
     CommaList<FieldInit> fields = CommaList<FieldInit>.Parse(
