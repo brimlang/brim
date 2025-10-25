@@ -56,13 +56,12 @@
     - [X] Add type parser support for postfix `?` / `!` creating optional/fallible type suffixes.
     - [X] TypeExpr.Parse handles `?` and `!` suffixes as GreenToken stored in TypeExpr.Suffix.
     - [X] No chaining: single suffix only (enforced by parser structure).
-    - [ ] Add diagnostics for misuse if needed (currently parsing captures suffix cleanly).
 
 - [P] **Phase 5 (Services & Protocols)**
     - [X] Parse protocol shapes: `.{ methodSig (, methodSig)* }` via ProtocolShape node.
     - [X] Parse service state shapes: `@{ field, ... }` via ServiceShape node.
     - [P] Parse service type declarations with protocol bounds and implementations.
-    - [ ] Members: constructors `^(forms)`, methods, destructor `~()`.
+    - [ ] Members: constructors `(params) @!`, methods, destructor `~(params) Type`.
     - Note: Service declarations exist in SyntaxKind but full implementation surface incomplete.
 
 - [X] **Phase 6 – Expression Layer & Operators**
@@ -93,13 +92,11 @@
     - [P] Pattern AST: Currently patterns parsed as expressions (ExprNode); need dedicated pattern nodes.
     - [ ] Pattern nodes: Wildcard, Identifier, TuplePattern, VariantPattern, Option/Result Patterns, FlagPattern.
     - [ ] Parse match arms: pattern (guard?) => expr with proper pattern parsing (not expression parsing).
-    - [ ] Loop parsing: `@{ ... @}` with `@>` (continue) and `<@ expr` (break) — currently deferred.
     - [ ] List rest patterns: Nail down `..rest` rules and exhaustiveness interactions; add 2–3 canonical examples.
 
 - [ ] **Phase 9 (Lifecycle & Control Flow)**
-    - [X] Service lifecycle declarations (constructors with `^`, destructors with `~`).
+    - [ ] Service lifecycle declarations (constructors `(params) @!`, destructors `~(params) Type`).
     - [X] Lifecycle binding syntax: `name :Type ~= expr` parsed.
-    - [ ] Loop parsing: `@{ ... @}` with `@>` (continue) and `<@ expr` (break).
     - [ ] Defer statements for cleanup.
 
 - [ ] **Semantic Backlog (post-parse)**

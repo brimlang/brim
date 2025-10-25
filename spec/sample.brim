@@ -62,7 +62,7 @@ UserService {
   (seed :Perms) @! {
     @{
       perms = seed,
-      audit = seq{},
+      audit = seq[str]{},
     }
   }
 

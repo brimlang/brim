@@ -165,6 +165,4 @@ The parser must distinguish between forms 2 and 3 after seeing `name :`. The key
 Current implementation status:
 - ✅ Form 1 (Type declarations) - fully implemented as TypeDeclaration
 - ✅ Form 2 (Value declarations) - fully implemented as ValueDeclaration  
-- ⚠️ Form 3 (Combined declarations) - **NOT YET IMPLEMENTED**
-
-Form 3 requires a new FunctionDeclaration node type and parser logic to distinguish it from form 2.
+- ✅ Form 3 (Combined declarations) - fully implemented as FunctionDeclaration
