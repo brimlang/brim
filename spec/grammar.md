@@ -95,13 +95,16 @@ Fences labeled hgf are in 'hinky grammar format', a highly custom variant of EBN
 ### Function & Member Surfaces
 
 
-| Surface                                    | Category     | Notes                                      |
-| ---------------------------------          | ------------ | -------                                    |
-| `(Type, ...) Ret`                          | type         | Function type.                             |
-| `|params|> expr` / `||> expr`              | expression   | Function literal with optional block body. |
-| `f :(Type, ...) Ret = ...`                 | declaration  | Named function/value binding.              |
-| `expr.member(args?)`                       | expression   | Member access or method invocation.        |
-| `=[pkg::ns]=`                              | module       | Module header; must be first declaration.  |
+| Surface                                    | Category     | Notes                                                        |
+| ---------------------------------          | ------------ | ------------------------------------------------------------ |
+| `(Type, ...) Ret`                          | type         | Function type expression.                                    |
+| `Name := (Type, ...) Ret`                  | type decl    | Function type alias (params are types only).                 |
+| `name :(Type, ...) Ret = expr`             | value decl   | Function value binding (often with lambda).                  |
+| `name :(param :Type, ...) Ret { body }`    | combined     | Function declaration shorthand (params are named). **NOT IMPLEMENTED** |
+| `name :(param :Type, ...) Ret => expr`     | combined     | Function declaration with arrow body. **NOT IMPLEMENTED**    |
+| `|params|> expr` / `||> expr`              | expression   | Function literal with optional block body.                   |
+| `expr.member(args?)`                       | expression   | Member access or method invocation.                          |
+| `=[pkg::ns]=`                              | module       | Module header; must be first declaration.                    |
 
 
 ### Control, Aggregates & Construction
@@ -352,14 +355,23 @@ ConstraintList          : TypeRef ['+' TypeRef]*
 ```hgf
 Declaration     : ImportDecl
                 | TypeDecl
-                | FunctionDef
+                | FunctionDecl
                 | ExportDecl
                 | ServiceDecl
                 | BindingDecl
 
 ImportDecl      : IDENT BIND_MODULE ModuleRef
+
 TypeDecl        : IDENT GenericParams? BIND_TYPE TypeExpr
-FunctionDef     : IDENT GenericParams? ':' ParamList TypeExpr FunctionBody
+                  -- Examples:
+                  --   adder := (i32, i32) i32
+                  --   Result[T, E] := |{ Ok :T, Err :E }
+
+FunctionDecl    : IDENT GenericParams? ':' ParamList TypeExpr FunctionBody
+                  -- Examples:
+                  --   add :(a :i32, b :i32) i32 { a + b }
+                  --   get[T] :(x :T) T => x
+                  -- NOTE: This form is NOT YET IMPLEMENTED
 
 ParamList       : ParenListOpt<ParamDecl>
 ParamDecl       : IDENT ':' TypeExpr
@@ -370,8 +382,16 @@ BindingDecl     : LocalBinding
                 | MutAssign
 
 LocalBinding    : IDENT ':' TypeExpr BIND_VALUE Expr
+                  -- Examples:
+                  --   count :i32 = 42
+                  --   add :(i32, i32) i32 = |a, b|> a + b
+                  --   ident[T] :(T) T = |x|> x
                 | MUTABLE IDENT ':' TypeExpr BIND_VALUE Expr
+                  -- Example:
+                  --   ^counter :i32 = 0
                 | IDENT ':' TypeExpr BIND_SERVICE Expr
+                  -- Example:
+                  --   db :DbService ~= connect("localhost")
 
 MutAssign       : AssignTarget BIND_VALUE Expr
 AssignTarget    : IDENT ['.' IDENT]*

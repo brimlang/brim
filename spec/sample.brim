@@ -118,11 +118,24 @@ check :(uname :str, pass :str, perms :Perms) bool {
     _        => false
 }
 
-get_one :() int32 = ||> 42
-ident[T] :(T) T = |x|> x
+-- Function forms demonstration:
+
+-- Type declaration: creates a function type alias
 adder := (i32, i32) i32
+
+-- Value declaration: binds a function value (using type alias)
 add_a :adder = |a, b|> a + b
-add_b :(a :i32, b :i32) i32 = |a, b|> a + b
+
+-- Value declaration: binds a function value (inline function type)
+add_b :(i32, i32) i32 = |a, b|> a + b
+
+-- Value declaration: with generic parameter on the name
+ident[T] :(T) T = |x|> x
+
+-- Value declaration: no-arg function returning literal
+get_one :() i32 = ||> 42
+
+-- Combined declaration: function with block body (named params)
 add_d :(a :i32, b :i32) i32 {
   fold(ints, a + b, |x, y|> x + y)
 }

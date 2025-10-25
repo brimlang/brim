@@ -79,7 +79,7 @@
     - [X] Block expressions implemented with statements (AssignmentStatement, ExpressionStatement).
     - [X] Diagnostics and recovery paths for expression parsing failures present.
     - [X] Parser tests in ExpressionParsingTests.cs; spec/sample.brim and spec/grammar.md updated.
-    - [ ] Function short-hand combined decl and definition.
+    - [ ] Function combined declaration (shorthand with named params in signature) - see spec/functions.md.
 
 - [X] **Phase 7 (Construct Expressions & Aggregates)**
     - [X] Basic aggregate construction syntax parsed (struct `%{}`, union `|{}`, tuple `#{}`, flags `&{}`).
