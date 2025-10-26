@@ -17,7 +17,9 @@ public sealed record StructPattern(CommaList<FieldPattern> FieldPatterns)
     {
         CommaList<FieldPattern> fieldPatterns = CommaList<FieldPattern>.Parse(
             parser,
+            RawKind.PercentLParen,
             SyntaxKind.StructToken,
+            RawKind.RParen,
             SyntaxKind.CloseParenToken,
             FieldPattern.Parse);
 

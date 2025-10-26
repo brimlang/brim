@@ -18,7 +18,9 @@ public sealed record ServicePattern(CommaList<ServicePatternEntry> Entries)
     {
         CommaList<ServicePatternEntry> entries = CommaList<ServicePatternEntry>.Parse(
             parser,
+            RawKind.AtmarkLParen,
             SyntaxKind.ServiceToken,
+            RawKind.RParen,
             SyntaxKind.CloseParenToken,
             ServicePatternEntry.Parse);
 
