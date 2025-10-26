@@ -11,30 +11,30 @@ public sealed record OptionalPattern(
   GreenToken CloseToken)
   : PatternNode(SyntaxKind.OptionalPattern, QuestionToken.Offset)
 {
-    public override int FullWidth => CloseToken.EndOffset - Offset;
+  public override int FullWidth => CloseToken.EndOffset - Offset;
 
-    public override IEnumerable<GreenNode> GetChildren()
+  public override IEnumerable<GreenNode> GetChildren()
+  {
+    yield return QuestionToken;
+    yield return OpenToken;
+    if (Pattern is not null)
+      yield return Pattern;
+    yield return CloseToken;
+  }
+
+  internal static new OptionalPattern Parse(Parser parser)
+  {
+    GreenToken question = parser.Expect(RawKind.Question, SyntaxKind.QuestionToken);
+    GreenToken open = parser.Expect(RawKind.LParen, SyntaxKind.OpenParenToken);
+
+    PatternNode? pattern = null;
+    if (!parser.Match(RawKind.RParen))
     {
-        yield return QuestionToken;
-        yield return OpenToken;
-        if (Pattern is not null)
-            yield return Pattern;
-        yield return CloseToken;
+      pattern = PatternNode.Parse(parser);
     }
 
-    internal static new OptionalPattern Parse(Parser parser)
-    {
-        GreenToken question = parser.Expect(RawKind.Question, SyntaxKind.QuestionToken);
-        GreenToken open = parser.Expect(RawKind.LParen, SyntaxKind.OpenParenToken);
+    GreenToken close = parser.Expect(RawKind.RParen, SyntaxKind.CloseParenToken);
 
-        PatternNode? pattern = null;
-        if (!parser.Match(RawKind.RParen))
-        {
-            pattern = PatternNode.Parse(parser);
-        }
-
-        GreenToken close = parser.Expect(RawKind.RParen, SyntaxKind.CloseParenToken);
-
-        return new OptionalPattern(question, open, pattern, close);
-    }
+    return new OptionalPattern(question, open, pattern, close);
+  }
 }

@@ -35,4 +35,3 @@ public sealed record ExportList(
   public static ExportList Parse(Parser p) =>
     new(CommaList.Parse(p, SyntaxKind.ExportOpenToken, SyntaxKind.ExportEndToken, SyntaxKind.IdentifierToken));
 }
-

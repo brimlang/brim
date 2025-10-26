@@ -7,23 +7,23 @@ namespace Brim.Parse.Green;
 public sealed record FlagsPattern(CommaList<FlagsPatternEntry> Entries)
   : PatternNode(SyntaxKind.FlagsPattern, Entries.Offset)
 {
-    public override int FullWidth => Entries.FullWidth;
+  public override int FullWidth => Entries.FullWidth;
 
-    public override IEnumerable<GreenNode> GetChildren()
-    {
-        yield return Entries;
-    }
+  public override IEnumerable<GreenNode> GetChildren()
+  {
+    yield return Entries;
+  }
 
-    internal static new FlagsPattern Parse(Parser parser)
-    {
-        CommaList<FlagsPatternEntry> entries = CommaList<FlagsPatternEntry>.Parse(
-            parser,
-            RawKind.AmpersandLParen,
-            SyntaxKind.FlagsToken,
-            RawKind.RParen,
-            SyntaxKind.CloseParenToken,
-            FlagsPatternEntry.Parse);
+  internal static new FlagsPattern Parse(Parser parser)
+  {
+    CommaList<FlagsPatternEntry> entries = CommaList<FlagsPatternEntry>.Parse(
+        parser,
+        RawKind.AmpersandLParen,
+        SyntaxKind.FlagsToken,
+        RawKind.RParen,
+        SyntaxKind.CloseParenToken,
+        FlagsPatternEntry.Parse);
 
-        return new FlagsPattern(entries);
-    }
+    return new FlagsPattern(entries);
+  }
 }

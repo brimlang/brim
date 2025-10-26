@@ -6,28 +6,28 @@ namespace Brim.Parse.Green;
 public sealed record FlagsPatternEntry(GreenNode Entry)
   : GreenNode(SyntaxKind.FlagsPatternEntry, Entry.Offset)
 {
-    public override int FullWidth => Entry.FullWidth;
+  public override int FullWidth => Entry.FullWidth;
 
-    public override IEnumerable<GreenNode> GetChildren()
+  public override IEnumerable<GreenNode> GetChildren()
+  {
+    yield return Entry;
+  }
+
+  internal static FlagsPatternEntry Parse(Parser parser)
+  {
+    GreenNode entry;
+
+    if (parser.Match(RawKind.Plus) || parser.Match(RawKind.Minus))
     {
-        yield return Entry;
+      // Signed flag: +flag or -flag
+      entry = SignedFlag.Parse(parser);
+    }
+    else
+    {
+      // Bare identifier
+      entry = parser.Expect(RawKind.Identifier, SyntaxKind.IdentifierToken);
     }
 
-    internal static FlagsPatternEntry Parse(Parser parser)
-    {
-        GreenNode entry;
-
-        if (parser.Match(RawKind.Plus) || parser.Match(RawKind.Minus))
-        {
-            // Signed flag: +flag or -flag
-            entry = SignedFlag.Parse(parser);
-        }
-        else
-        {
-            // Bare identifier
-            entry = parser.Expect(RawKind.Identifier, SyntaxKind.IdentifierToken);
-        }
-
-        return new FlagsPatternEntry(entry);
-    }
+    return new FlagsPatternEntry(entry);
+  }
 }

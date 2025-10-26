@@ -7,21 +7,21 @@ namespace Brim.Parse.Green;
 public sealed record VariantPatternTail(CommaList<PatternNode> Patterns)
   : GreenNode(SyntaxKind.VariantPatternTail, Patterns.Offset)
 {
-    public override int FullWidth => Patterns.FullWidth;
+  public override int FullWidth => Patterns.FullWidth;
 
-    public override IEnumerable<GreenNode> GetChildren()
-    {
-        yield return Patterns;
-    }
+  public override IEnumerable<GreenNode> GetChildren()
+  {
+    yield return Patterns;
+  }
 
-    internal static VariantPatternTail Parse(Parser parser)
-    {
-        CommaList<PatternNode> patterns = CommaList<PatternNode>.Parse(
-            parser,
-            SyntaxKind.OpenParenToken,
-            SyntaxKind.CloseParenToken,
-            PatternNode.Parse);
+  internal static VariantPatternTail Parse(Parser parser)
+  {
+    CommaList<PatternNode> patterns = CommaList<PatternNode>.Parse(
+        parser,
+        SyntaxKind.OpenParenToken,
+        SyntaxKind.CloseParenToken,
+        PatternNode.Parse);
 
-        return new VariantPatternTail(patterns);
-    }
+    return new VariantPatternTail(patterns);
+  }
 }

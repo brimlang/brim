@@ -10,30 +10,30 @@ public sealed record VariantPattern(
   GreenToken CloseToken)
   : PatternNode(SyntaxKind.VariantPattern, OpenToken.Offset)
 {
-    public override int FullWidth => CloseToken.EndOffset - Offset;
+  public override int FullWidth => CloseToken.EndOffset - Offset;
 
-    public override IEnumerable<GreenNode> GetChildren()
+  public override IEnumerable<GreenNode> GetChildren()
+  {
+    yield return OpenToken;
+    yield return VariantName;
+    if (Tail is not null)
+      yield return Tail;
+    yield return CloseToken;
+  }
+
+  internal static new VariantPattern Parse(Parser parser)
+  {
+    GreenToken open = parser.Expect(RawKind.PipeLParen, SyntaxKind.UnionToken);
+    GreenToken variantName = parser.Expect(RawKind.Identifier, SyntaxKind.IdentifierToken);
+
+    VariantPatternTail? tail = null;
+    if (parser.Match(RawKind.LParen))
     {
-        yield return OpenToken;
-        yield return VariantName;
-        if (Tail is not null)
-            yield return Tail;
-        yield return CloseToken;
+      tail = VariantPatternTail.Parse(parser);
     }
 
-    internal static new VariantPattern Parse(Parser parser)
-    {
-        GreenToken open = parser.Expect(RawKind.PipeLParen, SyntaxKind.UnionToken);
-        GreenToken variantName = parser.Expect(RawKind.Identifier, SyntaxKind.IdentifierToken);
+    GreenToken close = parser.Expect(RawKind.RParen, SyntaxKind.CloseParenToken);
 
-        VariantPatternTail? tail = null;
-        if (parser.Match(RawKind.LParen))
-        {
-            tail = VariantPatternTail.Parse(parser);
-        }
-
-        GreenToken close = parser.Expect(RawKind.RParen, SyntaxKind.CloseParenToken);
-
-        return new VariantPattern(open, variantName, tail, close);
-    }
+    return new VariantPattern(open, variantName, tail, close);
+  }
 }

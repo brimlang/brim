@@ -10,21 +10,21 @@ public sealed record ServicePatternEntry(
   TypeRef Protocol)
   : GreenNode(SyntaxKind.ServicePatternEntry, Name.Offset)
 {
-    public override int FullWidth => Protocol.EndOffset - Offset;
+  public override int FullWidth => Protocol.EndOffset - Offset;
 
-    public override IEnumerable<GreenNode> GetChildren()
-    {
-        yield return Name;
-        yield return ColonToken;
-        yield return Protocol;
-    }
+  public override IEnumerable<GreenNode> GetChildren()
+  {
+    yield return Name;
+    yield return ColonToken;
+    yield return Protocol;
+  }
 
-    internal static ServicePatternEntry Parse(Parser parser)
-    {
-        GreenToken name = parser.Expect(RawKind.Identifier, SyntaxKind.IdentifierToken);
-        GreenToken colon = parser.Expect(RawKind.Colon, SyntaxKind.ColonToken);
-        TypeRef protocol = TypeRef.Parse(parser);
+  internal static ServicePatternEntry Parse(Parser parser)
+  {
+    GreenToken name = parser.Expect(RawKind.Identifier, SyntaxKind.IdentifierToken);
+    GreenToken colon = parser.Expect(RawKind.Colon, SyntaxKind.ColonToken);
+    TypeRef protocol = TypeRef.Parse(parser);
 
-        return new ServicePatternEntry(name, colon, protocol);
-    }
+    return new ServicePatternEntry(name, colon, protocol);
+  }
 }

@@ -6,22 +6,22 @@ namespace Brim.Parse.Green;
 public sealed record WildcardPattern(GreenToken Underscore)
   : PatternNode(SyntaxKind.WildcardPattern, Underscore.Offset)
 {
-    public override int FullWidth => Underscore.FullWidth;
+  public override int FullWidth => Underscore.FullWidth;
 
-    public override IEnumerable<GreenNode> GetChildren()
-    {
-        yield return Underscore;
-    }
+  public override IEnumerable<GreenNode> GetChildren()
+  {
+    yield return Underscore;
+  }
 
-    internal static new WildcardPattern Parse(Parser parser)
-    {
-        GreenToken underscore = parser.Expect(RawKind.Identifier, SyntaxKind.IdentifierToken);
-        return new WildcardPattern(underscore);
-    }
+  internal static new WildcardPattern Parse(Parser parser)
+  {
+    GreenToken underscore = parser.Expect(RawKind.Identifier, SyntaxKind.IdentifierToken);
+    return new WildcardPattern(underscore);
+  }
 
-    internal static PatternNode ParseError(Parser parser)
-    {
-        GreenToken error = parser.Expect(RawKind.Error, SyntaxKind.ErrorToken);
-        return new WildcardPattern(error);
-    }
+  internal static PatternNode ParseError(Parser parser)
+  {
+    GreenToken error = parser.Expect(RawKind.Error, SyntaxKind.ErrorToken);
+    return new WildcardPattern(error);
+  }
 }
