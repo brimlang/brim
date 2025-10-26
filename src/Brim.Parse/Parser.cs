@@ -119,6 +119,24 @@ public sealed partial class Parser(
   internal bool MatchRaw(RawKind kind, int offset = 0) =>
     kind == RawKind.Any || PeekKind(offset) == kind;
 
+  internal bool Match(RawKind kind) =>
+    MatchRaw(kind, 0);
+
+  internal GreenToken Expect(RawKind rawKind, SyntaxKind syntaxKind)
+  {
+    if (Current.Kind == rawKind)
+    {
+      SignificantToken sig = Current;
+      Advance();
+      return new GreenToken(syntaxKind, sig);
+    }
+
+    _diags.Add(Diagnostic.Missing(rawKind, Current.CoreToken));
+    RawToken missing = GetMissingToken();
+    SignificantToken fabricated = new(missing, LeadingTrivia: []);
+    return new GreenToken(syntaxKind, fabricated);
+  }
+
   internal RawToken ExpectRaw(RawKind kind)
   {
     if (Current.Kind == kind)

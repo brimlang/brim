@@ -9,6 +9,7 @@ public static class CommaList
 {
   /// <summary>
   /// Parses a comma-separated list of tokens of the given kind, enclosed by the given open and close kinds.
+  /// Backwards-compatible overload that uses SyntaxKind and maps to RawKind internally.
   /// </summary>
   /// <param name="p">The parser instance.</param>
   /// <param name="openKind">The syntax kind of the opening delimiter.</param>
@@ -19,11 +20,37 @@ public static class CommaList
     Parser p,
     SyntaxKind openKind,
     SyntaxKind closeKind,
+    SyntaxKind elementKind)
+  {
+    RawKind openRaw = Parser.MapRawKind(openKind);
+    RawKind closeRaw = Parser.MapRawKind(closeKind);
+    return Parse(p, openRaw, openKind, closeRaw, closeKind, elementKind);
+  }
+
+  /// <summary>
+  /// Parses a comma-separated list of tokens of the given kind, enclosed by the given open and close kinds.
+  /// Direct overload that uses RawKind for matching and SyntaxKind for token assignment.
+  /// </summary>
+  /// <param name="p">The parser instance.</param>
+  /// <param name="openRaw">The raw kind of the opening delimiter.</param>
+  /// <param name="openSyntax">The syntax kind to assign to the opening delimiter token.</param>
+  /// <param name="closeRaw">The raw kind of the closing delimiter.</param>
+  /// <param name="closeSyntax">The syntax kind to assign to the closing delimiter token.</param>
+  /// <param name="elementKind">The syntax kind of list elements.</param>
+  /// <returns>A comma list containing tokens of the specified kind.</returns>
+  public static CommaList<GreenToken> Parse(
+    Parser p,
+    RawKind openRaw,
+    SyntaxKind openSyntax,
+    RawKind closeRaw,
+    SyntaxKind closeSyntax,
     SyntaxKind elementKind) =>
     CommaList<GreenToken>.Parse(
       p,
-      openKind,
-      closeKind,
+      openRaw,
+      openSyntax,
+      closeRaw,
+      closeSyntax,
       p2 => p2.ExpectSyntax(elementKind));
 }
 
@@ -60,6 +87,7 @@ GreenNode(SyntaxKind.CommaList, OpenToken.Offset) where T : GreenNode
 
   /// <summary>
   /// Parses a comma-separated list using a custom element parser.
+  /// Backwards-compatible overload that uses SyntaxKind and maps to RawKind internally.
   /// </summary>
   /// <param name="p">The parser instance.</param>
   /// <param name="openKind">The syntax kind of the opening delimiter.</param>
@@ -68,7 +96,25 @@ GreenNode(SyntaxKind.CommaList, OpenToken.Offset) where T : GreenNode
   /// <returns>A parsed comma list.</returns>
   public static CommaList<T> Parse(Parser p, SyntaxKind openKind, SyntaxKind closeKind, Func<Parser, T> parseElement)
   {
-    GreenToken open = p.ExpectSyntax(openKind);
+    RawKind openRaw = Parser.MapRawKind(openKind);
+    RawKind closeRaw = Parser.MapRawKind(closeKind);
+    return Parse(p, openRaw, openKind, closeRaw, closeKind, parseElement);
+  }
+
+  /// <summary>
+  /// Parses a comma-separated list using a custom element parser.
+  /// Direct overload that uses RawKind for matching and SyntaxKind for token assignment.
+  /// </summary>
+  /// <param name="p">The parser instance.</param>
+  /// <param name="openRaw">The raw kind of the opening delimiter.</param>
+  /// <param name="openSyntax">The syntax kind to assign to the opening delimiter token.</param>
+  /// <param name="closeRaw">The raw kind of the closing delimiter.</param>
+  /// <param name="closeSyntax">The syntax kind to assign to the closing delimiter token.</param>
+  /// <param name="parseElement">Function to parse individual list elements.</param>
+  /// <returns>A parsed comma list.</returns>
+  public static CommaList<T> Parse(Parser p, RawKind openRaw, SyntaxKind openSyntax, RawKind closeRaw, SyntaxKind closeSyntax, Func<Parser, T> parseElement)
+  {
+    GreenToken open = p.Expect(openRaw, openSyntax);
 
     GreenToken? leadingTerminator = null;
     if (p.MatchRaw(RawKind.Terminator))
@@ -77,7 +123,7 @@ GreenNode(SyntaxKind.CommaList, OpenToken.Offset) where T : GreenNode
     ArrayBuilder<Element> elements = [];
 
     // Parse first element if not immediately at close
-    if (!p.MatchSyntax(closeKind))
+    if (!p.MatchRaw(closeRaw))
     {
       elements.Add(Element.Parse(p, parseElement));
       // Parse remaining elements
@@ -86,7 +132,7 @@ GreenNode(SyntaxKind.CommaList, OpenToken.Offset) where T : GreenNode
         if (!p.MatchRaw(RawKind.Comma))
           break;
 
-        if (p.MatchSyntax(closeKind, 1) || (p.MatchRaw(RawKind.Terminator, 1) && p.MatchSyntax(closeKind, 2)))
+        if (p.MatchRaw(closeRaw, 1) || (p.MatchRaw(RawKind.Terminator, 1) && p.MatchRaw(closeRaw, 2)))
           break;
 
         Parser.StallGuard sg = p.GetStallGuard();
@@ -103,7 +149,7 @@ GreenNode(SyntaxKind.CommaList, OpenToken.Offset) where T : GreenNode
     if (p.MatchRaw(RawKind.Terminator))
       trailingTerminator = p.ExpectSyntax(SyntaxKind.TerminatorToken);
 
-    GreenToken close = p.ExpectSyntax(closeKind);
+    GreenToken close = p.Expect(closeRaw, closeSyntax);
 
     return new(
       open,

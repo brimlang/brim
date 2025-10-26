@@ -1,7 +1,7 @@
 namespace Brim.Parse.Green;
 
 public sealed record MatchArm(
-  GreenNode Pattern,
+  PatternNode Pattern,
   MatchGuard? Guard,
   GreenToken Arrow,
   ExprNode Target,

@@ -249,7 +249,7 @@ public sealed partial class Parser
 
   MatchArm ParseMatchArm()
   {
-    ExprNode pattern = ParseBinaryExpression(0);
+    PatternNode pattern = PatternNode.Parse(this);
 
     MatchGuard? guard = null;
     if (MatchRaw(RawKind.QuestionQuestion))
