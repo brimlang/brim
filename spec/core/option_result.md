@@ -3,7 +3,7 @@ id: core.option-result
 layer: core
 title: Option/Result & Return Lifting
 authors: ['trippwill', 'gpt-5-thinking']
-updated: 2025-09-13
+updated: 2025-01-28
 status: accepted
 version: 0.1.0
 ---
@@ -11,12 +11,14 @@ version: 0.1.0
 
 ## Summary
 
-Introduce symbolic encodings for **option** and **result** and define **type-directed return lifting** and **postfix short-circuit propagation** in core.
+Defines symbolic encodings for **option** and **result** and **type-directed return lifting** and **postfix short-circuit propagation** in core.
 
 - **Types:** `T?` (option), `T!` (result).
 - **Constructors (expr):** `?{}` (nil), `?{x}` (has), `!{x}` (ok), `!!{e}` (err).
 - **Propagation (expr):** `e?` (propagate nil), `e!` (propagate err) to the nearest matching context.
 - **Return lifting:** In bodies returning `T?`/`T!`, a tail `T` auto-lifts to `?{…}` / `!{…}`; an existing `T?`/`T!` passes through.
+
+For pattern matching with option/result values, see `spec/core/patterns.md`. For match expression details, see `spec/core/match.md`.
 
 ## Specification (Normative)
 
@@ -85,9 +87,9 @@ y =>
 Canonical nominal/value split applies:
 
 ```brim
-name : (ParamTypes...) ReturnType = (params) => { body }
+name :(ParamTypes...) ReturnType = |params|> { body }
 -- or shorthand header with parameter names & types (const only):
-name :(x :T, y :U) ReturnType = { body }
+name :(x :T, y :U) ReturnType { body }
 ```
 
 Rules when `ReturnType` is `T?` or `T!` (unchanged semantically):
@@ -193,3 +195,13 @@ ping() =>                           -- : ()!
 
 - **Error type:** `err` is a nominal type defined elsewhere. `!!{e}` requires `e :err`.
 - **Emit/ABI:** Lowering to WIT/wasm‑GC follows canonical option/result encodings (see emitter spec).
+
+---
+
+## Related Specs
+
+- `spec/core/patterns.md` — Pattern matching semantics for option/result patterns
+- `spec/core/match.md` — Match expressions with option/result arms
+- `spec/core/expressions.md` — Expression forms and propagation overview
+- `spec/functions.md` — Function return types and lifting
+- `spec/grammar.md` — Option/result syntax grammar productions

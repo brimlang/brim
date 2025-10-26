@@ -28,7 +28,7 @@ canon:
   - [Structural Templates](#structural-templates)
   - [Trivia](#trivia)
   - [Module Structure](#module-structure)
-  - [Block Structure](#block-structure)
+  - [Block Expression](#block-expression)
   - [Types](#types)
   - [Declarations](#declarations)
   - [Expressions](#expressions)
@@ -299,7 +299,6 @@ TypeExpr           : TypeCore TypeSuffix?
 TypeCore           : TypeRef
                    | FunctionTypeExpr
                    | SeqTypeExpr
-                   | BufTypeExpr
                    | AggregateTypeExpr
 
 TypeSuffix         : OPTIONAL
@@ -326,8 +325,6 @@ QualifiedIdent     : IDENT ['.' IDENT]*
 
 FunctionTypeExpr   : ParenListOpt<TypeExpr> TypeExpr
 SeqTypeExpr        : { SEQ_KW '[' } TypeExpr ']'
-BufTypeExpr        : { BUF_KW '[' } TypeExpr ['*' INTEGER]? ']'
-
 AggregateTypeExpr  : AggregateShape<STRUCT_SHAPE, FieldDeclaration>
                    | AggregateShape<UNION_SHAPE, UnionVariantDeclaration>
                    | AggregateShape<TUPLE_SHAPE, NamedTupleElement>
@@ -340,8 +337,6 @@ FlagMemberDeclaration   : IDENT
 MethodSignature         : IDENT ':' ParamList TypeExpr
 NamedTupleElement       : IDENT ':' TypeExpr
 FieldDeclaration        : IDENT ':' TypeExpr
-
-BufTypeArgs             : '[' TypeExpr ['*' INTEGER]? ']'
 
 GenericArgs             : BracketListOpt<TypeExpr>
 GenericParams           : BracketListOpt<GenericParam>
@@ -410,7 +405,7 @@ LifecycleMember : ServiceCtorDecl
                 | ServiceDtorDecl
 
 ServiceCtorDecl : ParamList '@' '!' BlockExpr
-ServiceDtorDecl : '~' ParamList TypeExpr BlockExpr
+ServiceDtorDecl : '~' ParamList 'unit' BlockExpr
 ```
 
 ## Expressions
@@ -425,8 +420,6 @@ FunctionLiteral  : LAMBDA_EMPTY LambdaBody
                  | LAMBDA_OPEN LambdaParams LAMBDA_CLOSE LambdaBody
 LambdaParams     : IDENT (',' IDENT)*
 LambdaBody       : Expr
-                 | BlockExpr
-FunctionBody     : ARROW Expr
                  | BlockExpr
 
 MatchExpr        : BinaryExpr ARROW MatchArmList
@@ -476,8 +469,6 @@ ConstructExpr    : TypedConstruct<TUPLE_SHAPE, Expr>
                  | ERR_SHAPE Expr '}'
                  | UNIT_KW '{}'
                  | LinearConstruct<SEQ_KW, GenericArgs, Expr>
-                 | LinearConstruct<BUF_KW, BufTypeArgs, Expr>
-
 
 UnionExpr        : { TypeRef UNION_SHAPE } VariantInit '}'
 
@@ -528,4 +519,17 @@ FlagsPatternEntry   : SignedFlag
                     | IDENT
 
 ServicePatternEntry : IDENT ':' TypeRef
+
+---
+
+## Related Specs
+
+- `spec/fundamentals.md` — Core laws, binding rules, and basics primer
+- `spec/unicode.md` — Unicode encoding, identifiers, and literal rules (authoritative for lexical encoding)
+- `spec/functions.md` — Function declaration forms (authoritative for function syntax)
+- `spec/sample.brim` — Canonical examples demonstrating grammar in practice
+- `spec/core/expressions.md` — Expression semantics and evaluation rules
+- `spec/core/patterns.md` — Pattern matching semantics
+- `spec/core/aggregates.md` — Aggregate type semantics
+- `spec/core/services.md` — Service and protocol semantics
 ```

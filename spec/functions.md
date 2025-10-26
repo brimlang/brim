@@ -162,7 +162,12 @@ The parser must distinguish between forms 2 and 3 after seeing `name :`. The key
 - `name :(param :Type, ...)` → If params have names, it's a **combined declaration** (form 3)
 - `name :` followed by non-paren → value declaration with non-function type
 
-Current implementation status:
-- ✅ Form 1 (Type declarations) - fully implemented as TypeDeclaration
-- ✅ Form 2 (Value declarations) - fully implemented as ValueDeclaration  
-- ✅ Form 3 (Combined declarations) - fully implemented as FunctionDeclaration
+---
+
+## Related Specs
+
+- `spec/grammar.md` — Function grammar productions (authoritative for syntax)
+- `spec/core/expressions.md` — Function literals and call expressions
+- `spec/core/generics.md` — Generic function parameters and constraints
+- `spec/fundamentals.md` — Function basics and binding rules
+- `spec/sample.brim` — Canonical function examples

@@ -1,10 +1,15 @@
 =[acme::hello]=
-
--- canon:
--- spec/grammar.md
--- spec/unicode.md
--- spec/fundamentals.md
--- spec/sample.brim
+-- Canonical Sample: This file is part of the canonical sync set and must
+-- demonstrate all core language features. When updating syntax, this file
+-- must be updated in the same change set as grammar.md, fundamentals.md,
+-- unicode.md, and functions.md to maintain consistency.
+--
+-- Canonical sync set:
+-- - spec/grammar.md
+-- - spec/fundamentals.md
+-- - spec/unicode.md
+-- - spec/functions.md
+-- - spec/sample.brim
 
 <<
 Perms,

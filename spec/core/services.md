@@ -3,12 +3,16 @@ id: core.services
 title: Services, Protocols, and Constraints
 layer: core
 authors: ['trippwill', 'assistant']
-updated: 2025-09-22
+updated: 2025-01-28
 status: accepted
 version: 0.1.0
 ---
 
 # Services, Protocols, and Constraints
+
+## Overview
+
+This document defines services (stateful behavioral handles), protocols (interface specifications), and generic constraints. For pattern matching with services, see `spec/core/patterns.md`. For service patterns in match expressions, see `spec/core/match.md`.
 
 ## Services
 
@@ -157,3 +161,13 @@ Logger<Fmt>(svc :@) {
   to_string :() str { svc.target }
 }
 ```
+
+---
+
+## Related Specs
+
+- `spec/core/patterns.md` — Pattern matching semantics for service patterns
+- `spec/core/match.md` — Match expressions with service pattern arms
+- `spec/core/generics.md` — Generic constraints and protocol requirements
+- `spec/core/expressions.md` — Expression forms overview
+- `spec/grammar.md` — Service and protocol grammar productions

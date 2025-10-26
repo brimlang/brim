@@ -60,34 +60,33 @@ What a new brimmian should know immediately.
 
 ## Basics Primer
 
+Quick reference for essential syntax. For complete documentation, see related specs listed at the end of this file.
+
 ```brim
 =[acme::demo]=
 << Main
 
 io ::= std::io           -- import alias (module bind)
 
-^limit :i32 = 10        -- mutable binding (writes use 'limit = …')
+^limit :i32 = 10        -- mutable binding
 limit = limit + 10      -- mutable update
-answer :i32 = 42i32     -- const binding
+answer :i32 = 42        -- const binding
 
 Point := %{ x :i32, y :i32 }
 Reply[T] := |{ Good :T, Error :str }
 
-inc :(i32) i32 = (x) { x + 1 }
+inc :(i32) i32 = |x|> x + 1
 
 main :() i32 = {
-  pt = Point%{ x = 1, y = 2 }          -- struct ctor
-  ok :Reply[i32] = Reply|{ Good = 5 }  -- union ctor
+  pt = Point%{ x = 1, y = 2 }
+  ok :Reply[i32] = Reply|{ Good = 5 }
   ok =>
     |(Good(v)) => inc(v)
-    |(Error(msg)) => {
-      io.write("Error: " + msg)
-      -1
-    }
+    |(Error(msg)) => -1
 }
 ```
 
-Semicolons (`;`) are interchangeable with newlines when terminating statements; mixed runs collapse to a single terminator token.
+**Terminators:** Semicolons (`;`) are interchangeable with newlines when terminating statements; mixed runs collapse to a single terminator token.
 
 
 ## Modules
@@ -169,11 +168,21 @@ Runes:
 
 ## Patterns Primer
 
-- Unit pattern is `()`.
-- Result carrying unit matches with `!()` for the ok case.
-- Flags patterns:
-  - Exact set: `&(read, write)`; empty: `&()`
-  - Require/forbid: `&(+read, -exec)` (others unconstrained)
+Pattern matching is type-directed. Common forms:
+
+- Wildcard: `_` (matches anything, no binding)
+- Binding: `name` (matches anything, binds value)
+- Literals: `42`, `"text"`, `true`
+- Unit: `(unit)`
+- Tuples: `#(x, y)`
+- Structs: `%(field = pattern, ...)` or shorthand `%(field1, field2)`
+- Unions: `|(Variant(pattern?))`
+- Flags: `&(read, write)` (exact) or `&(+read, -exec)` (constrained)
+- Sequences: `(h, ..t)` (head and tail)
+- Option: `?(v)` (has), `?()` (nil)
+- Result: `!(v)` (ok), `!!(e)` (err), `!()` (unit ok)
+
+For complete pattern documentation, see `spec/core/patterns.md`.
 
 ## Casts & Assertions (Compile‑Time)
 
@@ -188,11 +197,21 @@ Runes:
 - Type ascription:
   - In headers: `Ident :Type` (one space before colon, none after).
 
-## Spec Map
+## Related Specs
 
-- Expressions: `spec/core/expressions.md` — evaluation forms and composition.
-- Functions: `spec/core/functions.md` — types, values, named functions.
-- Aggregate Types: `spec/core/aggregates.md` — structs, unions, named tuples, flags, sequences.
-- Generics: `spec/core/generics.md` — parameters, constraints, use sites.
-- Option/Result & Propagation: `spec/core/option_result.md` — `T?`/`T!`, constructors, postfix.
-- Services & Protocols: `spec/core/services.md` — service handles, protocol blocks.
+### Canonical Sync Set
+- `spec/grammar.md` — Canonical grammar (syntax productions)
+- `spec/unicode.md` — Unicode & encoding rules
+- `spec/functions.md` — Function types, values, declaration forms
+- `spec/sample.brim` — Canonical sample code
+
+### Core Semantics
+- `spec/core/expressions.md` — Expression forms and evaluation
+- `spec/core/aggregates.md` — Structs, unions, named tuples, flags, sequences
+- `spec/core/patterns.md` — Pattern matching semantics
+- `spec/core/match.md` — Match expressions and arms
+- `spec/core/generics.md` — Type parameters, constraints, inference
+- `spec/core/option_result.md` — `T?`/`T!` types, constructors, propagation
+- `spec/core/services.md` — Services, protocols, lifecycle
+
+For complete spec map, see `spec/README.md`.

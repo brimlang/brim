@@ -3,18 +3,22 @@ id: core.aggregates
 layer: core
 title: Aggregate Types
 authors: ['trippwill']
-updated: 2025-09-14
+updated: 2025-01-28
 status: accepted
 version: 0.1.0
 ---
 
 # Aggregate Types
 
+## Overview
+
 Defines the canonical declaration, construction, and pattern forms for aggregates. All aggregates are nominal.
 
-Comma policy: Every comma-delimited list in aggregate declarations, constructions, and patterns permits at most one optional trailing comma (before the closing delimiter). Empty lists contain no comma. All commas are preserved as tokens.
+**Comma policy:** Every comma-delimited list in aggregate declarations, constructions, and patterns permits at most one optional trailing comma (before the closing delimiter). Empty lists contain no comma. All commas are preserved as tokens.
 
-Principle: Construction (term formation) for every aggregate uses the aggregate’s sigil or type head immediately followed by `{ ... }`. Patterns are type-directed and use parentheses.
+**Construction principle:** Construction (term formation) for every aggregate uses the aggregate's sigil or type head immediately followed by `{ ... }`. Patterns are type-directed and use parentheses.
+
+For complete pattern matching semantics, see `spec/core/patterns.md`. For match expression details, see `spec/core/match.md`.
 
 ## Named Tuples — positional aggregates
 
@@ -117,3 +121,12 @@ check : (p : Perms) bool = {
 
 Flags are fixed enumerated bitsets chosen for efficient embedding in numeric fields.
 Patterns do not use bitwise operators. Do not mix bare and signed names; duplicate names or contradictory constraints like `&(+read, -read)` are rejected.
+
+---
+
+## Related Specs
+
+- `spec/core/patterns.md` — Pattern matching semantics (authoritative for patterns)
+- `spec/core/match.md` — Match expressions and arms
+- `spec/core/expressions.md` — Expression forms and constructors overview
+- `spec/grammar.md` — Aggregate grammar productions

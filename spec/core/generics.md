@@ -3,14 +3,16 @@ id: core.generics
 title: Generics
 layer: core
 authors: ['trippwill']
-updated: 2025-09-14
+updated: 2025-01-28
 status: accepted
 version: 0.1.0
 ---
 
 # Generics
 
-Defines canonical syntax & minimal semantics for parametric polymorphism.
+## Overview
+
+Defines canonical syntax & minimal semantics for parametric polymorphism. For protocol constraints in practice, see `spec/core/services.md`. For generic function examples, see `spec/functions.md`.
 
 ## Scope
 Applies to: functions, struct types, union types, services, protocols, builtin parametric types (`T?`, `T!`, `seq[T]`).
@@ -120,3 +122,12 @@ val =>
 - Variance annotations
 - Higher-kinded parameters
 - Partial specialization
+
+---
+
+## Related Specs
+
+- `spec/core/services.md` — Protocols and constraints in practice
+- `spec/functions.md` — Generic function declarations
+- `spec/core/aggregates.md` — Generic aggregate types
+- `spec/grammar.md` — Generic parameter syntax productions

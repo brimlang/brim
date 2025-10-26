@@ -1,4 +1,11 @@
 =[acme::inventory]=
+-- Illustrative Example: Inventory Management
+-- This file demonstrates inventory tracking patterns and is non-canonical.
+-- Unlike spec/sample.brim, this file is not part of the canonical sync set
+-- and may use experimental or proposed features.
+--
+-- Status: illustrative (not canonical)
+
 
 -- canon:
 -- spec/inventory_sample.brim

@@ -87,3 +87,12 @@ Defines the canonical treatment of Unicode code points across tokens, literals, 
 - Confusable detection / security profiles (e.g., restricting identifiers to mixed scripts) are deferred.
 - Additional comment forms (block comments) remain out of scope for now.
 - Byte-level primitives (raw string literals, explicit encoding literals) will be addressed separately if needed.
+
+---
+
+## Related Specs
+
+- `spec/grammar.md` — Lexical grammar and token definitions (authoritative for syntax)
+- `spec/fundamentals.md` — Core types including `str` and `rune`
+- `spec/core/numeric_literals.md` — Numeric literal encoding
+- `spec/sample.brim` — Canonical examples demonstrating Unicode usage
