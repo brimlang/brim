@@ -85,78 +85,79 @@ validate_price :(Price) bool = |price|> {
 }
 
 is_low_stock :(StockLevel) bool = |level|> {
-  level =>
-    LowStock = n ?? n < 10 => true
-    InStock = n ?? n < 20  => true
+  level => {
+    |(LowStock(n)) ?? n < 10 => true
+    |(InStock(n)) ?? n < 20  => true
     _                       => false
+  }
 }
 
 -- Item creation and manipulation
 
 create_item :(id :ItemId, name :str, category :ItemCategory, location :WarehouseLocation, initial_qty :Quantity) InventoryItem! {
-  validate_quantity(initial_qty) =>
+  validate_quantity(initial_qty) => {
     false => !!{ "Invalid quantity" }
-    true => !{
-      InventoryItem%{
-        id = id,
-        name = name,
-        description = ?{ },
-        category = category,
-        status = ItemStatus&{ available },
-        location = location,
-        stock_level = initial_qty =>
-          0 => StockLevel|{ OutOfStock }
-          n ?? n < 20 => StockLevel|{ LowStock = n }
-          n => StockLevel|{ InStock = n },
-        price = 0.0,
-        last_updated = time.now(),
-      }
-    }
+    true => !{ InventoryItem%{
+      id = id,
+      name = name,
+      description = ?{ },
+      category = category,
+      status = ItemStatus&{ available },
+      location = location,
+      stock_level = initial_qty => {
+        0 => StockLevel|{ OutOfStock }
+        n ?? n < 20 => StockLevel|{ LowStock = n }
+        n => StockLevel|{ InStock = n }
+      },
+      price = 0.0,
+      last_updated = time.now(),
+    } }
+  }
 }
 
 update_stock :(item :InventoryItem, delta :Quantity) InventoryItem! {
-  new_qty := item.stock_level =>
+  new_qty :Quantity! = item.stock_level => {
     InStock = n => n + delta
     LowStock = n => n + delta
     OutOfStock => delta
-    Discontinued => !!{ "Cannot update discontinued item" }!
+    Discontinued => !!{ "Cannot update discontinued item" }
+  }
 
-  validate_quantity(new_qty) =>
+  validate_quantity(new_qty!) => {
     false => !!{ "Stock would become negative" }
-    true => !{
-      InventoryItem%{
-        id = item.id,
-        name = item.name,
-        description = item.description,
-        category = item.category,
-        status = item.status,
-        location = item.location,
-        stock_level = new_qty =>
-          0 => StockLevel|{ OutOfStock }
-          n ?? n < 20 => StockLevel|{ LowStock = n }
-          n => StockLevel|{ InStock = n },
-        price = item.price,
-        last_updated = time.now(),
-      }
-    }
+    true => !{ InventoryItem%{
+      id = item.id,
+      name = item.name,
+      description = item.description,
+      category = item.category,
+      status = item.status,
+      location = item.location,
+      stock_level = new_qty => {
+        0 => StockLevel|{ OutOfStock }
+        n ?? n < 20 => StockLevel|{ LowStock = n }
+        n => StockLevel|{ InStock = n }
+      },
+      price = item.price,
+      last_updated = time.now(),
+    } }
+  }
 }
 
 update_price :(item :InventoryItem, new_price :Price) InventoryItem! {
-  validate_price(new_price) =>
+  validate_price(new_price) => {
     false => !!{ "Invalid price" }
-    true => !{
-      InventoryItem%{
-        id = item.id,
-        name = item.name,
-        description = item.description,
-        category = item.category,
-        status = item.status,
-        location = item.location,
-        stock_level = item.stock_level,
-        price = new_price,
-        last_updated = time.now(),
-      }
-    }
+    true => !{ InventoryItem%{
+      id = item.id,
+      name = item.name,
+      description = item.description,
+      category = item.category,
+      status = item.status,
+      location = item.location,
+      stock_level = item.stock_level,
+      price = new_price,
+      last_updated = time.now(),
+    } }
+  }
 }
 
 mark_damaged :(item :InventoryItem) InventoryItem {
@@ -181,31 +182,17 @@ find_low_stock :(items :seq[InventoryItem]) seq[InventoryItem] {
 
 find_by_category :(items :seq[InventoryItem], cat :ItemCategory) seq[InventoryItem] {
   seqops.filter(items, |item|> {
-    item.category =>
-      Electronics = _ => cat =>
-        Electronics = _ => true
-        _ => false
-      Clothing = _ => cat =>
-        Clothing = _ => true
-        _ => false
-      Food = _ => cat =>
-        Food = _ => true
-        _ => false
-      Furniture => cat =>
-        Furniture => true
-        _ => false
-      Other => cat =>
-        Other => true
-        _ => false
+    item.category == cat
   })
 }
 
 calculate_total_value :(items :seq[InventoryItem]) Price {
   seqops.fold(items, 0.0, |acc, item|> {
-    qty := item.stock_level =>
-      InStock = n => n
-      LowStock = n => n
+    qty = item.stock_level => {
+      |(InStock(n)) => n
+      |(LowStock(n)) => n
       _ => 0
+    }
     acc + (item.price * (qty :> f64))
   })
 }
@@ -254,9 +241,10 @@ InventoryService<InventoryProtocol>(svc :@) {
 
   get_item :(id :ItemId) InventoryItem! {
     result := seqops.find(svc.items, |item|> item.id == id)
-    result =>
+    result => {
       ?{ item } => !{ item }
       ?{ } => !!{ "Item not found" }
+    }
   }
 
   update_item :(id :ItemId, delta :Quantity) InventoryItem! {
@@ -298,18 +286,18 @@ find_index :(items :seq[InventoryItem], id :ItemId) u32 {
 
 -- Example usage
 create_inventory :() InventoryService@ {
-  warehouse_a := WarehouseLocation%{
+  warehouse_a = WarehouseLocation%{
     warehouse_id = 1,
     aisle = "A",
     shelf = 1,
     bin = 1,
   }
 
-  initial_items := seq[InventoryItem]{
+  initial_items = seq[InventoryItem]{
     create_item(0, "Laptop", ItemCategory|{ Electronics = "Computer" }, warehouse_a, 50)!,
     create_item(1, "T-Shirt", ItemCategory|{ Clothing = "Apparel" }, warehouse_a, 100)!,
     create_item(2, "Apple", ItemCategory|{ Food = time.today() }, warehouse_a, 15)!,
   }
 
-  InventoryService@{ items = initial_items }
+  InventoryService@{ initial_items }
 }

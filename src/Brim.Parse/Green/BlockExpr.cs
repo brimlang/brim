@@ -45,13 +45,25 @@ ExprNode(SyntaxKind.BlockExpr, OpenBrace.Offset)
       if (p.MatchRaw(RawKind.Terminator))
       {
         GreenToken term = p.ExpectSyntax(SyntaxKind.TerminatorToken);
+        
+        // If closing brace or EOB follows, this is the final expression with trailing terminator
+        if (p.MatchRaw(RawKind.RBrace) || p.MatchRaw(RawKind.Eob))
+        {
+          // The terminator is optional trailing, result is the expression
+          ExprNode result = expr;
+          GreenToken closeToken = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
+          return new BlockExpr(openBrace, statements.ToImmutable(), result, closeToken);
+        }
+        
+        // Otherwise it's a statement and we continue parsing
         statements.Add(new ExpressionStatement(expr, term));
         continue;
       }
 
-      ExprNode result = expr;
-      GreenToken close = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
-      return new BlockExpr(openBrace, statements.ToImmutable(), result, close);
+      // No terminator after expression, must be the final expression before }
+      ExprNode resultExpr = expr;
+      GreenToken closingBrace = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
+      return new BlockExpr(openBrace, statements.ToImmutable(), resultExpr, closingBrace);
     }
 
     ExprNode missing = new LiteralExpr(p.FabricateMissing(SyntaxKind.IdentifierToken, RawKind.Identifier));

@@ -286,7 +286,7 @@ ModuleBody   : TerminatedListOpt<Declaration>
 ## Block Expression
 
 ```hgf
-BlockExpr      : '{' TerminatedListOpt<BlockEntry> Expr '}'
+BlockExpr      : '{' TerminatedListOpt<BlockEntry> Expr TERM? '}'
 BlockEntry     : BindingDecl
                | Expr
 ```
@@ -422,8 +422,9 @@ LambdaParams     : IDENT (',' IDENT)*
 LambdaBody       : Expr
                  | BlockExpr
 
-MatchExpr        : BinaryExpr ARROW MatchArmList
-MatchArmList     : TerminatedList<MatchArm>
+MatchExpr        : BinaryExpr ARROW MatchBody
+MatchBody        : MatchArm
+                 | '{' TerminatedList<MatchArm> '}'
 MatchArm         : Pattern GuardExpr? ARROW MatchTarget
 MatchTarget      : Expr
 GuardExpr        : GUARD BinaryExpr

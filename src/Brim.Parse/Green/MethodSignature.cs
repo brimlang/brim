@@ -3,23 +3,30 @@ namespace Brim.Parse.Green;
 public sealed record MethodSignature(
   DeclarationName Name,
   GreenToken Colon,
-  FunctionShape MethodShape
+  CommaList<FunctionParam> Parameters,
+  TypeExpr ReturnType
 ) : GreenNode(SyntaxKind.MethodSignature, Name.Offset),
   IParsable<MethodSignature>
 {
-  public override int FullWidth => MethodShape.EndOffset - Offset;
+  public override int FullWidth => ReturnType.EndOffset - Offset;
   public override IEnumerable<GreenNode> GetChildren()
   {
     yield return Name;
     yield return Colon;
-    foreach (GreenNode p in MethodShape.GetChildren()) yield return p;
+    yield return Parameters;
+    yield return ReturnType;
   }
 
   public static MethodSignature Parse(Parser p)
   {
     DeclarationName name = DeclarationName.Parse(p);
     GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
-    FunctionShape shape = FunctionShape.Parse(p);
-    return new(name, colon, shape);
+    CommaList<FunctionParam> parameters = CommaList<FunctionParam>.Parse(
+      p,
+      SyntaxKind.OpenParenToken,
+      SyntaxKind.CloseParenToken,
+      FunctionParam.Parse);
+    TypeExpr returnType = TypeExpr.Parse(p);
+    return new(name, colon, parameters, returnType);
   }
 }
