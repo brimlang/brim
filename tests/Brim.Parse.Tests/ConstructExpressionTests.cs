@@ -78,17 +78,18 @@ public class ConstructExpressionTests
   [Fact]
   public void FlagsConstruct_InMatchArm()
   {
-    string src = Header + "perms :Perms = is_admin =>\n  true => Perms&{ read, write, exec }\n  false => Perms&{ read }\n";
+    string src = Header + "perms :Perms = is_admin => {\n  true => Perms&{ read, write, exec }\n  false => Perms&{ read }\n}\n";
     BrimModule module = ParserTestHelpers.ParseModule(src);
 
     ValueDeclaration decl = ParserTestHelpers.GetMember<ValueDeclaration>(module, 0);
     MatchExpr match = Assert.IsType<MatchExpr>(decl.Initializer);
 
-    MatchArm firstArm = match.Arms.Arms[0];
+    MatchBlock block = Assert.IsType<MatchBlock>(match.Body);
+    MatchArm firstArm = block.Arms[0].Arm;
     FlagsConstruct flags = Assert.IsType<FlagsConstruct>(firstArm.Target);
     Assert.Equal(3, flags.Flags.Elements.Length);
 
-    MatchArm secondArm = match.Arms.Arms[1];
+    MatchArm secondArm = block.Arms[1].Arm;
     FlagsConstruct singleFlag = Assert.IsType<FlagsConstruct>(secondArm.Target);
     Assert.Equal(1, singleFlag.Flags.Elements.Length);
   }

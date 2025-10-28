@@ -78,9 +78,10 @@ UserService {
 
 UserService<UserProtocol,AuthProtocol>(svc :@) {
   add :(name :str, is_admin :bool) User! {
-    svc.perms = is_admin =>
+    svc.perms = is_admin => {
       true  => Perms&{ read, write, exec }
       false => Perms&{ read }
+    }
     svc.audit = seqops.concat(svc.audit, seq{
       text.concat("add:", name)
     })
@@ -99,7 +100,7 @@ UserService<UserProtocol,AuthProtocol>(svc :@) {
   }
 
   login :(uname :str, pass :str) User! {
-    check(uname, pass, svc.perms) =>
+    check(uname, pass, svc.perms) => {
       true  => User%{
         name  = uname,
         perms = Area|{
@@ -107,6 +108,7 @@ UserService<UserProtocol,AuthProtocol>(svc :@) {
         },
       }
       false => !!{ mkerr("Not Authorized") }
+    }
   }
 
   logout :(user :User) unit {
@@ -118,9 +120,10 @@ UserService<UserProtocol,AuthProtocol>(svc :@) {
 
 -- shorthand function syntax
 check :(uname :str, pass :str, perms :Perms) bool {
-  perms =>
+  perms => {
     &(+exec) => true
     _        => false
+  }
 }
 
 -- Function forms demonstration:
@@ -173,12 +176,13 @@ AuthService {
 
 AuthService<Auth>(svc :@) {
   login :(uname :str, pass :str) User! {
-    stdlib.atoi(pass) == svc.foo =>
+    stdlib.atoi(pass) == svc.foo => {
       true  => User%{
         id   = uname,
         auth = svc.bar,
       }
       false => !!{ mkerr("Not Authorized") }
+    }
   }
 }
 

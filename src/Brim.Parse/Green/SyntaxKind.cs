@@ -133,6 +133,7 @@ public enum SyntaxKind
   MatchExpr,
   MatchArm,
   MatchArmList,
+  MatchBlock,
   MatchGuard,
   IdentifierExpr,
   LiteralExpr,

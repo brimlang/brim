@@ -25,8 +25,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     LiteralPattern pattern = Assert.IsType<LiteralPattern>(arm.Pattern);
     Assert.Equal(SyntaxKind.IntToken, pattern.Literal.Kind);
@@ -46,8 +46,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     BindingPattern pattern = Assert.IsType<BindingPattern>(arm.Pattern);
     Assert.Equal(SyntaxKind.IdentifierToken, pattern.Identifier.Kind);
@@ -67,8 +67,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     LiteralPattern pattern = Assert.IsType<LiteralPattern>(arm.Pattern);
     Assert.Equal(SyntaxKind.StrToken, pattern.Literal.Kind);
@@ -88,8 +88,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     VariantPattern pattern = Assert.IsType<VariantPattern>(arm.Pattern);
     Assert.Equal(SyntaxKind.IdentifierToken, pattern.VariantName.Kind);
@@ -110,8 +110,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     TuplePattern pattern = Assert.IsType<TuplePattern>(arm.Pattern);
     Assert.Empty(pattern.Patterns.Elements);
@@ -131,8 +131,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     TuplePattern pattern = Assert.IsType<TuplePattern>(arm.Pattern);
     Assert.Single(pattern.Patterns.Elements);
@@ -153,8 +153,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     TuplePattern pattern = Assert.IsType<TuplePattern>(arm.Pattern);
     Assert.Equal(2, pattern.Patterns.Elements.Length);
@@ -176,8 +176,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     TuplePattern outer = Assert.IsType<TuplePattern>(arm.Pattern);
     Assert.Equal(2, outer.Patterns.Elements.Length);
@@ -205,8 +205,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     BindingPattern pattern = Assert.IsType<BindingPattern>(arm.Pattern);
     Assert.Equal(SyntaxKind.IdentifierToken, pattern.Identifier.Kind);
@@ -227,8 +227,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     VariantPattern pattern = Assert.IsType<VariantPattern>(arm.Pattern);
     Assert.Equal(SyntaxKind.IdentifierToken, pattern.VariantName.Kind);
@@ -252,8 +252,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     StructPattern pattern = Assert.IsType<StructPattern>(arm.Pattern);
     Assert.Empty(pattern.FieldPatterns.Elements);
@@ -275,8 +275,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     StructPattern pattern = Assert.IsType<StructPattern>(arm.Pattern);
     Assert.Single(pattern.FieldPatterns.Elements);
@@ -302,8 +302,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     StructPattern pattern = Assert.IsType<StructPattern>(arm.Pattern);
     Assert.Equal(2, pattern.FieldPatterns.Elements.Length);
@@ -331,8 +331,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     ListPattern pattern = Assert.IsType<ListPattern>(arm.Pattern);
     Assert.Null(pattern.Elements);
@@ -352,8 +352,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     ListPattern pattern = Assert.IsType<ListPattern>(arm.Pattern);
     Assert.NotNull(pattern.Elements);
@@ -377,8 +377,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     ListPattern pattern = Assert.IsType<ListPattern>(arm.Pattern);
     Assert.NotNull(pattern.Elements);
@@ -402,8 +402,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     OptionalPattern pattern = Assert.IsType<OptionalPattern>(arm.Pattern);
     Assert.Null(pattern.Pattern);
@@ -423,8 +423,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     OptionalPattern pattern = Assert.IsType<OptionalPattern>(arm.Pattern);
     Assert.NotNull(pattern.Pattern);
@@ -445,8 +445,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     FalliblePattern pattern = Assert.IsType<FalliblePattern>(arm.Pattern);
     Assert.Null(pattern.SecondBangToken);
@@ -468,8 +468,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     FalliblePattern pattern = Assert.IsType<FalliblePattern>(arm.Pattern);
     Assert.NotNull(pattern.SecondBangToken);
@@ -490,8 +490,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     FalliblePattern pattern = Assert.IsType<FalliblePattern>(arm.Pattern);
     Assert.NotNull(pattern.SecondBangToken);
@@ -513,8 +513,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     StructPattern pattern = Assert.IsType<StructPattern>(arm.Pattern);
     Assert.Equal(2, pattern.FieldPatterns.Elements.Length);
@@ -543,8 +543,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     VariantPattern variantPattern = Assert.IsType<VariantPattern>(arm.Pattern);
     Assert.NotNull(variantPattern.Tail);
@@ -569,8 +569,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     ListPattern listPattern = Assert.IsType<ListPattern>(arm.Pattern);
     Assert.NotNull(listPattern.Elements);
@@ -600,8 +600,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     OptionalPattern optPattern = Assert.IsType<OptionalPattern>(arm.Pattern);
     Assert.NotNull(optPattern.Pattern);
@@ -625,8 +625,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     // Layer 1: Variant pattern
     VariantPattern variantPattern = Assert.IsType<VariantPattern>(arm.Pattern);
@@ -663,8 +663,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     FlagsPattern pattern = Assert.IsType<FlagsPattern>(arm.Pattern);
     Assert.Empty(pattern.Entries.Elements);
@@ -684,8 +684,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     FlagsPattern pattern = Assert.IsType<FlagsPattern>(arm.Pattern);
     Assert.Single(pattern.Entries.Elements);
@@ -705,8 +705,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     FlagsPattern pattern = Assert.IsType<FlagsPattern>(arm.Pattern);
     Assert.Equal(2, pattern.Entries.Elements.Length);
@@ -726,8 +726,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     ServicePattern pattern = Assert.IsType<ServicePattern>(arm.Pattern);
     Assert.Empty(pattern.Entries.Elements);
@@ -747,8 +747,8 @@ public class PatternParsingTests
     FunctionLiteral func = Assert.IsType<FunctionLiteral>(value.Initializer);
     MatchExpr match = Assert.IsType<MatchExpr>(func.Body);
 
-    Assert.Single(match.Arms.Arms);
-    MatchArm arm = match.Arms.Arms[0];
+    // Single-arm match: Body is MatchArm directly
+    MatchArm arm = Assert.IsType<MatchArm>(match.Body);
 
     ServicePattern pattern = Assert.IsType<ServicePattern>(arm.Pattern);
     Assert.Single(pattern.Entries.Elements);

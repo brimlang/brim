@@ -25,8 +25,20 @@ public sealed partial class Parser
     if (MatchRaw(RawKind.EqualGreater))
     {
       GreenToken arrow = ExpectSyntax(SyntaxKind.ArrowToken);
-      MatchArmList arms = ParseMatchArmList();
-      return new MatchExpr(scrutinee, arrow, arms);
+      
+      // Check if this is a multi-line match (with braces) or single-line
+      if (MatchRaw(RawKind.LBrace))
+      {
+        // Multi-line match: => { arms }
+        MatchBlock block = ParseMatchBlock();
+        return new MatchExpr(scrutinee, arrow, block);
+      }
+      else
+      {
+        // Single-line match: => arm
+        MatchArm arm = ParseMatchArm();
+        return new MatchExpr(scrutinee, arrow, arm);
+      }
     }
 
     return scrutinee;
@@ -245,6 +257,44 @@ public sealed partial class Parser
     }
 
     return new MatchArmList(arms.ToImmutable());
+  }
+
+  MatchBlock ParseMatchBlock()
+  {
+    GreenToken openBrace = ExpectSyntax(SyntaxKind.OpenBraceToken);
+
+    // Optional leading terminator
+    GreenToken? leadingTerminator = null;
+    if (MatchRaw(RawKind.Terminator))
+      leadingTerminator = ExpectSyntax(SyntaxKind.TerminatorToken);
+
+    ArrayBuilder<MatchBlock.Element> arms = [];
+
+    // Parse arms until we hit closing brace
+    while (!MatchRaw(RawKind.RBrace) && !MatchRaw(RawKind.Eob))
+    {
+      Parser.StallGuard guard = GetStallGuard();
+      
+      // Optional leading terminator before this arm (for 2nd+ arms)
+      GreenToken? armLeadingTerm = null;
+      if (arms.Count > 0 && MatchRaw(RawKind.Terminator))
+        armLeadingTerm = ExpectSyntax(SyntaxKind.TerminatorToken);
+      
+      // Parse the arm itself (which includes its own optional terminator)
+      MatchArm arm = ParseMatchArm();
+      arms.Add(new MatchBlock.Element(armLeadingTerm, arm));
+
+      if (guard.Stalled)
+        break;
+    }
+
+    // Optional trailing terminator before close
+    GreenToken? trailingTerminator = null;
+    if (MatchRaw(RawKind.Terminator))
+      trailingTerminator = ExpectSyntax(SyntaxKind.TerminatorToken);
+
+    GreenToken closeBrace = ExpectSyntax(SyntaxKind.CloseBlockToken);
+    return new MatchBlock(openBrace, leadingTerminator, arms.ToImmutable(), trailingTerminator, closeBrace);
   }
 
   MatchArm ParseMatchArm()
