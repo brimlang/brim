@@ -4,18 +4,13 @@ namespace Brim.Parse.Green;
 
 public sealed record ExportList(
   CommaList<GreenToken> List
-) : GreenNode(SyntaxKind.ExportList, List.OpenToken.Offset),
+) : GreenNode(SyntaxKind.ExportList, List.Offset),
   IParsable<ExportList>
 {
-  public override int FullWidth => List.CloseToken.EndOffset - List.OpenToken.Offset;
+  public override int FullWidth => List.EndOffset - List.Offset;
   public override IEnumerable<GreenNode> GetChildren()
   {
-    yield return List.OpenToken;
-    if (List.LeadingTerminator is not null) yield return List.LeadingTerminator;
-    foreach (CommaList<GreenToken>.Element element in List.Elements) yield return element;
-    if (List.TrailingComma is not null) yield return List.TrailingComma;
-    if (List.TrailingTerminator is not null) yield return List.TrailingTerminator;
-    yield return List.CloseToken;
+    yield return List;
   }
 
   public string GetIdentifiersText(ReadOnlySpan<char> source)

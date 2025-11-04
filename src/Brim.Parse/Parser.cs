@@ -181,6 +181,18 @@ public sealed partial class Parser(
     return FabricateMissing(kind, tokenKind);
   }
 
+  internal StructuralArray<GreenToken> CollectStandaloneSyntaxKind(SyntaxKind kind)
+  {
+    ArrayBuilder<GreenToken> tokens = [];
+    while (MatchSyntax(kind))
+    {
+      SignificantToken sig = Current;
+      tokens.Add(new GreenToken(kind, sig));
+      Advance();
+    }
+    return tokens;
+  }
+
   internal GreenToken FabricateMissing(SyntaxKind syntaxKind, RawKind expectedRaw)
   {
     _diags.Add(Diagnostic.Missing(expectedRaw, Current.CoreToken));

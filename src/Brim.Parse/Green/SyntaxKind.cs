@@ -24,7 +24,7 @@ public enum SyntaxKind
   GreaterToken,
   UnionToken,
   AmpersandToken,
-  OpenBraceToken,
+  OpenBlockToken,
   CloseBlockToken,
   ExportOpenToken,
   ColonToken,
@@ -174,4 +174,5 @@ public enum SyntaxKind
   VariantPatternTail,
   FlagsPatternEntry,
   ServicePatternEntry,
+  TerminatorList,
 }
