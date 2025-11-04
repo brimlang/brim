@@ -27,6 +27,24 @@ public readonly struct StructuralArray<T> : IImmutableList<T>, IEquatable<Struct
   readonly ImmutableArray<T> _array;
 
   /// <summary>
+  /// Initializes a new instance of <see cref="StructuralArray{T}"/> from an <see cref="ImmutableArray{T}"/>.
+  /// </summary>
+  /// <param name="array">The immutable array to wrap.</param>
+  public StructuralArray(ImmutableArray<T> array) => _array = array;
+
+  /// <summary>
+  /// Initializes a new instance of <see cref="StructuralArray{T}"/> from an <see cref="IEnumerable{T}"/>.
+  /// </summary>
+  /// <param name="items">The items to include.</param>
+  public StructuralArray(IEnumerable<T> items) => _array = items is null ? [] : [.. items];
+
+  /// <summary>
+  /// Initializes a new instance of the <see cref="StructuralArray{T}"/> class with the specified items.
+  /// </summary>
+  /// <param name="items">The array of items to initialize the structural array with. If null, an empty array is used.</param>
+  public StructuralArray(T[] items) => _array = items is null ? [] : ImmutableArray.Create(items);
+
+  /// <summary>
   /// An empty <see cref="StructuralArray{T}"/>.
   /// </summary>
   public static StructuralArray<T> Empty { get; } = ImmutableArray<T>.Empty;
@@ -44,41 +62,23 @@ public readonly struct StructuralArray<T> : IImmutableList<T>, IEquatable<Struct
   /// <summary>
   /// Gets the length of the underlying array.
   /// </summary>
-  public int Length => _array.Length;
+  public int Length => _array.IsDefault ? 0 : _array.Length;
 
   /// <summary>
   /// Gets the number of elements in the collection.
   /// </summary>
-  public int Count => _array.Length;
+  public int Count => _array.IsDefault ? 0 : _array.Length;
 
   /// <summary>
   /// Gets a value indicating whether the collection is empty.
   /// </summary>
-  public bool IsEmpty => _array.IsEmpty;
+  public bool IsEmpty => _array.IsDefaultOrEmpty;
 
   /// <summary>
   /// Gets the element at the specified index.
   /// </summary>
   /// <param name="index">The zero-based index of the element to get.</param>
   public T this[int index] => _array[index];
-
-  /// <summary>
-  /// Initializes a new instance of <see cref="StructuralArray{T}"/> from an <see cref="ImmutableArray{T}"/>.
-  /// </summary>
-  /// <param name="array">The immutable array to wrap.</param>
-  public StructuralArray(ImmutableArray<T> array) => _array = array;
-
-  /// <summary>
-  /// Initializes a new instance of <see cref="StructuralArray{T}"/> from an <see cref="IEnumerable{T}"/>.
-  /// </summary>
-  /// <param name="items">The items to include.</param>
-  public StructuralArray(IEnumerable<T> items) => _array = [.. items];
-
-  /// <summary>
-  /// Initializes a new instance of the <see cref="StructuralArray{T}"/> class with the specified items.
-  /// </summary>
-  /// <param name="items">The array of items to initialize the structural array with. If null, an empty array is used.</param>
-  public StructuralArray(T[] items) => _array = items is null ? [] : ImmutableArray.Create(items);
 
 #pragma warning disable IDE0028, IDE0306 // Collection expression can be simplified
   public static implicit operator StructuralArray<T>(T[] array) => new(array);
@@ -91,6 +91,11 @@ public readonly struct StructuralArray<T> : IImmutableList<T>, IEquatable<Struct
 
   public bool Equals(StructuralArray<T> other)
   {
+    if (_array.IsDefault && other._array.IsDefault)
+      return true;
+    if (_array.IsDefault || other._array.IsDefault)
+      return false;
+
     int count = _array.Length;
     return count != other.Count
       ? false
@@ -102,6 +107,9 @@ public readonly struct StructuralArray<T> : IImmutableList<T>, IEquatable<Struct
 
   public override int GetHashCode()
   {
+    if (_array.IsDefault)
+      return 0;
+
     HashCode hash = new();
     foreach (T? item in _array)
       hash.Add(item);

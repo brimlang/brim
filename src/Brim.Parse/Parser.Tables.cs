@@ -54,7 +54,7 @@ public sealed partial class Parser
     SyntaxKind.RuneToken => RawKind.RuneLiteral,
     SyntaxKind.EqualToken => RawKind.Equal,
     SyntaxKind.AmpersandToken => RawKind.Ampersand,
-    SyntaxKind.OpenBraceToken => RawKind.LBrace,
+    SyntaxKind.OpenBlockToken => RawKind.LBrace,
     SyntaxKind.CloseBlockToken => RawKind.RBrace,
     SyntaxKind.EobToken => RawKind.Eob,
     SyntaxKind.ColonToken => RawKind.Colon,

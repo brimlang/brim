@@ -57,7 +57,7 @@ public sealed record ServiceImpl(
       ctorClose = p.ExpectSyntax(SyntaxKind.CloseParenToken);
     }
 
-    GreenToken ob = p.ExpectSyntax(SyntaxKind.OpenBraceToken);
+    GreenToken ob = p.ExpectSyntax(SyntaxKind.OpenBlockToken);
 
     // Init declarations: ('^'? Ident ':' Type '=' ... Terminator)+
     ImmutableArray<ServiceFieldInit>.Builder inits = ImmutableArray.CreateBuilder<ServiceFieldInit>();
@@ -104,7 +104,7 @@ public sealed record ServiceImpl(
     while (!p.MatchRaw(RawKind.RBrace) && !p.MatchRaw(RawKind.Eob))
     {
       if (p.MatchRaw(RawKind.Terminator)) { _ = p.ExpectRaw(RawKind.Terminator); continue; }
-      if (p.MatchRaw(RawKind.LBrace)) { _ = p.ExpectSyntax(SyntaxKind.OpenBraceToken); SkipBlock(p); continue; }
+      if (p.MatchRaw(RawKind.LBrace)) { _ = p.ExpectSyntax(SyntaxKind.OpenBlockToken); SkipBlock(p); continue; }
 
       if (p.MatchRaw(RawKind.Identifier))
       {
@@ -127,7 +127,7 @@ public sealed record ServiceImpl(
     StructuralArray<ServiceParam> @params = ParseParamDeclList(p);
     GreenToken cp = p.ExpectSyntax(SyntaxKind.CloseParenToken);
     TypeExpr ret = TypeExpr.Parse(p);
-    GreenToken bodyOpen = p.ExpectSyntax(SyntaxKind.OpenBraceToken);
+    GreenToken bodyOpen = p.ExpectSyntax(SyntaxKind.OpenBlockToken);
     SkipBlock(p);
     return new ServiceMethodHeader(name, op, @params, cp, ret, bodyOpen);
   }
@@ -138,7 +138,7 @@ public sealed record ServiceImpl(
     GreenToken op = p.ExpectSyntax(SyntaxKind.OpenParenToken);
     GreenToken cp = p.ExpectSyntax(SyntaxKind.CloseParenToken);
     TypeExpr ret = TypeExpr.Parse(p);
-    GreenToken bodyOpen = p.ExpectSyntax(SyntaxKind.OpenBraceToken);
+    GreenToken bodyOpen = p.ExpectSyntax(SyntaxKind.OpenBlockToken);
     SkipBlock(p);
     return new ServiceDtorHeader(tilde, op, cp, ret, bodyOpen);
   }
@@ -173,7 +173,7 @@ public sealed record ServiceImpl(
     int depth = 1;
     while (!p.MatchRaw(RawKind.Eob) && depth > 0)
     {
-      if (p.MatchRaw(RawKind.LBrace)) { _ = p.ExpectSyntax(SyntaxKind.OpenBraceToken); depth++; continue; }
+      if (p.MatchRaw(RawKind.LBrace)) { _ = p.ExpectSyntax(SyntaxKind.OpenBlockToken); depth++; continue; }
       if (p.MatchRaw(RawKind.RBrace)) { depth--; if (depth == 0) break; _ = p.ExpectSyntax(SyntaxKind.CloseBlockToken); continue; }
       _ = p.ExpectRaw(p.Current.Kind);
     }

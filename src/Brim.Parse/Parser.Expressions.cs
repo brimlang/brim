@@ -25,7 +25,7 @@ public sealed partial class Parser
     if (MatchRaw(RawKind.EqualGreater))
     {
       GreenToken arrow = ExpectSyntax(SyntaxKind.ArrowToken);
-      
+
       // Check if this is a multi-line match (with braces) or single-line
       if (MatchRaw(RawKind.LBrace))
       {
@@ -261,7 +261,7 @@ public sealed partial class Parser
 
   MatchBlock ParseMatchBlock()
   {
-    GreenToken openBrace = ExpectSyntax(SyntaxKind.OpenBraceToken);
+    GreenToken openBrace = ExpectSyntax(SyntaxKind.OpenBlockToken);
 
     // Optional leading terminator
     GreenToken? leadingTerminator = null;
@@ -274,12 +274,12 @@ public sealed partial class Parser
     while (!MatchRaw(RawKind.RBrace) && !MatchRaw(RawKind.Eob))
     {
       Parser.StallGuard guard = GetStallGuard();
-      
+
       // Optional leading terminator before this arm (for 2nd+ arms)
       GreenToken? armLeadingTerm = null;
       if (arms.Count > 0 && MatchRaw(RawKind.Terminator))
         armLeadingTerm = ExpectSyntax(SyntaxKind.TerminatorToken);
-      
+
       // Parse the arm itself (which includes its own optional terminator)
       MatchArm arm = ParseMatchArm();
       arms.Add(new MatchBlock.Element(armLeadingTerm, arm));
@@ -517,7 +517,7 @@ public sealed partial class Parser
 
     CommaList<ExprNode> elements = CommaList<ExprNode>.Parse(
       this,
-      SyntaxKind.OpenBraceToken,
+      SyntaxKind.OpenBlockToken,
       SyntaxKind.CloseBlockToken,
       p => p.ParseExpression());
 

@@ -1,10 +1,5 @@
 =[acme::inventory]=
 -- Illustrative Example: Inventory Management
--- This file demonstrates inventory tracking patterns and is non-canonical.
--- Unlike spec/sample.brim, this file is not part of the canonical sync set
--- and may use experimental or proposed features.
---
--- Status: illustrative (not canonical)
 
 
 -- canon:
@@ -116,11 +111,11 @@ create_item :(id :ItemId, name :str, category :ItemCategory, location :Warehouse
 }
 
 update_stock :(item :InventoryItem, delta :Quantity) InventoryItem! {
-  new_qty :Quantity! = item.stock_level => {
-    InStock = n => n + delta
-    LowStock = n => n + delta
-    OutOfStock => delta
-    Discontinued => !!{ "Cannot update discontinued item" }
+  new_qty = item.stock_level => {
+    |(InStock(n)) => n + delta
+    |(LowStock(n)) => n + delta
+    |(OutOfStock) => delta
+    |(Discontinued) => !!{ "Cannot update discontinued item" }
   }
 
   validate_quantity(new_qty!) => {
@@ -139,7 +134,7 @@ update_stock :(item :InventoryItem, delta :Quantity) InventoryItem! {
       },
       price = item.price,
       last_updated = time.now(),
-    } }
+    }}
   }
 }
 
@@ -156,7 +151,7 @@ update_price :(item :InventoryItem, new_price :Price) InventoryItem! {
       stock_level = item.stock_level,
       price = new_price,
       last_updated = time.now(),
-    } }
+    }}
   }
 }
 

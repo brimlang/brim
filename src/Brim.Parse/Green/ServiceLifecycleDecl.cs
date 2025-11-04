@@ -29,7 +29,7 @@ public sealed record ServiceLifecycleDecl(
     // TypeRef '{' (ServiceCtorDecl | ServiceDtorDecl)* '}'
     TypeRef tref = TypeRef.Parse(p);
 
-    GreenToken ob = p.ExpectSyntax(SyntaxKind.OpenBraceToken);
+    GreenToken ob = p.ExpectSyntax(SyntaxKind.OpenBlockToken);
 
     ArrayBuilder<GreenNode> members = [];
     while (!p.MatchRaw(RawKind.RBrace) && !p.MatchRaw(RawKind.Eob))
@@ -175,7 +175,7 @@ public sealed record ServiceProtocolDecl(
       receiver = ServiceReceiver.Parse(p);
     }
 
-    GreenToken ob = p.ExpectSyntax(SyntaxKind.OpenBraceToken);
+    GreenToken ob = p.ExpectSyntax(SyntaxKind.OpenBlockToken);
 
     // Parse method declarations
     ArrayBuilder<GreenNode> methods = [];
