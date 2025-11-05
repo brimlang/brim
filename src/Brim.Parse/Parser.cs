@@ -116,8 +116,11 @@ public sealed partial class Parser(
     };
   }
 
+  internal bool MatchRawNotEob(RawKind kind, int offset = 0) =>
+    PeekKind(offset) != RawKind.Eob && MatchRaw(kind, offset);
+
   internal bool MatchRaw(RawKind kind, int offset = 0) =>
-    kind == RawKind.Any || PeekKind(offset) == kind;
+     kind == RawKind.Any || PeekKind(offset) == kind;
 
   internal bool Match(RawKind kind) =>
     MatchRaw(kind, 0);
@@ -181,7 +184,7 @@ public sealed partial class Parser(
     return FabricateMissing(kind, tokenKind);
   }
 
-  internal StructuralArray<GreenToken> CollectStandaloneSyntaxKind(SyntaxKind kind)
+  internal StructuralArray<GreenToken> CollectSyntaxKind(SyntaxKind kind)
   {
     ArrayBuilder<GreenToken> tokens = [];
     while (MatchSyntax(kind))

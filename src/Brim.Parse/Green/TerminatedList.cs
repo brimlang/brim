@@ -104,16 +104,20 @@ GreenNode(SyntaxKind.TerminatorList, OpenToken.Offset) where T : GreenNode
   /// <param name="closeSyntax">The syntax kind to assign to the closing delimiter token.</param>
   /// <param name="parseElement">Function to parse individual list elements.</param>
   /// <returns>A parsed terminator list.</returns>
-  public static TerminatorList<T> Parse(Parser p, RawKind openRaw, SyntaxKind openSyntax, RawKind closeRaw, SyntaxKind closeSyntax, Func<Parser, T> parseElement)
+  public static TerminatorList<T> Parse(
+    Parser p,
+    RawKind openRaw,
+    SyntaxKind openSyntax,
+    RawKind closeRaw,
+    SyntaxKind closeSyntax,
+    Func<Parser, T> parseElement)
   {
     GreenToken open = p.Expect(openRaw, openSyntax);
-
-    StructuralArray<GreenToken> leadingTerminators = p.CollectStandaloneSyntaxKind(SyntaxKind.TerminatorToken);
-
+    StructuralArray<GreenToken> leadingTerminators = p.CollectSyntaxKind(SyntaxKind.TerminatorToken);
     ArrayBuilder<Element> elements = [];
 
     // Parse first element if not immediately at close
-    while (!p.MatchRaw(closeRaw))
+    while (!p.MatchRawNotEob(closeRaw))
     {
       Parser.StallGuard sg = p.GetStallGuard();
       elements.Add(Element.Parse(p, parseElement));
@@ -150,7 +154,7 @@ GreenNode(SyntaxKind.TerminatorList, OpenToken.Offset) where T : GreenNode
     internal static Element Parse(Parser p, Func<Parser, T> parseElement)
     {
       T element = parseElement(p);
-      StructuralArray<GreenToken> terminators = p.CollectStandaloneSyntaxKind(SyntaxKind.TerminatorToken);
+      StructuralArray<GreenToken> terminators = p.CollectSyntaxKind(SyntaxKind.TerminatorToken);
 
       return new(element, terminators);
     }
