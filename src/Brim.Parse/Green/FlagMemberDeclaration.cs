@@ -10,5 +10,5 @@ public sealed record FlagMemberDeclaration(
     yield return Identifier;
   }
 
-  public static FlagMemberDeclaration Parse(Parser p) => new(p.ExpectSyntax(SyntaxKind.IdentifierToken));
+  public static FlagMemberDeclaration Parse(Parser p) => new(p.Expect(SyntaxKind.IdentifierToken));
 }

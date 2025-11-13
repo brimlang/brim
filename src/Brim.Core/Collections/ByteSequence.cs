@@ -1,4 +1,4 @@
-namespace Brim.Parse.Collections;
+namespace Brim.Core.Collections;
 
 /// <summary>
 /// Immutable, stack-only sequence of up to 3 UTF-8 bytes, for efficient operator matching.
@@ -154,8 +154,10 @@ public readonly struct ByteSequence :
   public bool TryFormat(
       Span<char> destination,
       out int charsWritten,
+#pragma warning disable IDE0060 // Remove unused parameter
       ReadOnlySpan<char> format = default,
       IFormatProvider? provider = null)
+#pragma warning restore IDE0060 // Remove unused parameter
   {
     if (destination.Length < Length)
     {

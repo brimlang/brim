@@ -1,9 +1,9 @@
 using System.Globalization;
 using System.Text;
 
-namespace Brim.Parse;
+namespace Brim.Core;
 
-static class BrimChars
+public static class BrimChars
 {
   /// <summary>
   /// End Of Buffer marker for stream processing.

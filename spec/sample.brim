@@ -49,13 +49,13 @@ User := %{
 
 
 AuthProtocol := .{
-  login  :(str, str) User!,
-  logout :(User) unit,
+  login  :(uname: str, pass :str) User!,
+  logout :(user: User) unit,
 }
 
 UserProtocol := .{
-  add :(str, bool) User!,
-  ban :(User) unit,
+  add :(uname :str, is_admin :bool) User!,
+  ban :(user :User) unit,
 }
 
 UserService := @{
@@ -65,7 +65,7 @@ UserService := @{
 
 UserService {
   (seed :Perms) @! {
-    @{
+    UserService@{
       perms = seed,
       audit = seq[str]{},
     }
@@ -82,19 +82,17 @@ UserService<UserProtocol,AuthProtocol>(svc :@) {
       true  => Perms&{ read, write, exec }
       false => Perms&{ read }
     }
-    svc.audit = seqops.concat(svc.audit, seq{
-      text.concat("add:", name)
-    })
+
+    svc.audit = seqops.concat(svc.audit, seq[str]{ text.concat("add:", name) })
+
     User%{
       name  = name,
-      perms = Area|{
-        Admin = svc.perms,
-      },
+      perms = Area|{ Admin = svc.perms },
     }
   }
 
   ban :(user :User) unit {
-    svc.audit = seqops.concat(svc.audit, seq{
+    svc.audit = seqops.concat(svc.audit, seq[str]{
       text.concat("ban:", user.name)
     })
   }
@@ -103,16 +101,14 @@ UserService<UserProtocol,AuthProtocol>(svc :@) {
     check(uname, pass, svc.perms) => {
       true  => User%{
         name  = uname,
-        perms = Area|{
-          Client = svc.perms,
-        },
+        perms = Area|{ Client = svc.perms },
       }
       false => !!{ mkerr("Not Authorized") }
     }
   }
 
   logout :(user :User) unit {
-    svc.audit = seqops.concat(svc.audit, seq{
+    svc.audit = seqops.concat(svc.audit, seq[str]{
       text.concat("logout:", user.name)
     })
   }
@@ -161,7 +157,7 @@ AuthService := @{
 AuthService {
   (a :u32, b :bool) @! {
     start()
-    @{
+    AuthService@{
       foo = a,
       bar = b,
     }
@@ -187,14 +183,14 @@ AuthService<Auth>(svc :@) {
 }
 
 -- These expressions should parse
-parse_pass :() unit {
+parse_pass :() unit = {
   opt?
   res!
 
-  ^limit :i8 = 10
+  limit = 10
   limit = limit + 10
 
-  pi :f32 = 3.14159
+  pi = 3.14159
 
   value :> A :> B?
   value :> A :> B!
@@ -219,7 +215,7 @@ parse_pass :() unit {
 }
 
 -- These expressions should fail to parse
-fail :() unit {
+fail :() unit = {
   expr? :> T
   expr! :> T
   svc.method()?.next()

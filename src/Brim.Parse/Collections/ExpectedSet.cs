@@ -9,16 +9,16 @@ namespace Brim.Parse.Collections;
 /// </summary>
 public readonly struct ExpectedSet
 {
-  readonly RawKind _e0;
-  readonly RawKind _e1;
-  readonly RawKind _e2;
-  readonly RawKind _e3;
+  readonly TokenKind _e0;
+  readonly TokenKind _e1;
+  readonly TokenKind _e2;
+  readonly TokenKind _e3;
 
   public byte Count { get; }
 
-  public ExpectedSet Add(RawKind kind)
+  public ExpectedSet Add(TokenKind kind)
   {
-    if (kind == RawKind.Any) return this;
+    if (kind == TokenKind.Any) return this;
     // De-dup linear (N ≤ 4)
     return Count switch
     {
@@ -37,7 +37,7 @@ public readonly struct ExpectedSet
     };
   }
 
-  public ReadOnlySpan<RawKind> AsSpan()
+  public ReadOnlySpan<TokenKind> AsSpan()
   {
     // Use MemoryMarshal to create a span over the first field; fields are laid out sequentially.
     return Count switch
@@ -50,7 +50,7 @@ public readonly struct ExpectedSet
     };
   }
 
-  ExpectedSet(RawKind e0, RawKind e1, RawKind e2, RawKind e3, byte count)
+  ExpectedSet(TokenKind e0, TokenKind e1, TokenKind e2, TokenKind e3, byte count)
   {
     _e0 = e0; _e1 = e1; _e2 = e2; _e3 = e3; Count = count;
   }

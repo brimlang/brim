@@ -1,5 +1,3 @@
-using Brim.Parse.Collections;
-
 namespace Brim.Parse.Green;
 
 public sealed record ServiceImpl(
@@ -37,131 +35,148 @@ public sealed record ServiceImpl(
   public static ServiceImpl Parse(Parser p)
   {
     // '@' ServiceRef '<' recv '>' CtorParamsOpt '{' InitDecl* Member* '}'
-    GreenToken sigil = p.ExpectSyntax(SyntaxKind.ServiceImplToken);
-    GreenToken head = p.ExpectSyntax(SyntaxKind.IdentifierToken);
+    GreenToken sigil = p.Expect(SyntaxKind.ServiceImplToken);
+    GreenToken head = p.Expect(SyntaxKind.IdentifierToken);
     GreenNode sref = head;
-    if (p.MatchRaw(RawKind.LBracket))
+    if (p.Match(TokenKind.LBracket))
       sref = TypeRef.WithGenericArgs(p, head);
 
-    GreenToken recvOpen = p.ExpectSyntax(SyntaxKind.LessToken);
-    GreenToken rid = p.ExpectSyntax(SyntaxKind.IdentifierToken); // allow '_'
-    GreenToken recvClose = p.ExpectSyntax(SyntaxKind.GreaterToken);
+    GreenToken recvOpen = p.Expect(SyntaxKind.LessToken);
+    GreenToken rid = p.Expect(SyntaxKind.IdentifierToken); // allow '_'
+    GreenToken recvClose = p.Expect(SyntaxKind.GreaterToken);
 
     GreenToken? ctorOpen = null;
     StructuralArray<ServiceParam> ctorParams = [];
     GreenToken? ctorClose = null;
-    if (p.MatchRaw(RawKind.LParen))
+    if (p.Match(TokenKind.LParen))
     {
-      ctorOpen = p.ExpectSyntax(SyntaxKind.OpenParenToken);
+      ctorOpen = p.Expect(SyntaxKind.OpenParenToken);
       ctorParams = ParseParamDeclList(p);
-      ctorClose = p.ExpectSyntax(SyntaxKind.CloseParenToken);
+      ctorClose = p.Expect(SyntaxKind.CloseParenToken);
     }
 
-    GreenToken ob = p.ExpectSyntax(SyntaxKind.OpenBlockToken);
+    GreenToken ob = p.Expect(SyntaxKind.OpenBlockToken);
 
     // Init declarations: ('^'? Ident ':' Type '=' ... Terminator)+
     ImmutableArray<ServiceFieldInit>.Builder inits = ImmutableArray.CreateBuilder<ServiceFieldInit>();
     while (true)
     {
-      // Skip standalone syntax
-      while (p.MatchRaw(RawKind.Terminator) || p.MatchRaw(RawKind.CommentTrivia))
-        _ = p.ExpectRaw(p.Current.Kind);
+      // Skip terminators
+      // TODO: Preserve tokens in tree
+      StructuralArray<GreenToken> _ = p.CollectSyntaxKind(SyntaxKind.TerminatorToken);
 
       // Optional attributes would be handled here (future)
 
-      bool looksLikeInit = p.MatchRaw(RawKind.Hat) && p.MatchRaw(RawKind.Identifier, 1) && p.MatchRaw(RawKind.Colon, 2)
-        || (p.MatchRaw(RawKind.Identifier) && p.MatchRaw(RawKind.Colon, 1));
+      bool looksLikeInit = p.Match(TokenKind.Hat) && p.Match(TokenKind.Identifier, 1) && p.Match(TokenKind.Colon, 2)
+        || (p.Match(TokenKind.Identifier) && p.Match(TokenKind.Colon, 1));
       if (!looksLikeInit) break;
 
       GreenToken? mutator = null;
-      if (p.MatchRaw(RawKind.Hat))
-        mutator = new GreenToken(SyntaxKind.HatToken, p.ExpectRaw(RawKind.Hat));
+      if (p.Match(TokenKind.Hat))
+        mutator = p.Expect(SyntaxKind.MutableToken);
 
-      GreenToken fname = p.ExpectSyntax(SyntaxKind.IdentifierToken);
-      GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
+      GreenToken fname = p.Expect(SyntaxKind.IdentifierToken);
+      GreenToken colon = p.Expect(SyntaxKind.ColonToken);
       TypeExpr ftype = TypeExpr.Parse(p);
-      GreenToken eq = p.ExpectSyntax(SyntaxKind.EqualToken);
+      GreenToken eq = p.Expect(SyntaxKind.EqualToken);
       ExprNode initializer;
-      if (p.MatchRaw(RawKind.Terminator) || p.MatchRaw(RawKind.Eob) || p.MatchRaw(RawKind.RBrace))
+      if (p.Match(TokenKind.Terminator) || p.Match(TokenKind.Eob) || p.Match(TokenKind.RBrace))
       {
-        GreenToken missing = p.FabricateMissing(SyntaxKind.IdentifierToken, RawKind.Identifier);
+        GreenToken missing = p.FabricateMissing(SyntaxKind.IdentifierToken);
         initializer = new IdentifierExpr(missing);
       }
       else
       {
         initializer = p.ParseExpression();
       }
-      GreenToken term = p.ExpectSyntax(SyntaxKind.TerminatorToken);
+      GreenToken term = p.Expect(SyntaxKind.TerminatorToken);
       inits.Add(new ServiceFieldInit(mutator, fname, colon, ftype, eq, initializer, term));
     }
 
     // Optional destructor immediately after init section
-    ImmutableArray<GreenNode>.Builder memb = ImmutableArray.CreateBuilder<GreenNode>();
-    if (p.MatchRaw(RawKind.Tilde))
+    ArrayBuilder<GreenNode> memb = [];
+    if (p.Match(TokenKind.Tilde))
       memb.Add(ParseDtorHeaderAndSkipBody(p));
 
     // Members: methods only; skip bodies
-    while (!p.MatchRaw(RawKind.RBrace) && !p.MatchRaw(RawKind.Eob))
+    while (!p.Match(TokenKind.RBrace))
     {
-      if (p.MatchRaw(RawKind.Terminator)) { _ = p.ExpectRaw(RawKind.Terminator); continue; }
-      if (p.MatchRaw(RawKind.LBrace)) { _ = p.ExpectSyntax(SyntaxKind.OpenBlockToken); SkipBlock(p); continue; }
+      Parser.StallGuard guard = p.GetStallGuard();
 
-      if (p.MatchRaw(RawKind.Identifier))
+      if (p.Match(TokenKind.Terminator)) { _ = p.Expect(SyntaxKind.TerminatorToken); continue; }
+      if (p.Match(TokenKind.LBrace)) { _ = p.Expect(SyntaxKind.OpenBlockToken); SkipBlock(p); continue; }
+
+      if (p.Match(TokenKind.Identifier))
       {
         memb.Add(ParseMethodHeaderAndSkipBody(p));
         continue;
       }
 
-      // Fallback
-      _ = p.ExpectRaw(p.Current.Kind);
+      // Unexpected token - consume and continue
+      memb.Add(p.UnexpectedTokenAsError());
+
+      // Stall guard to prevent infinite loop
+      if (guard.Stalled) break;
     }
 
-    GreenToken cb = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
-    return new ServiceImpl(sigil, sref, recvOpen, rid, recvClose, ctorOpen, ctorParams, ctorClose, ob, [.. inits], memb.ToImmutable(), cb);
+    GreenToken cb = p.Expect(SyntaxKind.CloseBlockToken);
+    return new ServiceImpl(
+      Sigil: sigil,
+      ServiceRef: sref,
+      ReceiverOpen: recvOpen,
+      ReceiverIdent: rid,
+      ReceiverClose: recvClose,
+      CtorOpenParen: ctorOpen,
+      CtorParams: ctorParams,
+      CtorCloseParen: ctorClose,
+      OpenBrace: ob,
+      InitDecls: [.. inits],
+      Members: memb,
+      CloseBrace: cb);
   }
 
   static ServiceMethodHeader ParseMethodHeaderAndSkipBody(Parser p)
   {
-    GreenToken name = p.ExpectSyntax(SyntaxKind.IdentifierToken);
-    GreenToken op = p.ExpectSyntax(SyntaxKind.OpenParenToken);
+    GreenToken name = p.Expect(SyntaxKind.IdentifierToken);
+    GreenToken op = p.Expect(SyntaxKind.OpenParenToken);
     StructuralArray<ServiceParam> @params = ParseParamDeclList(p);
-    GreenToken cp = p.ExpectSyntax(SyntaxKind.CloseParenToken);
+    GreenToken cp = p.Expect(SyntaxKind.CloseParenToken);
     TypeExpr ret = TypeExpr.Parse(p);
-    GreenToken bodyOpen = p.ExpectSyntax(SyntaxKind.OpenBlockToken);
+    GreenToken bodyOpen = p.Expect(SyntaxKind.OpenBlockToken);
     SkipBlock(p);
     return new ServiceMethodHeader(name, op, @params, cp, ret, bodyOpen);
   }
 
   static ServiceDtorHeader ParseDtorHeaderAndSkipBody(Parser p)
   {
-    GreenToken tilde = new(SyntaxKind.TildeToken, p.ExpectRaw(RawKind.Tilde));
-    GreenToken op = p.ExpectSyntax(SyntaxKind.OpenParenToken);
-    GreenToken cp = p.ExpectSyntax(SyntaxKind.CloseParenToken);
+    GreenToken tilde = p.Expect(SyntaxKind.TildeToken);
+    GreenToken op = p.Expect(SyntaxKind.OpenParenToken);
+    GreenToken cp = p.Expect(SyntaxKind.CloseParenToken);
     TypeExpr ret = TypeExpr.Parse(p);
-    GreenToken bodyOpen = p.ExpectSyntax(SyntaxKind.OpenBlockToken);
+    GreenToken bodyOpen = p.Expect(SyntaxKind.OpenBlockToken);
     SkipBlock(p);
     return new ServiceDtorHeader(tilde, op, cp, ret, bodyOpen);
   }
 
   static StructuralArray<ServiceParam> ParseParamDeclList(Parser p)
   {
-    if (p.MatchRaw(RawKind.RParen)) return [];
+    if (p.Match(TokenKind.RParen)) return [];
     ImmutableArray<ServiceParam>.Builder list = ImmutableArray.CreateBuilder<ServiceParam>();
     while (true)
     {
       Parser.StallGuard sg = p.GetStallGuard();
-      GreenToken pname = p.ExpectSyntax(SyntaxKind.IdentifierToken);
-      GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
+      GreenToken pname = p.Expect(SyntaxKind.IdentifierToken);
+      GreenToken colon = p.Expect(SyntaxKind.ColonToken);
       TypeExpr ptype = TypeExpr.Parse(p);
 
       GreenToken? trailing = null;
-      if (p.MatchRaw(RawKind.Comma))
-        trailing = p.ExpectSyntax(SyntaxKind.CommaToken);
+      if (p.Match(TokenKind.Comma))
+        trailing = p.Expect(SyntaxKind.CommaToken);
 
       list.Add(new ServiceParam(pname, colon, ptype, trailing));
 
       if (trailing is null) break;
-      if (p.MatchRaw(RawKind.RParen) || p.MatchRaw(RawKind.Eob)) break;
+      if (p.Match(TokenKind.RParen) || p.Match(TokenKind.Eob)) break;
       if (sg.Stalled) break;
     }
 
@@ -171,13 +186,12 @@ public sealed record ServiceImpl(
   static void SkipBlock(Parser p)
   {
     int depth = 1;
-    while (!p.MatchRaw(RawKind.Eob) && depth > 0)
+    while (!p.Match(TokenKind.Eob) && depth > 0)
     {
-      if (p.MatchRaw(RawKind.LBrace)) { _ = p.ExpectSyntax(SyntaxKind.OpenBlockToken); depth++; continue; }
-      if (p.MatchRaw(RawKind.RBrace)) { depth--; if (depth == 0) break; _ = p.ExpectSyntax(SyntaxKind.CloseBlockToken); continue; }
-      _ = p.ExpectRaw(p.Current.Kind);
+      if (p.Match(TokenKind.LBrace)) { _ = p.Expect(SyntaxKind.OpenBlockToken); depth++; continue; }
+      if (p.Match(TokenKind.RBrace)) { depth--; if (depth == 0) break; _ = p.Expect(SyntaxKind.CloseBlockToken); continue; }
     }
-    _ = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
+    _ = p.Expect(SyntaxKind.CloseBlockToken);
   }
 
   // Removed old state block parsing in favor of init decls

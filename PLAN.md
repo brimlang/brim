@@ -24,6 +24,12 @@
 - Service constructors, methods, destructors
 - Aggregate construction expressions (field/variant initialization)
 - Loop constructs (`@{ ... @}` with control flow)
+- Parser/Lexer boundary refactor (documented 2025-11-05):
+  - Introduce a dedicated `TokenKind` owned by the parser/tree layer while keeping `RawKind` private to the lexer; split `SyntaxKind` so only structural nodes remain.
+  - Rebuild parser helpers so the public surface is syntax/token oriented: `Match(TokenKind)`, `Expect(TokenKind)`, and syntax convenience shims; cache mapped raw sequences inside prediction tables to preserve LL(k≤4) performance.
+  - Update diagnostics to operate on the chosen abstraction (syntax-first) and ensure missing/fabricated tokens carry the expected kind without leaking lexer enums.
+  - Sweep green factories, helpers, and tooling (formatters, validators, tests) to consume the new token discriminator instead of `SyntaxKind.*Token`.
+  - Regenerate/extend parser coverage to assert against the new representation and run `mise run format`, `mise run lint`, `mise run test` to lock in the change.
 
 ---
 

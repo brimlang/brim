@@ -1,3 +1,5 @@
+using Brim.Core;
+
 namespace Brim.Parse.Tests;
 
 public class ParserPredictionTests
@@ -14,8 +16,8 @@ public class ParserPredictionTests
   {
     bool proto = Parser.ModuleMemberPredictions.Any(p =>
       p.Sequence.Length > 1 &&
-      p.Sequence[0] == RawKind.Identifier &&
-      p.Sequence[1] == RawKind.Less);
+      p.Sequence[0] == TokenKind.Identifier &&
+      p.Sequence[1] == TokenKind.Less);
     Assert.True(proto);
   }
 }

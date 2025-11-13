@@ -15,13 +15,13 @@ public sealed record WildcardPattern(GreenToken Underscore)
 
   internal static new WildcardPattern Parse(Parser parser)
   {
-    GreenToken underscore = parser.Expect(RawKind.Identifier, SyntaxKind.IdentifierToken);
+    GreenToken underscore = parser.Expect(SyntaxKind.IdentifierToken);
     return new WildcardPattern(underscore);
   }
 
   internal static PatternNode ParseError(Parser parser)
   {
-    GreenToken error = parser.Expect(RawKind.Error, SyntaxKind.ErrorToken);
+    GreenToken error = parser.Expect(SyntaxKind.ErrorToken);
     return new WildcardPattern(error);
   }
 }

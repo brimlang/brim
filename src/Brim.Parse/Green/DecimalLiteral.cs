@@ -10,6 +10,6 @@ GreenNode(SyntaxKind.DecimalToken, Token.Offset), IParsable<DecimalLiteral>
     yield return Token;
   }
 
-  public static DecimalLiteral Parse(Parser p) => new(p.ExpectSyntax(SyntaxKind.DecimalToken));
+  public static DecimalLiteral Parse(Parser p) => new(p.Expect(SyntaxKind.DecimalToken));
 }
 

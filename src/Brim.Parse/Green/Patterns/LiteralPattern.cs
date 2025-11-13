@@ -15,13 +15,13 @@ public sealed record LiteralPattern(GreenToken Literal)
 
   internal static new LiteralPattern Parse(Parser parser)
   {
-    GreenToken literal = parser.Current.Kind switch
+    GreenToken literal = parser.Current.TokenKind switch
     {
-      RawKind.IntegerLiteral => parser.Expect(RawKind.IntegerLiteral, SyntaxKind.IntToken),
-      RawKind.DecimalLiteral => parser.Expect(RawKind.DecimalLiteral, SyntaxKind.DecimalToken),
-      RawKind.StringLiteral => parser.Expect(RawKind.StringLiteral, SyntaxKind.StrToken),
-      RawKind.RuneLiteral => parser.Expect(RawKind.RuneLiteral, SyntaxKind.RuneToken),
-      _ => parser.Expect(RawKind.Error, SyntaxKind.ErrorToken)
+      TokenKind.IntegerLiteral => parser.Expect(SyntaxKind.IntToken),
+      TokenKind.DecimalLiteral => parser.Expect(SyntaxKind.DecimalToken),
+      TokenKind.StringLiteral => parser.Expect(SyntaxKind.StrToken),
+      TokenKind.RuneLiteral => parser.Expect(SyntaxKind.RuneToken),
+      _ => parser.Expect(SyntaxKind.ErrorToken),
     };
 
     return new LiteralPattern(literal);

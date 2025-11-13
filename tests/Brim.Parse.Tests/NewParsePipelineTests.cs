@@ -1,3 +1,4 @@
+using Brim.Core;
 using Brim.Parse.Collections;
 using Brim.Parse.Producers;
 
@@ -5,22 +6,22 @@ namespace Brim.Parse.Tests;
 
 public class NewParsePipelineTests
 {
-  static List<RawToken> LexAll(string text)
+  static List<LexToken> LexAll(string text)
   {
     var src = SourceText.From(text);
-    RawProducer raw = new(src, DiagnosticList.Create());
-    List<RawToken> list = [];
-    while (raw.TryRead(out RawToken t)) { list.Add(t); if (t.Kind == RawKind.Eob) break; }
+    LexSource raw = new(src, DiagnosticList.Create());
+    List<LexToken> list = [];
+    while (raw.TryRead(out LexToken t)) { list.Add(t); if (t.Kind == TokenKind.Eob) break; }
     return list;
   }
 
   static List<SignificantToken> SigAll(string text)
   {
     var src = SourceText.From(text);
-    RawProducer raw = new(src, DiagnosticList.Create());
-    SignificantProducer<RawProducer> sig = new(raw);
+    LexSource raw = new(src, DiagnosticList.Create());
+    SignificantProducer<LexSource> sig = new(raw);
     List<SignificantToken> list = [];
-    while (sig.TryRead(out SignificantToken st)) { list.Add(st); if (st.CoreToken.Kind == RawKind.Eob) break; }
+    while (sig.TryRead(out SignificantToken st)) { list.Add(st); if (st.CoreToken.Kind == TokenKind.Eob) break; }
     return list;
   }
 
@@ -28,7 +29,7 @@ public class NewParsePipelineTests
   public void TerminatorReceivesLeadingTrivia()
   {
     List<SignificantToken> toks = SigAll("   ;\n"); // whitespace then terminator
-    SignificantToken term = Assert.Single(toks, static t => t.CoreToken.Kind == RawKind.Terminator);
+    SignificantToken term = Assert.Single(toks, static t => t.CoreToken.Kind == TokenKind.Terminator);
     Assert.True(term.HasLeading);
     _ = Assert.Single(term.LeadingTrivia);
   }
@@ -37,9 +38,9 @@ public class NewParsePipelineTests
   public void Lookahead4HardFail()
   {
     var src = SourceText.From("foo bar baz quux");
-    RawProducer raw = new(src, DiagnosticList.Create());
-    SignificantProducer<RawProducer> signif = new(raw);
-    RingBuffer<SignificantToken, SignificantProducer<RawProducer>> la = new(signif, 4);
+    LexSource raw = new(src, DiagnosticList.Create());
+    SignificantProducer<LexSource> signif = new(raw);
+    RingBuffer<SignificantToken, SignificantProducer<LexSource>> la = new(signif, 4);
     _ = la.Peek(3); // ok
     bool threw = false;
     try { _ = la.Peek(4); } catch (ArgumentOutOfRangeException) { threw = true; }
@@ -49,28 +50,28 @@ public class NewParsePipelineTests
   [Fact]
   public void RawProducerLexesIdentifiersNumbersStringsAndWhitespace()
   {
-    List<RawToken> list = LexAll("foo 123 1.23 \"bar\"");
-    Assert.Contains(list, static t => t.Kind == RawKind.Identifier);
-    Assert.Contains(list, static t => t.Kind == RawKind.IntegerLiteral);
-    Assert.Contains(list, static t => t.Kind == RawKind.DecimalLiteral);
-    Assert.Contains(list, static t => t.Kind == RawKind.StringLiteral);
-    Assert.Contains(list, static t => t.Kind == RawKind.WhitespaceTrivia);
+    List<LexToken> list = LexAll("foo 123 1.23 \"bar\"");
+    Assert.Contains(list, static t => t.Kind == TokenKind.Identifier);
+    Assert.Contains(list, static t => t.Kind == TokenKind.IntegerLiteral);
+    Assert.Contains(list, static t => t.Kind == TokenKind.DecimalLiteral);
+    Assert.Contains(list, static t => t.Kind == TokenKind.StringLiteral);
+    Assert.Contains(list, static t => t.Kind == TokenKind.WhitespaceTrivia);
   }
 
   [Fact]
   public void RawProducerUnterminatedStringIsStringLiteral()
   {
-    List<RawToken> list = LexAll("\"");
-    Assert.Contains(list, static t => t.Kind == RawKind.StringLiteral);
+    List<LexToken> list = LexAll("\"");
+    Assert.Contains(list, static t => t.Kind == TokenKind.StringLiteral);
   }
 
   [Fact]
   public void SignificantProducerAttachesFormerTrailingAsLeadingOnNext()
   {
     var toks = SigAll("foo   -- c\n"); // identifier, whitespace+comment, terminator
-    SignificantToken id = Assert.Single(toks, static t => t.CoreToken.Kind == RawKind.Identifier);
+    SignificantToken id = Assert.Single(toks, static t => t.CoreToken.Kind == TokenKind.Identifier);
     Assert.False(id.HasLeading);
-    var term = Assert.Single(toks, static t => t.CoreToken.Kind == RawKind.Terminator);
+    var term = Assert.Single(toks, static t => t.CoreToken.Kind == TokenKind.Terminator);
     Assert.True(term.HasLeading);
     Assert.True(term.LeadingTrivia.Count >= 2);
   }

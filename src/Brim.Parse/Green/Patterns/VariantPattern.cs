@@ -23,16 +23,16 @@ public sealed record VariantPattern(
 
   internal static new VariantPattern Parse(Parser parser)
   {
-    GreenToken open = parser.Expect(RawKind.PipeLParen, SyntaxKind.UnionToken);
-    GreenToken variantName = parser.Expect(RawKind.Identifier, SyntaxKind.IdentifierToken);
+    GreenToken open = parser.Expect(SyntaxKind.UnionToken);
+    GreenToken variantName = parser.Expect(SyntaxKind.IdentifierToken);
 
     VariantPatternTail? tail = null;
-    if (parser.Match(RawKind.LParen))
+    if (parser.Match(TokenKind.LParen))
     {
       tail = VariantPatternTail.Parse(parser);
     }
 
-    GreenToken close = parser.Expect(RawKind.RParen, SyntaxKind.CloseParenToken);
+    GreenToken close = parser.Expect(SyntaxKind.CloseParenToken);
 
     return new VariantPattern(open, variantName, tail, close);
   }

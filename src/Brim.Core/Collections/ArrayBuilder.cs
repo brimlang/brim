@@ -1,12 +1,11 @@
 using System.Collections.ObjectModel;
 
-namespace Brim.Parse.Collections;
+namespace Brim.Core.Collections;
 
 /// <summary>
 /// A builder for <see cref="StructuralArray{T}"/> and ImmutableArray{T},
 /// similar to <see cref="ImmutableArray{T}.Builder"/> but with simpler syntax.
 /// </summary>
-[SuppressMessage("Style", "IDE0028:Simplify collection initialization", Justification = "Preserve explicit constructor")]
 public readonly ref struct ArrayBuilder<T> : IEnumerable<T>
 {
   readonly ImmutableArray<T>.Builder _builder;
@@ -30,7 +29,9 @@ public readonly ref struct ArrayBuilder<T> : IEnumerable<T>
   public void CopyTo(int sourceIndex, T[] array, int arrayIndex, int count) => _builder.CopyTo(sourceIndex, array, arrayIndex, count);
 
   public T[] ToArray() => _builder.ToArray();
+#pragma warning disable IDE0028 // Simplify collection initialization
   public StructuralArray<T> ToStructuralArray() => new(_builder.ToImmutable());
+#pragma warning restore IDE0028 // Simplify collection initialization
   public ImmutableArray<T> ToImmutable() => _builder.ToImmutable();
   public ImmutableList<T> ToImmutableList() => _builder.ToImmutableList();
   public ReadOnlyCollection<T> ToReadOnlyCollection() => _builder.AsReadOnly();

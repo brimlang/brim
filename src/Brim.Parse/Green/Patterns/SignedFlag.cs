@@ -18,14 +18,14 @@ public sealed record SignedFlag(
 
   internal static SignedFlag Parse(Parser parser)
   {
-    GreenToken sign = parser.Current.Kind switch
+    GreenToken sign = parser.Current.TokenKind switch
     {
-      RawKind.Plus => parser.Expect(RawKind.Plus, SyntaxKind.PlusToken),
-      RawKind.Minus => parser.Expect(RawKind.Minus, SyntaxKind.MinusToken),
-      _ => parser.Expect(RawKind.Error, SyntaxKind.ErrorToken)
+      TokenKind.Plus => parser.Expect(SyntaxKind.PlusToken),
+      TokenKind.Minus => parser.Expect(SyntaxKind.MinusToken),
+      _ => parser.Expect(SyntaxKind.ErrorToken)
     };
 
-    GreenToken flagName = parser.Expect(RawKind.Identifier, SyntaxKind.IdentifierToken);
+    GreenToken flagName = parser.Expect(SyntaxKind.IdentifierToken);
 
     return new SignedFlag(sign, flagName);
   }

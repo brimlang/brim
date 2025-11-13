@@ -1,7 +1,8 @@
 using System.CommandLine;
 using System.Text;
+using Brim.Core;
+using Brim.Core.Collections;
 using Brim.Parse;
-using Brim.Parse.Collections;
 using Brim.Parse.Green;
 using Brim.Tool.Diagnostics;
 using Spectre.Console;

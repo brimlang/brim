@@ -26,8 +26,8 @@ public sealed record ValueDeclaration(
   public static ValueDeclaration Parse(Parser p)
   {
     GreenToken? mutator = null;
-    if (p.MatchRaw(RawKind.Hat))
-      mutator = new GreenToken(SyntaxKind.HatToken, p.ExpectRaw(RawKind.Hat));
+    if (p.Match(TokenKind.Hat))
+      mutator = p.Expect(SyntaxKind.MutableToken);
 
     DeclarationName name = DeclarationName.Parse(p);
     return ParseAfterName(p, mutator, name);
@@ -35,26 +35,26 @@ public sealed record ValueDeclaration(
 
   internal static ValueDeclaration ParseAfterName(Parser p, GreenToken? mutator, DeclarationName name)
   {
-    GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
+    GreenToken colon = p.Expect(SyntaxKind.ColonToken);
     TypeExpr typeExpr = TypeExpr.Parse(p);
 
-    if (p.MatchRaw(RawKind.Terminator) && mutator is null)
+    if (p.Match(TokenKind.Terminator) && mutator is null)
     {
-      p.AddDiagUnsupportedModuleMember(name.Identifier.Token);
+      p.AddDiagUnsupportedModuleMember(name.Identifier.CoreToken);
 
-      GreenToken terminator = p.ExpectSyntax(SyntaxKind.TerminatorToken);
-      GreenToken errorEq = new(SyntaxKind.ErrorToken, p.Current);
+      GreenToken terminator = p.Expect(SyntaxKind.TerminatorToken);
+      GreenToken errorEq = SyntaxKind.ErrorToken.MakeGreen(p.Current);
       ExprNode errorInit = new LiteralExpr(errorEq);
       return new ValueDeclaration(mutator, name, colon, typeExpr, errorEq, errorInit, terminator);
     }
 
-    GreenToken eq = p.ExpectSyntax(SyntaxKind.EqualToken);
+    GreenToken eq = p.Expect(SyntaxKind.EqualToken);
 
-    ExprNode initializer = p.MatchRaw(RawKind.Terminator) || p.MatchRaw(RawKind.Eob)
-      ? new IdentifierExpr(p.FabricateMissing(SyntaxKind.IdentifierToken, RawKind.Identifier))
+    ExprNode initializer = p.Match(TokenKind.Terminator) || p.Match(TokenKind.Eob)
+      ? new IdentifierExpr(p.FabricateMissing(SyntaxKind.IdentifierToken))
       : p.ParseExpression();
 
-    GreenToken term = p.ExpectSyntax(SyntaxKind.TerminatorToken);
+    GreenToken term = p.Expect(SyntaxKind.TerminatorToken);
     return new ValueDeclaration(mutator, name, colon, typeExpr, eq, initializer, term);
   }
 }

@@ -8,10 +8,10 @@ public sealed partial class Parser
   {
     DeclarationName name = DeclarationName.Parse(p);
 
-    if (p.MatchRaw(RawKind.ColonEqual))
+    if (p.Match(TokenKind.ColonEqual))
       return TypeDeclaration.ParseAfterName(p, name);
 
-    if (p.MatchRaw(RawKind.Colon))
+    if (p.Match(TokenKind.Colon))
     {
       // Lookahead to distinguish value decl from function decl
       // After name :, we need to peek into the parameter list
@@ -22,9 +22,9 @@ public sealed partial class Parser
     }
 
     // Fall back: treat as unsupported module member
-    RawToken token = name.Identifier.Token;
+    CoreToken token = name.Identifier.CoreToken;
     p.AddDiagUnsupportedModuleMember(token);
-    return new GreenToken(SyntaxKind.ErrorToken, token);
+    return SyntaxKind.ErrorToken.MakeGreen(token);
   }
 
   static bool IsFunctionDeclaration(Parser p)
@@ -33,12 +33,12 @@ public sealed partial class Parser
     // Value decl: name :(Type, ...) Ret = expr
     // Function decl: name :(param :Type, ...) Ret { body }
 
-    if (!p.MatchRaw(RawKind.LParen, 1))
+    if (!p.Match(TokenKind.LParen, 1))
       return false; // Not a function type at all
 
-    // Empty parens: :() 
+    // Empty parens: :()
     // Could be either form - need to see what's after the closing paren
-    if (p.MatchRaw(RawKind.RParen, 2))
+    if (p.Match(TokenKind.RParen, 2))
     {
       // After :() we need to skip return type to find = or {
       // This is tricky - for now, be conservative and assume value decl
@@ -50,7 +50,7 @@ public sealed partial class Parser
 
     // If first token in parens is identifier followed by colon, it's named param
     // Position: 0=current, 1=(, 2=first_in_parens, 3=after_first
-    if (p.MatchRaw(RawKind.Identifier, 2) && p.MatchRaw(RawKind.Colon, 3))
+    if (p.Match(TokenKind.Identifier, 2) && p.Match(TokenKind.Colon, 3))
       return true; // Function declaration (named parameter)
 
     // Otherwise it's a value declaration (type in parens, no param names)

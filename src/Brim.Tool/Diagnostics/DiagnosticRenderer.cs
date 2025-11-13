@@ -1,4 +1,5 @@
 using System.Text;
+using Brim.Core;
 using Brim.Parse;
 
 namespace Brim.Tool.Diagnostics;
@@ -23,7 +24,7 @@ public static class DiagnosticRenderer
     return $"{d.Severity.ToString().ToLower()}[{d.Phase.ToString().ToLower()}]: {core}";
   }
 
-  static string KindName(ushort kind) => kind == 0 ? "<none>" : ((RawKind)kind).ToString();
+  static string KindName(TokenKind kind) => kind == default ? "<none>" : kind.ToString();
 
   static string RenderUnexpected(in Diagnostic d)
   {
@@ -35,7 +36,7 @@ public static class DiagnosticRenderer
       for (int i = 0; i < d.ExpectedCount; i++)
       {
         if (i > 0) _ = sb.Append(" | ");
-        _ = sb.Append(KindName(i switch { 0 => d.Expect0, 1 => d.Expect1, 2 => d.Expect2, 3 => d.Expect3, _ => 0 }));
+        _ = sb.Append(KindName(i switch { 0 => d.Expect0, 1 => d.Expect1, 2 => d.Expect2, 3 => d.Expect3, _ => default }));
       }
     }
     return sb.ToString();

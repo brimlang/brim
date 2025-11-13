@@ -1,5 +1,3 @@
-using Brim.Parse.Collections;
-
 namespace Brim.Parse.Green;
 
 /// <summary>
@@ -29,30 +27,41 @@ public sealed record ServiceLifecycleDecl(
     // TypeRef '{' (ServiceCtorDecl | ServiceDtorDecl)* '}'
     TypeRef tref = TypeRef.Parse(p);
 
-    GreenToken ob = p.ExpectSyntax(SyntaxKind.OpenBlockToken);
+    GreenToken ob = p.Expect(SyntaxKind.OpenBlockToken);
 
     ArrayBuilder<GreenNode> members = [];
-    while (!p.MatchRaw(RawKind.RBrace) && !p.MatchRaw(RawKind.Eob))
+    while (!p.Match(TokenKind.RBrace) && !p.Match(TokenKind.Eob))
     {
+      Parser.StallGuard guard = p.GetStallGuard();
+
+      // Skip terminators
+      if (p.Match(TokenKind.Terminator))
+      {
+        _ = p.Expect(SyntaxKind.TerminatorToken);
+        continue;
+      }
+
       // Constructor: '(' params ')' '@' '!' BlockExpr
-      if (p.MatchRaw(RawKind.LParen))
+      if (p.Match(TokenKind.LParen))
       {
         members.Add(ServiceCtorDecl.Parse(p));
         continue;
       }
 
       // Destructor: '~' '(' params ')' TypeExpr BlockExpr
-      if (p.MatchRaw(RawKind.Tilde))
+      if (p.Match(TokenKind.Tilde))
       {
         members.Add(ServiceDtorDecl.Parse(p));
         continue;
       }
 
-      // Unexpected - consume and continue
-      _ = p.ExpectRaw(p.Current.Kind);
+      members.Add(p.UnexpectedTokenAsError());
+
+      // Stall guard to prevent infinite loop
+      if (guard.Stalled) break;
     }
 
-    GreenToken cb = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
+    GreenToken cb = p.Expect(SyntaxKind.CloseBlockToken);
     return new ServiceLifecycleDecl(tref, ob, members.ToImmutable(), cb);
   }
 }
@@ -86,8 +95,8 @@ public sealed partial record ServiceCtorDecl(
       SyntaxKind.CloseParenToken,
       ServiceMethodParam.Parse);
 
-    GreenToken at = p.ExpectSyntax(SyntaxKind.ServiceImplToken);
-    GreenToken bang = p.ExpectSyntax(SyntaxKind.BangToken);
+    GreenToken at = p.Expect(SyntaxKind.ServiceImplToken);
+    GreenToken bang = p.Expect(SyntaxKind.BangToken);
     BlockExpr expr = BlockExpr.Parse(p);
     return new ServiceCtorDecl(@params, at, bang, expr);
   }
@@ -116,7 +125,7 @@ public sealed record ServiceDtorDecl(
   public static ServiceDtorDecl Parse(Parser p)
   {
     // '~' '(' params ')' TypeExpr '{' ... '}'
-    GreenToken tilde = p.ExpectSyntax(SyntaxKind.TildeToken);
+    GreenToken tilde = p.Expect(SyntaxKind.TildeToken);
     CommaList<ServiceMethodParam> @params = CommaList<ServiceMethodParam>.Parse(
       p,
       SyntaxKind.OpenParenToken,
@@ -163,36 +172,48 @@ public sealed record ServiceProtocolDecl(
 
     // Optional protocol constraints: '<' TypeRef (',' TypeRef)* '>'
     ProtocolList? protocols = null;
-    if (p.MatchRaw(RawKind.Less))
+    if (p.Match(TokenKind.Less))
     {
       protocols = ProtocolList.Parse(p);
     }
 
     // Optional receiver: '(' ident ':' '@' ')'
     ServiceReceiver? receiver = null;
-    if (p.MatchRaw(RawKind.LParen))
+    if (p.Match(TokenKind.LParen))
     {
       receiver = ServiceReceiver.Parse(p);
     }
 
-    GreenToken ob = p.ExpectSyntax(SyntaxKind.OpenBlockToken);
+    GreenToken ob = p.Expect(SyntaxKind.OpenBlockToken);
 
     // Parse method declarations
     ArrayBuilder<GreenNode> methods = [];
-    while (!p.MatchRaw(RawKind.RBrace) && !p.MatchRaw(RawKind.Eob))
+    while (!p.Match(TokenKind.RBrace) && !p.Match(TokenKind.Eob))
     {
+      Parser.StallGuard guard = p.GetStallGuard();
+
+      // Skip terminators
+      if (p.Match(TokenKind.Terminator))
+      {
+        _ = p.Expect(SyntaxKind.TerminatorToken);
+        continue;
+      }
+
       // Method: Ident ':' ParamList TypeExpr BlockExpr
-      if (p.MatchRaw(RawKind.Identifier))
+      if (p.Match(TokenKind.Identifier))
       {
         methods.Add(ServiceMethodDecl.Parse(p));
         continue;
       }
 
       // Unexpected - consume and continue
-      _ = p.ExpectRaw(p.Current.Kind);
+      methods.Add(p.UnexpectedTokenAsError());
+
+      // Stall guard to prevent infinite loop
+      if (guard.Stalled) break;
     }
 
-    GreenToken cb = p.ExpectSyntax(SyntaxKind.CloseBlockToken);
+    GreenToken cb = p.Expect(SyntaxKind.CloseBlockToken);
     return new ServiceProtocolDecl(sref, protocols, receiver, ob, methods, cb);
   }
 }
@@ -222,11 +243,11 @@ public sealed record ServiceReceiver(
   public static ServiceReceiver Parse(Parser p)
   {
     // '(' ident ':' '@' ')'
-    GreenToken op = p.ExpectSyntax(SyntaxKind.OpenParenToken);
-    GreenToken id = p.ExpectSyntax(SyntaxKind.IdentifierToken);
-    GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
-    GreenToken at = p.ExpectSyntax(SyntaxKind.ServiceImplToken);
-    GreenToken cp = p.ExpectSyntax(SyntaxKind.CloseParenToken);
+    GreenToken op = p.Expect(SyntaxKind.OpenParenToken);
+    GreenToken id = p.Expect(SyntaxKind.IdentifierToken);
+    GreenToken colon = p.Expect(SyntaxKind.ColonToken);
+    GreenToken at = p.Expect(SyntaxKind.ServiceImplToken);
+    GreenToken cp = p.Expect(SyntaxKind.CloseParenToken);
     return new ServiceReceiver(op, id, colon, at, cp);
   }
 }
@@ -256,8 +277,8 @@ public sealed record ServiceMethodDecl(
   public static ServiceMethodDecl Parse(Parser p)
   {
     // Ident ':' ParamList TypeExpr '{' ... '}'
-    GreenToken name = p.ExpectSyntax(SyntaxKind.IdentifierToken);
-    GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
+    GreenToken name = p.Expect(SyntaxKind.IdentifierToken);
+    GreenToken colon = p.Expect(SyntaxKind.ColonToken);
     CommaList<ServiceMethodParam> @params = CommaList<ServiceMethodParam>.Parse(
       p,
       SyntaxKind.OpenParenToken,
@@ -291,8 +312,8 @@ public sealed record ServiceMethodParam(
   public static ServiceMethodParam Parse(Parser p)
   {
     // ident ':' Type
-    GreenToken name = p.ExpectSyntax(SyntaxKind.IdentifierToken);
-    GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
+    GreenToken name = p.Expect(SyntaxKind.IdentifierToken);
+    GreenToken colon = p.Expect(SyntaxKind.ColonToken);
     TypeExpr type = TypeExpr.Parse(p);
     return new ServiceMethodParam(name, colon, type);
   }

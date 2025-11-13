@@ -1,33 +1,41 @@
-namespace Brim.Parse;
+namespace Brim.Core;
 
 /// <summary>
 /// Kinds of tokens in Brim source code.
 /// </summary>
-public enum RawKind : sbyte
+public enum TokenKind : sbyte
 {
   /// <summary>
   /// Sentinel value indicating the start of the range
   /// of special kinds that are not real tokens.
   /// </summary>
-  _SentinelSpecial = sbyte.MinValue,
-  Any = -1, // Wildcard for parsing
+  _SentinelSpecial = -10,
+  Any = -2, // Wildcard for parsing
+
+  /// <summary>
+  /// Default uninitialized value.
+  /// </summary>
+  Unitialized = 0,
 
   /// <summary>
   /// Sentinel value indicating the start of the range
-  /// of "normal" token kinds. Doubles as uninitialized.
+  /// of trivia token kinds.
   /// </summary>
-  _SentinelDefault = 0,
+  _SentinelTrivia = 1,
 
-  Error,
+  CommentTrivia,
+  WhitespaceTrivia,
+
+  _SentinelCore = 10,
+
   Identifier,
   Terminator,
-  Missing,
 
   /// <summary>
   /// Sentinel value indicating the start of the range
   /// of glyph token kinds.
   /// </summary>
-  _SentinelGlyphs = 30,
+  _SentinelGlyphs = 20,
 
   // Single glyphs -- no compound forms
   LParen, // (
@@ -44,63 +52,42 @@ public enum RawKind : sbyte
 
   // Possible compound glyph runs
   Atmark, AtmarkLParen, AtmarkLBrace, // @ @( @{
-  Less, LessLess, // < <<
-  Greater, GreaterGreater, // > >>
-  Equal, EqualGreater, EqualLBracket, // = => =[
+  Less, LessLess, LessEqual, // < << <=
+  Greater, GreaterGreater, GreaterEqual, // > >> >=
+  Equal, EqualGreater, EqualLBracket, EqualEqual, // = => =[ ==
   Star, StarLBrace, // * *{
   Tilde, TildeEqual, // ~ ~=
   LBracket, // [
   RBracket, RBracketEqual, // ] ]=
-  Colon, ColonColonEqual, ColonEqual, ColonColon, // : ::= := ::
-  Pipe, PipeLParen, PipeLBrace, // | |( |{
+  Colon, ColonColonEqual, ColonEqual, ColonColon, ColonGreater, // : ::= := :: :>
+  Pipe, PipeLParen, PipeLBrace, PipePipe, PipeGreater, PipePipeGreater, // | |( |{ || |> ||>
   Hash, HashLParen, HashLBrace, // # #( #{
   Percent, PercentLParen, PercentLBrace, // % %( %{
-  Stop, StopLBrace, // . .{
+  Stop, StopLBrace, StopStop, // . .{ ..
   Question, QuestionLBrace, QuestionQuestion, // ? ?{ ??
   Bang, BangEqual, BangLBrace, BangBangLBrace,  // ! != !{ !!{
   Ampersand, AmpersandAmpersand, AmpersandLParen, AmpersandLBrace, // & && &( &{
-
-  // Additional compound operators based on character sequences
-  ColonGreater, // :> (cast operator)
-  StopStop, // .. (rest pattern)
-  LessEqual, // <=
-  GreaterEqual, // >=
-  EqualEqual, // ==
-  PipePipe, // ||
-  PipeGreater, // |>
-  PipePipeGreater, // ||>
-
-  /// <summary>
-  /// Sentinel values indicating unused range for future use.
-  _SentinelUnusedRangeStart = 90,
-  _SentinelUnusedRangeEnd = 114,
 
   /// <summary>
   /// Sentinel value indicating the start of the range
   /// of literal token kinds.
   /// </summary>
-  _SentinelLiteral = 115,
+  _SentinelLiteral = 105,
 
   IntegerLiteral,
   DecimalLiteral,
   StringLiteral,
   RuneLiteral,
-
-  /// <summary>
-  /// Sentinel value indicating the start of the range
-  /// of trivia token kinds.
-  /// </summary>
-  _SentinelTrivia = 120,
-
-  CommentTrivia,
-  WhitespaceTrivia,
+  BooleanLiteral,
 
   /// <summary>
   /// Sentinel value indicating the start of the range
   /// of synthetic token kinds.
   /// </summary>
-  _SentinelSynthetic = 125,
-  _Reserved126 = 126,
+  _SentinelSynthetic = 120,
+
+  Error,
+  Missing,
 
   /// <summary>
   /// End of buffer/input. Emitted once at the end of the token stream.

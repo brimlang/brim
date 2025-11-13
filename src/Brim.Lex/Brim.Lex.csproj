@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<ItemGroup>
+    <InternalsVisibleTo Include="Brim.Lex.Tests" />
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\Brim.Core\Brim.Core.csproj" />
+	</ItemGroup>
+  <ItemGroup>
+    <Using Include="Brim.Core" />
+    <Using Include="Brim.Core.Collections" />
+  </ItemGroup>
+</Project>

@@ -19,12 +19,11 @@ public sealed record RestPattern(
 
   internal static RestPattern Parse(Parser parser)
   {
-    GreenToken restToken = parser.Expect(RawKind.StopStop, SyntaxKind.StopToken);
-
+    GreenToken restToken = parser.Expect(SyntaxKind.StopToken);
     GreenToken? identifier = null;
-    if (parser.Match(RawKind.Identifier))
+    if (parser.Match(TokenKind.Identifier))
     {
-      identifier = parser.Expect(RawKind.Identifier, SyntaxKind.IdentifierToken);
+      identifier = parser.Expect(SyntaxKind.IdentifierToken);
     }
 
     return new RestPattern(restToken, identifier);

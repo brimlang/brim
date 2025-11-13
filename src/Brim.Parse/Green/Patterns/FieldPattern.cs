@@ -20,8 +20,8 @@ public sealed record FieldPattern(
 
   internal static FieldPattern Parse(Parser parser)
   {
-    GreenToken fieldName = parser.Expect(RawKind.Identifier, SyntaxKind.IdentifierToken);
-    GreenToken bindToken = parser.Expect(RawKind.Equal, SyntaxKind.EqualToken);
+    GreenToken fieldName = parser.Expect(SyntaxKind.IdentifierToken);
+    GreenToken bindToken = parser.Expect(SyntaxKind.EqualToken);
     PatternNode pattern = PatternNode.Parse(parser);
 
     return new FieldPattern(fieldName, bindToken, pattern);

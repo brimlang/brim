@@ -21,15 +21,15 @@ public sealed record ListPattern(
 
   internal static new ListPattern Parse(Parser parser)
   {
-    GreenToken open = parser.Expect(RawKind.LParen, SyntaxKind.OpenParenToken);
+    GreenToken open = parser.Expect(SyntaxKind.OpenParenToken);
 
     ListElements? elements = null;
-    if (!parser.Match(RawKind.RParen))
+    if (!parser.Match(TokenKind.RParen))
     {
       elements = ListElements.Parse(parser);
     }
 
-    GreenToken close = parser.Expect(RawKind.RParen, SyntaxKind.CloseParenToken);
+    GreenToken close = parser.Expect(SyntaxKind.CloseParenToken);
 
     return new ListPattern(open, elements, close);
   }

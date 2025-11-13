@@ -1,8 +1,8 @@
 using System.CommandLine;
 using System.Text;
-using Brim.Parse;
-using Brim.Parse.Collections;
-using Brim.Parse.Producers;
+using Brim.Core;
+using Brim.Core.Collections;
+using Brim.Lex;
 using Spectre.Console;
 
 namespace Brim.Tool.Commands;
@@ -44,31 +44,31 @@ class LexCommand : Command
       st = SourceText.FromFile(file);
     }
 
-    DiagnosticList sink = DiagnosticList.Create();
-    RawProducer prod = new(st, sink);
+    DiagnosticList diags = DiagnosticList.Create();
+    LexTokenSource prod = new(st, diags);
 
-    while (prod.TryRead(out RawToken token))
+    while (prod.TryRead(out LexToken token))
     {
       WriteToken(token, st);
-      if (token.Kind == RawKind.Eob)
+      if (token.TokenKind == TokenKind.Eob)
         break;
     }
 
     return 0;
   }
 
-  static void WriteToken(RawToken token, SourceText source)
+  static void WriteToken(LexToken token, SourceText source)
   {
-    string literal = EscapeTokenValue(token.Value(source.Span));
-    string color = GetKindStyle(token.Kind);
+    string literal = EscapeTokenValue(token.Chars(source.Span));
+    string color = GetKindStyle(token.TokenKind);
 
     AnsiConsole.MarkupLine(
-      $"[{color}]{PadKind(token.Kind)}[/] [grey]{FormatLocation(token)}[/] '[white]{literal}[/]'");
+      $"[{color}]{PadKind(token.TokenKind)}[/] [grey]{FormatLocation(token)}[/] '[white]{literal}[/]'");
   }
 
-  static string PadKind(RawKind kind) => Markup.Escape(kind.ToString().PadRight(18));
+  static string PadKind(TokenKind kind) => Markup.Escape(kind.ToString().PadRight(18));
 
-  static string FormatLocation(RawToken token)
+  static string FormatLocation(LexToken token)
   {
     string line = token.Line.ToString().PadLeft(3);
     string column = token.Column.ToString().PadLeft(3);
@@ -98,23 +98,22 @@ class LexCommand : Command
     return Markup.Escape(builder.ToString());
   }
 
-  static string GetKindStyle(RawKind kind)
+  static string GetKindStyle(TokenKind kind)
   {
-    if (kind == RawKind.Error)
+    if (kind == TokenKind.Error)
       return "red";
 
     return kind switch
     {
-      RawKind.Terminator => "magenta",
-      RawKind.Identifier => "deepskyblue3",
-      RawKind.CommentTrivia or RawKind.WhitespaceTrivia => "cyan",
-      RawKind.IntegerLiteral or RawKind.DecimalLiteral or RawKind.StringLiteral or RawKind.RuneLiteral => "green",
-      RawKind.Eob => "grey50",
-      > RawKind._SentinelDefault and < RawKind._SentinelGlyphs => "mediumpurple1",
-      > RawKind._SentinelGlyphs and < RawKind._SentinelLiteral => "darkorange",
-      >= RawKind._SentinelLiteral and < RawKind._SentinelTrivia => "green",
-      >= RawKind._SentinelTrivia and < RawKind._SentinelSynthetic => "cyan",
-      >= RawKind._SentinelSynthetic => "grey66",
+      TokenKind.Terminator => "magenta",
+      TokenKind.Identifier => "deepskyblue3",
+      TokenKind.CommentTrivia or TokenKind.WhitespaceTrivia => "cyan",
+      TokenKind.IntegerLiteral or TokenKind.DecimalLiteral or TokenKind.StringLiteral or TokenKind.RuneLiteral => "green",
+      TokenKind.Eob => "grey50",
+      > TokenKind.Unitialized and < TokenKind._SentinelGlyphs => "mediumpurple1",
+      > TokenKind._SentinelGlyphs and < TokenKind._SentinelLiteral => "darkorange",
+      > TokenKind._SentinelLiteral and < TokenKind._SentinelSynthetic => "cyan",
+      > TokenKind._SentinelSynthetic => "grey66",
       _ => "yellow",
     };
   }

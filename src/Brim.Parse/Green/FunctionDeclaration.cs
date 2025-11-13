@@ -17,8 +17,8 @@ public sealed record FunctionParam(
 
   public static FunctionParam Parse(Parser p)
   {
-    GreenToken name = p.ExpectSyntax(SyntaxKind.IdentifierToken);
-    GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
+    GreenToken name = p.Expect(SyntaxKind.IdentifierToken);
+    GreenToken colon = p.Expect(SyntaxKind.ColonToken);
     TypeExpr type = TypeExpr.Parse(p);
     return new FunctionParam(name, colon, type);
   }
@@ -47,7 +47,7 @@ public sealed record FunctionDeclaration(
 
   public static FunctionDeclaration ParseAfterName(Parser p, DeclarationName name)
   {
-    GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
+    GreenToken colon = p.Expect(SyntaxKind.ColonToken);
 
     CommaList<FunctionParam> parameters = CommaList<FunctionParam>.Parse(
       p,
@@ -57,7 +57,7 @@ public sealed record FunctionDeclaration(
 
     TypeExpr returnType = TypeExpr.Parse(p);
     BlockExpr body = BlockExpr.Parse(p);
-    GreenToken terminator = p.ExpectSyntax(SyntaxKind.TerminatorToken);
+    GreenToken terminator = p.Expect(SyntaxKind.TerminatorToken);
 
     return new FunctionDeclaration(
       name,

@@ -1,40 +1,19 @@
-namespace Brim.Parse.Collections;
-
-/// <summary>
-/// A source that can produce buffer items and indicate end-of-source.
-/// </summary>
-public interface IBufferSource<T> where T : struct
-{
-  /// <summary>
-  /// Returns true if the given item is the last item in the source.
-  /// </summary>
-  /// <param name="item">The item to check.</param>
-  /// <returns><see langword="true" /> if the item is the last item; <see langword="false" /> otherwise.</returns>
-  bool IsEndOfSource(in T item);
-
-  /// <summary>
-  /// Attempts to read the next item from the source.
-  /// </summary>
-  /// <param name="item">The next item, if available.</param>
-  /// <returns><see langword="true" /> if an item was read; <see langword="false"> if the source is exhausted.</returns>
-  bool TryRead(out T item);
-}
+namespace Brim.Parse.Producers;
 
 /// <summary>
 /// A ring buffer that supports lookahead and is backed by a producer.
 /// </summary>
-public sealed class RingBuffer<T, TSource>
-  where T : struct
-  where TSource : IBufferSource<T>
+public sealed class RingBuffer<T>
+  where T : struct, IToken
 {
-  readonly TSource _source;
+  readonly ITokenSource<T> _source;
   readonly T[] _buffer;
 
   int _count;
   int _index;
   bool _ended;
 
-  public RingBuffer(TSource producer, int capacity)
+  public RingBuffer(ITokenSource<T> producer, int capacity)
   {
     ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacity);
     Capacity = capacity;

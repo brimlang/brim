@@ -17,8 +17,8 @@ public sealed record FieldInit(
 
   public static FieldInit Parse(Parser p)
   {
-    GreenToken name = p.ExpectSyntax(SyntaxKind.IdentifierToken);
-    GreenToken equals = p.ExpectSyntax(SyntaxKind.EqualToken);
+    GreenToken name = p.Expect(SyntaxKind.IdentifierToken);
+    GreenToken equals = p.Expect(SyntaxKind.EqualToken);
     ExprNode value = p.ParseExpression();
     return new FieldInit(name, equals, value);
   }

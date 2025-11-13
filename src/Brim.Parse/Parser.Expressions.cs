@@ -1,4 +1,3 @@
-using Brim.Parse.Collections;
 using Brim.Parse.Green;
 
 namespace Brim.Parse;
@@ -13,7 +12,7 @@ public sealed partial class Parser
   }
 
   internal readonly record struct BinaryOperatorInfo(
-    RawKind Kind,
+    TokenKind Kind,
     byte Precedence,
     OperatorAssociativity Associativity);
 
@@ -22,12 +21,12 @@ public sealed partial class Parser
   ExprNode ParseMatchExpression()
   {
     ExprNode scrutinee = ParseBinaryExpression(0);
-    if (MatchRaw(RawKind.EqualGreater))
+    if (Match(TokenKind.EqualGreater))
     {
-      GreenToken arrow = ExpectSyntax(SyntaxKind.ArrowToken);
+      GreenToken arrow = Expect(SyntaxKind.ArrowToken);
 
       // Check if this is a multi-line match (with braces) or single-line
-      if (MatchRaw(RawKind.LBrace))
+      if (Match(TokenKind.LBrace))
       {
         // Multi-line match: => { arms }
         MatchBlock block = ParseMatchBlock();
@@ -48,10 +47,10 @@ public sealed partial class Parser
   {
     ExprNode left = ParseUnaryExpression();
 
-    while (TryGetBinaryOperatorInfo(Current.Kind, out BinaryOperatorInfo info) && info.Precedence >= minPrecedence)
+    while (TryGetBinaryOperatorInfo(Current.TokenKind, out BinaryOperatorInfo info) && info.Precedence >= minPrecedence)
     {
       SyntaxKind opKind = MapBinaryOperatorKind(info.Kind);
-      GreenToken opToken = ExpectSyntax(opKind);
+      GreenToken opToken = Expect(opKind);
       byte nextPrecedence = info.Associativity switch
       {
         OperatorAssociativity.Left => (byte)(info.Precedence + 1),
@@ -67,10 +66,10 @@ public sealed partial class Parser
 
   ExprNode ParseUnaryExpression()
   {
-    if (IsPrefixOperator(Current.Kind))
+    if (IsPrefixOperator(Current.TokenKind))
     {
-      SyntaxKind opKind = MapPrefixOperatorKind(Current.Kind);
-      GreenToken opToken = ExpectSyntax(opKind);
+      SyntaxKind opKind = MapPrefixOperatorKind(Current.TokenKind);
+      GreenToken opToken = Expect(opKind);
       ExprNode operand = ParseUnaryExpression();
       return new UnaryExpr(opToken, operand);
     }
@@ -84,32 +83,32 @@ public sealed partial class Parser
 
     while (true)
     {
-      if (MatchRaw(RawKind.LParen))
+      if (Match(TokenKind.LParen))
       {
         ArgumentList args = ParseArgumentList();
         expr = new CallExpr(expr, args);
         continue;
       }
 
-      if (MatchRaw(RawKind.Stop))
+      if (Match(TokenKind.Stop))
       {
-        GreenToken dot = ExpectSyntax(SyntaxKind.StopToken);
-        GreenToken member = ExpectSyntax(SyntaxKind.IdentifierToken);
+        GreenToken dot = Expect(SyntaxKind.StopToken);
+        GreenToken member = Expect(SyntaxKind.IdentifierToken);
         expr = new MemberAccessExpr(expr, dot, member);
         continue;
       }
 
-      if (MatchRaw(RawKind.Question) || MatchRaw(RawKind.Bang))
+      if (Match(TokenKind.Question) || Match(TokenKind.Bang))
       {
-        SyntaxKind opKind = MatchRaw(RawKind.Question) ? SyntaxKind.QuestionToken : SyntaxKind.BangToken;
-        GreenToken op = ExpectSyntax(opKind);
+        SyntaxKind opKind = Match(TokenKind.Question) ? SyntaxKind.QuestionToken : SyntaxKind.BangToken;
+        GreenToken op = Expect(opKind);
         expr = new PropagationExpr(expr, op);
         continue;
       }
 
-      if (MatchRaw(RawKind.ColonGreater))
+      if (Match(TokenKind.ColonGreater))
       {
-        GreenToken cast = ExpectSyntax(SyntaxKind.CastToken);
+        GreenToken cast = Expect(SyntaxKind.CastToken);
         TypeExpr type = TypeExpr.Parse(this);
         expr = new CastExpr(expr, cast, type);
         continue;
@@ -123,51 +122,52 @@ public sealed partial class Parser
 
   ExprNode ParsePrimaryExpression()
   {
-    switch (Current.Kind)
+    switch (Current.TokenKind)
     {
-      case RawKind.Identifier:
+      case TokenKind.Identifier:
         return ParseIdentifierOrConstruct();
 
-      case RawKind.IntegerLiteral:
-      case RawKind.DecimalLiteral:
-      case RawKind.StringLiteral:
-      case RawKind.RuneLiteral:
-        SyntaxKind literalKind = Current.Kind switch
+      case TokenKind.IntegerLiteral:
+      case TokenKind.DecimalLiteral:
+      case TokenKind.StringLiteral:
+      case TokenKind.RuneLiteral:
+        SyntaxKind literalKind = Current.TokenKind switch
         {
-          RawKind.IntegerLiteral => SyntaxKind.IntToken,
-          RawKind.DecimalLiteral => SyntaxKind.DecimalToken,
-          RawKind.StringLiteral => SyntaxKind.StrToken,
-          RawKind.RuneLiteral => SyntaxKind.RuneToken,
+          TokenKind.IntegerLiteral => SyntaxKind.IntToken,
+          TokenKind.DecimalLiteral => SyntaxKind.DecimalToken,
+          TokenKind.StringLiteral => SyntaxKind.StrToken,
+          TokenKind.RuneLiteral => SyntaxKind.RuneToken,
           _ => SyntaxKind.ErrorToken,
         };
-        return new LiteralExpr(ExpectSyntax(literalKind));
+        return new LiteralExpr(Expect(literalKind));
 
-      case RawKind.Pipe:
-      case RawKind.PipePipeGreater:
+      case TokenKind.Pipe:
+      case TokenKind.PipePipeGreater:
         return ParseLambdaExpression();
 
-      case RawKind.LParen:
+      case TokenKind.LParen:
         return ParseParenthesizedExpression();
 
-      case RawKind.LBrace:
+      case TokenKind.LBrace:
         return ParseBlockExpression();
 
-      case RawKind.QuestionLBrace:
+      case TokenKind.QuestionLBrace:
         return ParseOptionConstruct();
 
-      case RawKind.BangLBrace:
+      case TokenKind.BangLBrace:
         return ParseResultConstruct();
 
-      case RawKind.BangBangLBrace:
+      case TokenKind.BangBangLBrace:
         return ParseErrorConstruct();
 
-      case RawKind.AtmarkLBrace:
+      case TokenKind.AtmarkLBrace:
         return ParseBareServiceConstruct();
 
       default:
-        RawToken unexpected = ExpectRaw(Current.Kind);
-        _diags.Add(Diagnostic.Unexpected(unexpected, []));
-        GreenToken error = new(SyntaxKind.ErrorToken, unexpected);
+        _diags.Add(Diagnostic.Parse.Unexpected(Current, ReadOnlySpan<TokenKind>.Empty));
+        CoreToken curr = Current;
+        Advance();
+        GreenToken error = SyntaxKind.ErrorToken.MakeGreen(curr);
         return new LiteralExpr(error);
     }
   }
@@ -185,52 +185,46 @@ public sealed partial class Parser
 
   ParenthesizedExpr ParseParenthesizedExpression()
   {
-    GreenToken open = ExpectSyntax(SyntaxKind.OpenParenToken);
+    GreenToken open = Expect(SyntaxKind.OpenParenToken);
     ExprNode inner = ParseExpression();
-    GreenToken close = ExpectSyntax(SyntaxKind.CloseParenToken);
+    GreenToken close = Expect(SyntaxKind.CloseParenToken);
     return new ParenthesizedExpr(open, inner, close);
   }
 
-  FunctionLiteral ParseLambdaExpression()
+  ExprNode ParseLambdaExpression()
   {
-    if (MatchRaw(RawKind.PipePipeGreater))
+    if (Match(TokenKind.PipePipeGreater))
     {
-      RawToken combined = ExpectRaw(RawKind.PipePipeGreater);
-      RawToken openRaw = new(RawKind.Pipe, combined.Offset, 1, combined.Line, combined.Column);
-      RawToken closeRaw = new(RawKind.PipeGreater, combined.Offset + 1, combined.Length - 1, combined.Line, combined.Column + 1);
+      GreenToken open = Expect(SyntaxKind.EmptyLambaToken);
+      ExprNode emptyBody = Match(TokenKind.LBrace) ? ParseBlockExpression() : ParseExpression();
 
-      GreenToken open = new(SyntaxKind.LambdaOpenToken, openRaw);
-      GreenToken close = new(SyntaxKind.LambdaCloseToken, closeRaw);
-      LambdaParams parameters = LambdaParams.Empty(open.Offset + open.FullWidth);
-
-      ExprNode emptyBody = MatchRaw(RawKind.LBrace) ? ParseBlockExpression() : ParseExpression();
-      return new FunctionLiteral(open, parameters, close, emptyBody);
+      return new ZeroParameterFunctionLiteral(open, emptyBody);
     }
 
-    GreenToken openToken = ExpectSyntax(SyntaxKind.LambdaOpenToken);
+    GreenToken openToken = Expect(SyntaxKind.LambdaOpenToken);
     ArrayBuilder<LambdaParams.Parameter> builder = [];
     int parametersOffset = openToken.EndOffset;
 
-    if (!MatchRaw(RawKind.PipeGreater))
+    if (!Match(TokenKind.PipeGreater))
     {
-      GreenToken firstIdent = ExpectSyntax(SyntaxKind.IdentifierToken);
+      GreenToken firstIdent = Expect(SyntaxKind.IdentifierToken);
       parametersOffset = firstIdent.Offset;
       builder.Add(new LambdaParams.Parameter(null, firstIdent));
 
-      while (MatchRaw(RawKind.Comma) && !MatchRaw(RawKind.PipeGreater, 1))
+      while (Match(TokenKind.Comma) && !Match(TokenKind.PipeGreater, 1))
       {
-        GreenToken comma = ExpectSyntax(SyntaxKind.CommaToken);
-        GreenToken ident = ExpectSyntax(SyntaxKind.IdentifierToken);
+        GreenToken comma = Expect(SyntaxKind.CommaToken);
+        GreenToken ident = Expect(SyntaxKind.IdentifierToken);
         builder.Add(new LambdaParams.Parameter(comma, ident));
       }
     }
 
-    GreenToken closeToken = ExpectSyntax(SyntaxKind.LambdaCloseToken);
+    GreenToken closeToken = Expect(SyntaxKind.LambdaCloseToken);
     LambdaParams parametersList = builder.Count > 0
       ? LambdaParams.From(builder, parametersOffset)
       : LambdaParams.Empty(closeToken.Offset);
 
-    ExprNode body = MatchRaw(RawKind.LBrace) ? ParseBlockExpression() : ParseExpression();
+    ExprNode body = Match(TokenKind.LBrace) ? ParseBlockExpression() : ParseExpression();
     return new FunctionLiteral(openToken, parametersList, closeToken, body);
   }
 
@@ -240,20 +234,20 @@ public sealed partial class Parser
   {
     ArrayBuilder<MatchArm> arms = [];
 
-    while (MatchRaw(RawKind.Terminator))
-      _ = ExpectSyntax(SyntaxKind.TerminatorToken);
+    while (Match(TokenKind.Terminator))
+      _ = Expect(SyntaxKind.TerminatorToken);
 
-    while (!MatchRaw(RawKind.Eob))
+    while (!Match(TokenKind.Eob))
     {
-      Parser.StallGuard guard = GetStallGuard();
+      StallGuard guard = GetStallGuard();
       MatchArm arm = ParseMatchArm();
       arms.Add(arm);
 
       if (arm.Terminator is null || guard.Stalled)
         break;
 
-      while (MatchRaw(RawKind.Terminator))
-        _ = ExpectSyntax(SyntaxKind.TerminatorToken);
+      while (Match(TokenKind.Terminator))
+        _ = Expect(SyntaxKind.TerminatorToken);
     }
 
     return new MatchArmList(arms.ToImmutable());
@@ -261,24 +255,24 @@ public sealed partial class Parser
 
   MatchBlock ParseMatchBlock()
   {
-    GreenToken openBrace = ExpectSyntax(SyntaxKind.OpenBlockToken);
+    GreenToken openBrace = Expect(SyntaxKind.OpenBlockToken);
 
     // Optional leading terminator
     GreenToken? leadingTerminator = null;
-    if (MatchRaw(RawKind.Terminator))
-      leadingTerminator = ExpectSyntax(SyntaxKind.TerminatorToken);
+    if (Match(TokenKind.Terminator))
+      leadingTerminator = Expect(SyntaxKind.TerminatorToken);
 
     ArrayBuilder<MatchBlock.Element> arms = [];
 
     // Parse arms until we hit closing brace
-    while (!MatchRaw(RawKind.RBrace) && !MatchRaw(RawKind.Eob))
+    while (!Match(TokenKind.RBrace) && !Match(TokenKind.Eob))
     {
-      Parser.StallGuard guard = GetStallGuard();
+      StallGuard guard = GetStallGuard();
 
       // Optional leading terminator before this arm (for 2nd+ arms)
       GreenToken? armLeadingTerm = null;
-      if (arms.Count > 0 && MatchRaw(RawKind.Terminator))
-        armLeadingTerm = ExpectSyntax(SyntaxKind.TerminatorToken);
+      if (arms.Count > 0 && Match(TokenKind.Terminator))
+        armLeadingTerm = Expect(SyntaxKind.TerminatorToken);
 
       // Parse the arm itself (which includes its own optional terminator)
       MatchArm arm = ParseMatchArm();
@@ -290,10 +284,10 @@ public sealed partial class Parser
 
     // Optional trailing terminator before close
     GreenToken? trailingTerminator = null;
-    if (MatchRaw(RawKind.Terminator))
-      trailingTerminator = ExpectSyntax(SyntaxKind.TerminatorToken);
+    if (Match(TokenKind.Terminator))
+      trailingTerminator = Expect(SyntaxKind.TerminatorToken);
 
-    GreenToken closeBrace = ExpectSyntax(SyntaxKind.CloseBlockToken);
+    GreenToken closeBrace = Expect(SyntaxKind.CloseBlockToken);
     return new MatchBlock(openBrace, leadingTerminator, arms.ToImmutable(), trailingTerminator, closeBrace);
   }
 
@@ -302,19 +296,19 @@ public sealed partial class Parser
     PatternNode pattern = PatternNode.Parse(this);
 
     MatchGuard? guard = null;
-    if (MatchRaw(RawKind.QuestionQuestion))
+    if (Match(TokenKind.QuestionQuestion))
     {
-      GreenToken guardToken = ExpectSyntax(SyntaxKind.MatchGuardToken);
+      GreenToken guardToken = Expect(SyntaxKind.MatchGuardToken);
       ExprNode condition = ParseBinaryExpression(0);
       guard = new MatchGuard(guardToken, condition);
     }
 
-    GreenToken arrow = ExpectSyntax(SyntaxKind.ArrowToken);
+    GreenToken arrow = Expect(SyntaxKind.ArrowToken);
     ExprNode target = ParseMatchExpression();
 
     GreenToken? terminator = null;
-    if (MatchRaw(RawKind.Terminator))
-      terminator = ExpectSyntax(SyntaxKind.TerminatorToken);
+    if (Match(TokenKind.Terminator))
+      terminator = Expect(SyntaxKind.TerminatorToken);
 
     return new MatchArm(pattern, guard, arrow, target, terminator);
   }
@@ -322,78 +316,78 @@ public sealed partial class Parser
   internal bool LooksLikeAssignment()
   {
     int offset = 0;
-    if (MatchRaw(RawKind.Hat, offset))
+    if (Match(TokenKind.Hat, offset))
       offset++;
 
-    if (!MatchRaw(RawKind.Identifier, offset))
+    if (!Match(TokenKind.Identifier, offset))
       return false;
 
     offset++;
 
-    while (MatchRaw(RawKind.Stop, offset) && MatchRaw(RawKind.Identifier, offset + 1))
+    while (Match(TokenKind.Stop, offset) && Match(TokenKind.Identifier, offset + 1))
     {
       offset += 2;
     }
 
-    return MatchRaw(RawKind.Equal, offset);
+    return Match(TokenKind.Equal, offset);
   }
 
   internal AssignmentStatement ParseAssignmentStatement()
   {
     AssignmentTarget target = AssignmentTarget.Parse(this);
-    GreenToken equal = ExpectSyntax(SyntaxKind.EqualToken);
+    GreenToken equal = Expect(SyntaxKind.EqualToken);
     ExprNode value = ParseExpression();
-    GreenToken terminator = ExpectSyntax(SyntaxKind.TerminatorToken);
+    GreenToken terminator = Expect(SyntaxKind.TerminatorToken);
     return new AssignmentStatement(target, equal, value, terminator);
   }
 
-  static bool IsPrefixOperator(RawKind kind) => kind is RawKind.Minus or RawKind.Bang;
+  static bool IsPrefixOperator(TokenKind kind) => kind is TokenKind.Minus or TokenKind.Bang;
 
-  static SyntaxKind MapPrefixOperatorKind(RawKind kind) => kind switch
+  static SyntaxKind MapPrefixOperatorKind(TokenKind kind) => kind switch
   {
-    RawKind.Minus => SyntaxKind.MinusToken,
-    RawKind.Bang => SyntaxKind.BangToken,
+    TokenKind.Minus => SyntaxKind.MinusToken,
+    TokenKind.Bang => SyntaxKind.BangToken,
     _ => SyntaxKind.ErrorToken,
   };
 
-  static SyntaxKind MapBinaryOperatorKind(RawKind kind) => kind switch
+  static SyntaxKind MapBinaryOperatorKind(TokenKind kind) => kind switch
   {
-    RawKind.Star => SyntaxKind.StarToken,
-    RawKind.Slash => SyntaxKind.SlashToken,
-    RawKind.Percent => SyntaxKind.PercentToken,
-    RawKind.Plus => SyntaxKind.PlusToken,
-    RawKind.Minus => SyntaxKind.MinusToken,
-    RawKind.Less => SyntaxKind.LessToken,
-    RawKind.Greater => SyntaxKind.GreaterToken,
-    RawKind.LessEqual => SyntaxKind.LessEqualToken,
-    RawKind.GreaterEqual => SyntaxKind.GreaterEqualToken,
-    RawKind.EqualEqual => SyntaxKind.EqualEqualToken,
-    RawKind.BangEqual => SyntaxKind.BangEqualToken,
-    RawKind.AmpersandAmpersand => SyntaxKind.AmpersandAmpersandToken,
-    RawKind.PipePipe => SyntaxKind.PipePipeToken,
+    TokenKind.Star => SyntaxKind.StarToken,
+    TokenKind.Slash => SyntaxKind.SlashToken,
+    TokenKind.Percent => SyntaxKind.PercentToken,
+    TokenKind.Plus => SyntaxKind.PlusToken,
+    TokenKind.Minus => SyntaxKind.MinusToken,
+    TokenKind.Less => SyntaxKind.LessToken,
+    TokenKind.Greater => SyntaxKind.GreaterToken,
+    TokenKind.LessEqual => SyntaxKind.LessEqualToken,
+    TokenKind.GreaterEqual => SyntaxKind.GreaterEqualToken,
+    TokenKind.EqualEqual => SyntaxKind.EqualEqualToken,
+    TokenKind.BangEqual => SyntaxKind.BangEqualToken,
+    TokenKind.AmpersandAmpersand => SyntaxKind.AmpersandAmpersandToken,
+    TokenKind.PipePipe => SyntaxKind.PipePipeToken,
     _ => SyntaxKind.ErrorToken,
   };
 
   static readonly BinaryOperatorInfo[] _binaryOperatorTable =
   [
-    new BinaryOperatorInfo(RawKind.Star, 80, OperatorAssociativity.Left),
-    new BinaryOperatorInfo(RawKind.Slash, 80, OperatorAssociativity.Left),
-    new BinaryOperatorInfo(RawKind.Percent, 80, OperatorAssociativity.Left),
-    new BinaryOperatorInfo(RawKind.Plus, 75, OperatorAssociativity.Left),
-    new BinaryOperatorInfo(RawKind.Minus, 75, OperatorAssociativity.Left),
-    new BinaryOperatorInfo(RawKind.Less, 70, OperatorAssociativity.None),
-    new BinaryOperatorInfo(RawKind.Greater, 70, OperatorAssociativity.None),
-    new BinaryOperatorInfo(RawKind.LessEqual, 70, OperatorAssociativity.None),
-    new BinaryOperatorInfo(RawKind.GreaterEqual, 70, OperatorAssociativity.None),
-    new BinaryOperatorInfo(RawKind.EqualEqual, 65, OperatorAssociativity.None),
-    new BinaryOperatorInfo(RawKind.BangEqual, 65, OperatorAssociativity.None),
-    new BinaryOperatorInfo(RawKind.AmpersandAmpersand, 50, OperatorAssociativity.Left),
-    new BinaryOperatorInfo(RawKind.PipePipe, 45, OperatorAssociativity.Left),
+    new BinaryOperatorInfo(TokenKind.Star, 80, OperatorAssociativity.Left),
+    new BinaryOperatorInfo(TokenKind.Slash, 80, OperatorAssociativity.Left),
+    new BinaryOperatorInfo(TokenKind.Percent, 80, OperatorAssociativity.Left),
+    new BinaryOperatorInfo(TokenKind.Plus, 75, OperatorAssociativity.Left),
+    new BinaryOperatorInfo(TokenKind.Minus, 75, OperatorAssociativity.Left),
+    new BinaryOperatorInfo(TokenKind.Less, 70, OperatorAssociativity.None),
+    new BinaryOperatorInfo(TokenKind.Greater, 70, OperatorAssociativity.None),
+    new BinaryOperatorInfo(TokenKind.LessEqual, 70, OperatorAssociativity.None),
+    new BinaryOperatorInfo(TokenKind.GreaterEqual, 70, OperatorAssociativity.None),
+    new BinaryOperatorInfo(TokenKind.EqualEqual, 65, OperatorAssociativity.None),
+    new BinaryOperatorInfo(TokenKind.BangEqual, 65, OperatorAssociativity.None),
+    new BinaryOperatorInfo(TokenKind.AmpersandAmpersand, 50, OperatorAssociativity.Left),
+    new BinaryOperatorInfo(TokenKind.PipePipe, 45, OperatorAssociativity.Left),
   ];
 
   static ReadOnlySpan<BinaryOperatorInfo> BinaryOperators => _binaryOperatorTable;
 
-  internal static bool TryGetBinaryOperatorInfo(RawKind kind, out BinaryOperatorInfo info)
+  internal static bool TryGetBinaryOperatorInfo(TokenKind kind, out BinaryOperatorInfo info)
   {
     foreach (BinaryOperatorInfo candidate in BinaryOperators)
     {
@@ -410,21 +404,21 @@ public sealed partial class Parser
 
   ExprNode ParseIdentifierOrConstruct()
   {
-    GreenToken ident = ExpectSyntax(SyntaxKind.IdentifierToken);
+    GreenToken ident = Expect(SyntaxKind.IdentifierToken);
 
-    return Current.Kind switch
+    return Current.TokenKind switch
     {
-      RawKind.PercentLBrace => ParseStructConstruct(ident),
-      RawKind.PipeLBrace => ParseUnionConstruct(ident),
-      RawKind.HashLBrace => ParseTupleConstruct(ident),
-      RawKind.AmpersandLBrace => ParseFlagsConstruct(ident),
-      RawKind.AtmarkLBrace => ParseServiceConstruct(ident),
-      RawKind.LBracket => ParseSeqConstruct(ident),
+      TokenKind.PercentLBrace => ParseStructConstruct(ident),
+      TokenKind.PipeLBrace => ParseUnionConstruct(ident),
+      TokenKind.HashLBrace => ParseTupleConstruct(ident),
+      TokenKind.AmpersandLBrace => ParseFlagsConstruct(ident),
+      TokenKind.AtmarkLBrace => ParseServiceConstruct(ident),
+      TokenKind.LBracket => ParseSeqConstruct(ident),
       _ => new IdentifierExpr(ident),
     };
   }
 
-  ExprNode ParseStructConstruct(GreenToken typeIdent)
+  StructConstruct ParseStructConstruct(GreenToken typeIdent)
   {
     QualifiedIdent qualifiedIdent = new([], typeIdent);
     TypeRef typeRef = new(qualifiedIdent, null);
@@ -433,24 +427,24 @@ public sealed partial class Parser
       this,
       SyntaxKind.StructToken,
       SyntaxKind.CloseBlockToken,
-      p => FieldInit.Parse(p));
+      FieldInit.Parse);
 
     return new StructConstruct(typeRef, fields);
   }
 
-  ExprNode ParseUnionConstruct(GreenToken typeIdent)
+  UnionConstruct ParseUnionConstruct(GreenToken typeIdent)
   {
     QualifiedIdent qualifiedIdent = new([], typeIdent);
     TypeRef typeRef = new(qualifiedIdent, null);
 
-    GreenToken unionOpen = ExpectSyntax(SyntaxKind.UnionToken);
+    GreenToken unionOpen = Expect(SyntaxKind.UnionToken);
     VariantInit variant = VariantInit.Parse(this);
-    GreenToken closeBrace = ExpectSyntax(SyntaxKind.CloseBlockToken);
+    GreenToken closeBrace = Expect(SyntaxKind.CloseBlockToken);
 
     return new UnionConstruct(typeRef, unionOpen, variant, closeBrace);
   }
 
-  ExprNode ParseTupleConstruct(GreenToken typeIdent)
+  TupleConstruct ParseTupleConstruct(GreenToken typeIdent)
   {
     QualifiedIdent qualifiedIdent = new([], typeIdent);
     TypeRef typeRef = new(qualifiedIdent, null);
@@ -464,7 +458,7 @@ public sealed partial class Parser
     return new TupleConstruct(typeRef, elements);
   }
 
-  ExprNode ParseFlagsConstruct(GreenToken typeIdent)
+  FlagsConstruct ParseFlagsConstruct(GreenToken typeIdent)
   {
     QualifiedIdent qualifiedIdent = new([], typeIdent);
     TypeRef typeRef = new(qualifiedIdent, null);
@@ -473,12 +467,12 @@ public sealed partial class Parser
       this,
       SyntaxKind.FlagsToken,
       SyntaxKind.CloseBlockToken,
-      p => p.ExpectSyntax(SyntaxKind.IdentifierToken));
+      p => p.Expect(SyntaxKind.IdentifierToken));
 
     return new FlagsConstruct(typeRef, flags);
   }
 
-  ExprNode ParseServiceConstruct(GreenToken typeIdent)
+  ServiceConstruct ParseServiceConstruct(GreenToken typeIdent)
   {
     QualifiedIdent qualifiedIdent = new([], typeIdent);
     TypeRef typeRef = new(qualifiedIdent, null);
@@ -487,16 +481,16 @@ public sealed partial class Parser
       this,
       SyntaxKind.ServiceToken,
       SyntaxKind.CloseBlockToken,
-      p => FieldInit.Parse(p));
+      FieldInit.Parse);
 
     return new ServiceConstruct(typeRef, fields);
   }
 
-  ExprNode ParseBareServiceConstruct()
+  ServiceConstruct ParseBareServiceConstruct()
   {
     // Bare @{ field = expr, ... } without type prefix
     // Create a missing/empty type reference
-    GreenToken missingType = FabricateMissing(SyntaxKind.IdentifierToken, RawKind.Identifier);
+    GreenToken missingType = FabricateMissing(SyntaxKind.IdentifierToken);
     QualifiedIdent qualifiedIdent = new([], missingType);
     TypeRef typeRef = new(qualifiedIdent, null);
 
@@ -504,15 +498,15 @@ public sealed partial class Parser
       this,
       SyntaxKind.ServiceToken,
       SyntaxKind.CloseBlockToken,
-      p => FieldInit.Parse(p));
+      FieldInit.Parse);
 
     return new ServiceConstruct(typeRef, fields);
   }
 
-  ExprNode ParseSeqConstruct(GreenToken seqIdent)
+  SeqConstruct ParseSeqConstruct(GreenToken seqIdent)
   {
     GenericArgumentList? genericArgs = null;
-    if (MatchRaw(RawKind.LBracket))
+    if (Match(TokenKind.LBracket))
       genericArgs = GenericArgumentList.Parse(this);
 
     CommaList<ExprNode> elements = CommaList<ExprNode>.Parse(
@@ -524,39 +518,33 @@ public sealed partial class Parser
     return new SeqConstruct(seqIdent, genericArgs, elements);
   }
 
-  ExprNode ParseOptionConstruct()
+  OptionConstruct ParseOptionConstruct()
   {
-    RawToken questionLBrace = ExpectRaw(RawKind.QuestionLBrace);
-    RawToken questionRaw = new(RawKind.Question, questionLBrace.Offset, 1, questionLBrace.Line, questionLBrace.Column);
-    GreenToken questionOpen = new(SyntaxKind.QuestionToken, questionRaw);
+    GreenToken optionOpen = Expect(SyntaxKind.OptionConstruct);
 
     ExprNode? value = null;
-    if (!MatchRaw(RawKind.RBrace))
+    if (!Match(TokenKind.RBrace))
       value = ParseExpression();
 
-    GreenToken closeBrace = ExpectSyntax(SyntaxKind.CloseBlockToken);
-    return new OptionConstruct(questionOpen, value, closeBrace);
+    GreenToken closeBrace = Expect(SyntaxKind.CloseBlockToken);
+    return new OptionConstruct(optionOpen, value, closeBrace);
   }
 
-  ExprNode ParseResultConstruct()
+  ResultConstruct ParseResultConstruct()
   {
-    RawToken bangLBrace = ExpectRaw(RawKind.BangLBrace);
-    RawToken bangRaw = new(RawKind.Bang, bangLBrace.Offset, 1, bangLBrace.Line, bangLBrace.Column);
-    GreenToken bangOpen = new(SyntaxKind.BangToken, bangRaw);
+    GreenToken resultOpen = Expect(SyntaxKind.ResultConstruct);
 
     ExprNode value = ParseExpression();
-    GreenToken closeBrace = ExpectSyntax(SyntaxKind.CloseBlockToken);
-    return new ResultConstruct(bangOpen, value, closeBrace);
+    GreenToken closeBrace = Expect(SyntaxKind.CloseBlockToken);
+    return new ResultConstruct(resultOpen, value, closeBrace);
   }
 
-  ExprNode ParseErrorConstruct()
+  ErrorConstruct ParseErrorConstruct()
   {
-    RawToken bangBangLBrace = ExpectRaw(RawKind.BangBangLBrace);
-    RawToken bangBangRaw = new(RawKind.Bang, bangBangLBrace.Offset, 2, bangBangLBrace.Line, bangBangLBrace.Column);
-    GreenToken bangBangOpen = new(SyntaxKind.BangToken, bangBangRaw);
+    GreenToken errorOpen = Expect(SyntaxKind.ErrorConstruct);
 
     ExprNode value = ParseExpression();
-    GreenToken closeBrace = ExpectSyntax(SyntaxKind.CloseBlockToken);
-    return new ErrorConstruct(bangBangOpen, value, closeBrace);
+    GreenToken closeBrace = Expect(SyntaxKind.CloseBlockToken);
+    return new ErrorConstruct(errorOpen, value, closeBrace);
   }
 }

@@ -1,5 +1,3 @@
-using Brim.Parse.Collections;
-
 namespace Brim.Parse.Green;
 
 /// <summary>
@@ -7,25 +5,6 @@ namespace Brim.Parse.Green;
 /// </summary>
 public static class TerminatorList
 {
-  /// <summary>
-  /// Parses a terminator-separated list of tokens of the given kind, enclosed by the given open and close kinds.
-  /// </summary>
-  /// <param name="p">The parser instance.</param>
-  /// <param name="openKind">The syntax kind of the opening delimiter.</param>
-  /// <param name="closeKind">The syntax kind of the closing delimiter.</param>
-  /// <param name="elementKind">The syntax kind of list elements.</param>
-  /// <returns>A comma list containing tokens of the specified kind.</returns>
-  public static TerminatorList<GreenToken> Parse(
-    Parser p,
-    SyntaxKind openKind,
-    SyntaxKind closeKind,
-    SyntaxKind elementKind)
-  {
-    RawKind openRaw = Parser.MapRawKind(openKind);
-    RawKind closeRaw = Parser.MapRawKind(closeKind);
-    return Parse(p, openRaw, openKind, closeRaw, closeKind, elementKind);
-  }
-
   /// <summary>
   /// Parses a terminator-separated list of tokens of the given kind, enclosed by the given open and close kinds.
   /// </summary>
@@ -38,18 +17,14 @@ public static class TerminatorList
   /// <returns>A comma list containing tokens of the specified kind.</returns>
   public static TerminatorList<GreenToken> Parse(
     Parser p,
-    RawKind openRaw,
     SyntaxKind openSyntax,
-    RawKind closeRaw,
     SyntaxKind closeSyntax,
     SyntaxKind elementKind) =>
     TerminatorList<GreenToken>.Parse(
       p,
-      openRaw,
       openSyntax,
-      closeRaw,
       closeSyntax,
-      p2 => p2.ExpectSyntax(elementKind));
+      p2 => p2.Expect(elementKind));
 }
 
 /// <summary>
@@ -83,21 +58,6 @@ GreenNode(SyntaxKind.TerminatorList, OpenToken.Offset) where T : GreenNode
   /// Parses a terminator-separated list using a custom element parser.
   /// </summary>
   /// <param name="p">The parser instance.</param>
-  /// <param name="openKind">The syntax kind of the opening delimiter.</param>
-  /// <param name="closeKind">The syntax kind of the closing delimiter.</param>
-  /// <param name="parseElement">Function to parse individual list elements.</param>
-  /// <returns>A parsed terminator list.</returns>
-  public static TerminatorList<T> Parse(Parser p, SyntaxKind openKind, SyntaxKind closeKind, Func<Parser, T> parseElement)
-  {
-    RawKind openRaw = Parser.MapRawKind(openKind);
-    RawKind closeRaw = Parser.MapRawKind(closeKind);
-    return Parse(p, openRaw, openKind, closeRaw, closeKind, parseElement);
-  }
-
-  /// <summary>
-  /// Parses a terminator-separated list using a custom element parser.
-  /// </summary>
-  /// <param name="p">The parser instance.</param>
   /// <param name="openRaw">The raw kind of the opening delimiter.</param>
   /// <param name="openSyntax">The syntax kind to assign to the opening delimiter token.</param>
   /// <param name="closeRaw">The raw kind of the closing delimiter.</param>
@@ -106,25 +66,26 @@ GreenNode(SyntaxKind.TerminatorList, OpenToken.Offset) where T : GreenNode
   /// <returns>A parsed terminator list.</returns>
   public static TerminatorList<T> Parse(
     Parser p,
-    RawKind openRaw,
     SyntaxKind openSyntax,
-    RawKind closeRaw,
     SyntaxKind closeSyntax,
     Func<Parser, T> parseElement)
   {
-    GreenToken open = p.Expect(openRaw, openSyntax);
+    GreenToken open = p.Expect(openSyntax);
     StructuralArray<GreenToken> leadingTerminators = p.CollectSyntaxKind(SyntaxKind.TerminatorToken);
     ArrayBuilder<Element> elements = [];
 
     // Parse first element if not immediately at close
-    while (!p.MatchRawNotEob(closeRaw))
+    while (!p.Match(Parser.MapTokenKind(closeSyntax)) && !p.Match(TokenKind.Eob))
     {
       Parser.StallGuard sg = p.GetStallGuard();
       elements.Add(Element.Parse(p, parseElement));
-      if (sg.Stalled) break;
+      if (sg.Stalled)
+      {
+        break;
+      }
     }
 
-    GreenToken close = p.Expect(closeRaw, closeSyntax);
+    GreenToken close = p.Expect(closeSyntax);
 
     return new(
       open,

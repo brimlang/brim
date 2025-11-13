@@ -1,5 +1,3 @@
-using Brim.Parse.Collections;
-
 namespace Brim.Parse.Green;
 
 /// <summary>
@@ -24,7 +22,7 @@ public sealed record ListElements(
     ArrayBuilder<GreenNode> elements = [];
 
     // First element - could be a pattern or rest pattern
-    if (parser.Match(RawKind.StopStop))
+    if (parser.Match(TokenKind.StopStop))
     {
       // Rest pattern only: (..rest)
       elements.Add(RestPattern.Parse(parser));
@@ -35,18 +33,18 @@ public sealed record ListElements(
     elements.Add(PatternNode.Parse(parser));
 
     // Parse additional elements
-    while (parser.Match(RawKind.Comma))
+    while (parser.Match(TokenKind.Comma))
     {
-      GreenToken comma = parser.Expect(RawKind.Comma, SyntaxKind.CommaToken);
+      GreenToken comma = parser.Expect(SyntaxKind.CommaToken);
       elements.Add(comma);
 
       // Check if next is rest pattern
-      if (parser.Match(RawKind.StopStop))
+      if (parser.Match(TokenKind.StopStop))
       {
         elements.Add(RestPattern.Parse(parser));
         break; // Rest pattern must be last
       }
-      else if (!parser.Match(RawKind.RParen))
+      else if (!parser.Match(TokenKind.RParen))
       {
         // Regular pattern
         elements.Add(PatternNode.Parse(parser));

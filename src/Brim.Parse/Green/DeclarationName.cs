@@ -15,7 +15,7 @@ IParsable<DeclarationName>
 
   public static DeclarationName Parse(Parser p)
   {
-    GreenToken id = p.ExpectSyntax(SyntaxKind.IdentifierToken);
+    GreenToken id = p.Expect(SyntaxKind.IdentifierToken);
     GenericParameterList? gp = GenericParameterList.TryParse(p);
     return new DeclarationName(id, gp);
   }

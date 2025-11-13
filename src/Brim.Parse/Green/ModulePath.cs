@@ -1,5 +1,3 @@
-using Brim.Parse.Collections;
-
 namespace Brim.Parse.Green;
 
 public sealed record class ModulePath(
@@ -18,11 +16,11 @@ public sealed record class ModulePath(
   {
     ImmutableArray<GreenToken>.Builder parts = ImmutableArray.CreateBuilder<GreenToken>();
 
-    parts.Add(p.ExpectSyntax(SyntaxKind.IdentifierToken));
-    while (p.MatchRaw(RawKind.ColonColon))
+    parts.Add(p.Expect(SyntaxKind.IdentifierToken));
+    while (p.Match(TokenKind.ColonColon))
     {
-      parts.Add(p.ExpectSyntax(SyntaxKind.ModulePathSepToken));
-      parts.Add(p.ExpectSyntax(SyntaxKind.IdentifierToken));
+      parts.Add(p.Expect(SyntaxKind.ModulePathSepToken));
+      parts.Add(p.Expect(SyntaxKind.IdentifierToken));
     }
 
     return new ModulePath(parts);
