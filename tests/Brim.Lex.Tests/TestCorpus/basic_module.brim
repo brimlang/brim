@@ -1,0 +1,32 @@
+=[demo::core]=
+
+Perms := &{ read, write, exec }
+
+User := %{
+  name  :str,
+  perms :Perms,
+}
+
+UserProtocol := .{
+  add :(name :str, active :bool) User!,
+}
+
+UserService := @{
+  perms :Perms,
+}
+
+UserService<UserProtocol>(svc :@) {
+  add :(name :str, active :bool) User! {
+    svc.perms = active => {
+      true  => Perms&{ read, write, exec }
+      false => Perms&{ read }
+    }
+
+    User%{
+      name  = name,
+      perms = svc.perms,
+    }
+  }
+}
+
+-- trailing comment ensures comment trivia
