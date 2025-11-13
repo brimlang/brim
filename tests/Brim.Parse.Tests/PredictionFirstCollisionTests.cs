@@ -1,3 +1,5 @@
+using Brim.Core;
+
 namespace Brim.Parse.Tests;
 
 /// <summary>
@@ -17,7 +19,7 @@ public class PredictionFirstCollisionTests
       {
         // Ensure the duplicate sequences are not identical beyond K1.
         // Collect all sequences sharing this K1 and assert no identical length/pattern duplicates.
-        var group = Parser.ModuleMemberPredictions.Where(p => p.Sequence[0] == (RawKind)k).ToList();
+        var group = Parser.ModuleMemberPredictions.Where(p => p.Sequence[0] == (TokenKind)k).ToList();
         for (int i = 0; i < group.Count; i++)
         {
           for (int j = i + 1; j < group.Count; j++)
@@ -43,7 +45,7 @@ public class PredictionFirstCollisionTests
                 }
                 string sa = sbldrA.ToString();
                 string sb = sbldrB.ToString();
-                Assert.False(identical, $"Duplicate prediction sequences for first token {(RawKind)k}: a=[{sa}] b=[{sb}]");
+                Assert.False(identical, $"Duplicate prediction sequences for first token {(TokenKind)k}: a=[{sa}] b=[{sb}]");
               }
             }
           }

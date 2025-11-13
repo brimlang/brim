@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Brim.Lex\Brim.Lex.csproj" />
     <ProjectReference Include="..\Brim.Parse\Brim.Parse.csproj" />
     <!-- <ProjectReference Include="..\Brim.S0\Brim.S0.csproj" /> -->
     <!-- <ProjectReference Include="..\Brim.C0\Brim.C0.csproj" /> -->

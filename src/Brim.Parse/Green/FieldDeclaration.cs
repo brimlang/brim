@@ -17,8 +17,8 @@ IParsable<FieldDeclaration>
 
   public static FieldDeclaration Parse(Parser p)
   {
-    GreenToken nameTok = p.ExpectSyntax(SyntaxKind.IdentifierToken);
-    GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
+    GreenToken nameTok = p.Expect(SyntaxKind.IdentifierToken);
+    GreenToken colon = p.Expect(SyntaxKind.ColonToken);
     TypeExpr type = TypeExpr.Parse(p);
 
     return new FieldDeclaration(nameTok, colon, type);

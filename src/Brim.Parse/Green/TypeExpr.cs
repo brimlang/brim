@@ -16,30 +16,30 @@ public sealed record TypeExpr(
   {
     // Parse TypeCore
     GreenNode core;
-    switch (p.Current.Kind)
+    switch (p.Current.TokenKind)
     {
       // Aggregate shapes
-      case RawKind.PercentLBrace:
+      case TokenKind.PercentLBrace:
         core = StructShape.Parse(p);
         break;
-      case RawKind.PipeLBrace:
+      case TokenKind.PipeLBrace:
         core = UnionShape.Parse(p);
         break;
-      case RawKind.HashLBrace:
+      case TokenKind.HashLBrace:
         core = NamedTupleShape.Parse(p);
         break;
-      case RawKind.StopLBrace:
+      case TokenKind.StopLBrace:
         core = ProtocolShape.Parse(p);
         break;
-      case RawKind.AtmarkLBrace:
+      case TokenKind.AtmarkLBrace:
         core = ServiceShape.Parse(p);
         break;
-      case RawKind.AmpersandLBrace:
+      case TokenKind.AmpersandLBrace:
         core = FlagsShape.Parse(p);
         break;
 
       // Function type
-      case RawKind.LParen:
+      case TokenKind.LParen:
         core = new FunctionTypeExpr(FunctionShape.Parse(p));
         break;
 
@@ -51,15 +51,15 @@ public sealed record TypeExpr(
     }
 
     // Parse optional TypeSuffix
-    GreenToken? suffix = p.Current.Kind switch
+    GreenToken? suffix = p.Current.TokenKind switch
     {
-      RawKind.Question => p.ExpectSyntax(SyntaxKind.QuestionToken),
-      RawKind.Bang => p.ExpectSyntax(SyntaxKind.BangToken),
+      TokenKind.Question => p.Expect(SyntaxKind.QuestionToken),
+      TokenKind.Bang => p.Expect(SyntaxKind.BangToken),
       _ => null
     };
 
     return new TypeExpr(core, suffix);
   }
 
-  public override string ToString() => $"{Core.Kind}{Suffix?.ToString() ?? ""}";
+  public override string ToString() => $"{Core.SyntaxKind}{Suffix?.ToString() ?? ""}";
 }

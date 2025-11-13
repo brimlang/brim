@@ -17,9 +17,7 @@ public sealed record TuplePattern(CommaList<PatternNode> Patterns)
   {
     CommaList<PatternNode> patterns = CommaList<PatternNode>.Parse(
         parser,
-        RawKind.HashLParen,
         SyntaxKind.OpenParenToken,
-        RawKind.RParen,
         SyntaxKind.CloseParenToken,
         PatternNode.Parse);
 

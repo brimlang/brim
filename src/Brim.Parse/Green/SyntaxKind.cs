@@ -4,6 +4,7 @@ public enum SyntaxKind
 {
   Missing = -2,
   Undefined = -1,
+
   // Tokens
   ErrorToken = 0,
   ModulePathOpenToken,
@@ -44,12 +45,13 @@ public enum SyntaxKind
   TerminatorToken,
   StopToken,
   CastToken,
-  HatToken,
+  MutableToken,
   TildeToken,
   NamedTupleToken,
   ProtocolToken,
   StructToken,
   FlagsToken,
+  FlagsPatternToken,
   ServiceToken,
   AmpersandAmpersandToken,
   PipePipeToken,
@@ -57,11 +59,16 @@ public enum SyntaxKind
   BangEqualToken,
   LessEqualToken,
   GreaterEqualToken,
+  ExportEndToken,
+  ServiceImplToken,
   EobToken,
 
   // Nodes
   Module,
   Comment,
+  TerminatorList,
+  CommaList,
+  ListElement,
 
   // Declarations
   TypeDeclaration,
@@ -106,10 +113,6 @@ public enum SyntaxKind
   FunctionParameter,
   FieldDeclaration,
   FieldList,
-  ServiceImplToken,
-  CommaList,
-  ListElement,
-  ExportEndToken,
   QualifiedIdentifier,
   QualifiedIdentifierSegment,
   Qualifier,
@@ -174,5 +177,14 @@ public enum SyntaxKind
   VariantPatternTail,
   FlagsPatternEntry,
   ServicePatternEntry,
-  TerminatorList,
+  EmptyLambaToken,
+  ServiceHandleToken,
+}
+
+public static class SyntaxKindExtensions
+{
+  extension(SyntaxKind sk)
+  {
+    public GreenToken MakeGreen(CoreToken core) => new(sk, core);
+  }
 }

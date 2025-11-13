@@ -60,7 +60,7 @@ dotnet_style_collection_initializer = true:warning
 dotnet_style_prefer_collection_expression = true:suggestion
 dotnet_style_null_propagation = true:warning
 dotnet_style_prefer_conditional_expression_over_assignment = true:suggestion
-dotnet_style_prefer_conditional_expression_over_return = true:suggestion
+dotnet_style_prefer_conditional_expression_over_return = true:silent
 dotnet_style_prefer_simplified_boolean_expressions = true:none
 dotnet_style_prefer_simplified_interpolation = true:warning
 dotnet_style_prefer_switch_expression = true:warning
@@ -114,7 +114,7 @@ csharp_space_between_method_declaration_parameter_list_parentheses = false
 csharp_space_between_method_call_parameter_list_parentheses = false
 csharp_space_after_cast = false
 
-csharp_prefer_braces = when_multiline:warning
+csharp_prefer_braces = false:warning
 csharp_style_trailing_comma = true:warning
 
 # Prefer trailing commas in multi-line constructs (reduces diffs)
@@ -125,3 +125,7 @@ dotnet_diagnostic.IDE0072.severity = none
 
 # IDE0018: Inline variable declaration
 dotnet_diagnostic.IDE0018.severity = silent
+
+# IDE0046: Convert to conditional expression
+dotnet_diagnostic.IDE0046.severity = silent
+

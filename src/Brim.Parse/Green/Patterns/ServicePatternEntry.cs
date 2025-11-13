@@ -21,8 +21,8 @@ public sealed record ServicePatternEntry(
 
   internal static ServicePatternEntry Parse(Parser parser)
   {
-    GreenToken name = parser.Expect(RawKind.Identifier, SyntaxKind.IdentifierToken);
-    GreenToken colon = parser.Expect(RawKind.Colon, SyntaxKind.ColonToken);
+    GreenToken name = parser.Expect(SyntaxKind.IdentifierToken);
+    GreenToken colon = parser.Expect(SyntaxKind.ColonToken);
     TypeRef protocol = TypeRef.Parse(parser);
 
     return new ServicePatternEntry(name, colon, protocol);

@@ -1,5 +1,3 @@
-using Brim.Parse.Collections;
-
 namespace Brim.Parse.Green;
 
 public sealed record GenericParameterList(
@@ -14,7 +12,7 @@ GreenNode(SyntaxKind.GenericParameterList, ParameterList.Offset)
 
   public static GenericParameterList? TryParse(Parser p)
   {
-    if (!p.MatchRaw(RawKind.LBracket))
+    if (!p.Match(TokenKind.LBracket))
       return null; // fast reject
 
     CommaList<GenericParameter> list = CommaList<GenericParameter>.Parse(
@@ -31,25 +29,25 @@ GreenNode(SyntaxKind.GenericParameterList, ParameterList.Offset)
 
   static GenericParameter ParseParameter(Parser p)
   {
-    GreenToken paramIdTok = p.ExpectSyntax(SyntaxKind.IdentifierToken);
+    GreenToken paramIdTok = p.Expect(SyntaxKind.IdentifierToken);
     ConstraintList? constraints = ParseConstraints(p);
     return new(paramIdTok, constraints);
   }
 
   static ConstraintList? ParseConstraints(Parser p)
   {
-    if (!p.MatchRaw(RawKind.Colon))
+    if (!p.Match(TokenKind.Colon))
       return null;
 
-    GreenToken colonTok = p.ExpectSyntax(SyntaxKind.ColonToken);
+    GreenToken colonTok = p.Expect(SyntaxKind.ColonToken);
 
     ArrayBuilder<ConstraintRef> refs = [];
 
-    if (!p.MatchRaw(RawKind.RBracket) && !p.MatchRaw(RawKind.Eob) && !p.MatchRaw(RawKind.Comma))
+    if (!p.Match(TokenKind.RBracket) && !p.Match(TokenKind.Eob) && !p.Match(TokenKind.Comma))
     {
       refs.Add(ParseConstraintRef(p));
 
-      while (!p.MatchRaw(RawKind.RBracket) && !p.MatchRaw(RawKind.Eob) && !p.MatchRaw(RawKind.Comma))
+      while (!p.Match(TokenKind.RBracket) && !p.Match(TokenKind.Eob) && !p.Match(TokenKind.Comma))
       {
         Parser.StallGuard sg = p.GetStallGuard();
         refs.Add(ParseConstraintRef(p));
@@ -63,8 +61,8 @@ GreenNode(SyntaxKind.GenericParameterList, ParameterList.Offset)
     static ConstraintRef ParseConstraintRef(Parser p)
     {
       GreenToken? leadingPlus = null;
-      if (p.MatchRaw(RawKind.Plus))
-        leadingPlus = p.ExpectSyntax(SyntaxKind.PlusToken);
+      if (p.Match(TokenKind.Plus))
+        leadingPlus = p.Expect(SyntaxKind.PlusToken);
 
       // Parse full TypeRef to support qualified names like runtime.Num
       TypeRef typeRef = TypeRef.Parse(p);

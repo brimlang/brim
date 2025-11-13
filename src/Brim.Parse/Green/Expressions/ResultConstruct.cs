@@ -1,18 +1,17 @@
 namespace Brim.Parse.Green;
 
 public sealed record ResultConstruct(
-  GreenToken BangOpen,
-  ExprNode Value,
-  GreenToken CloseBrace)
-  : ExprNode(SyntaxKind.ResultConstruct, BangOpen.Offset)
+  GreenToken Open,
+  ExprNode Expr,
+  GreenToken Close)
+  : ExprNode(SyntaxKind.ResultConstruct, Open.Offset)
 {
-  public override int FullWidth =>
-    BangOpen.FullWidth + Value.FullWidth + CloseBrace.FullWidth;
+  public override int FullWidth => Close.EndOffset - Offset;
 
   public override IEnumerable<GreenNode> GetChildren()
   {
-    yield return BangOpen;
-    yield return Value;
-    yield return CloseBrace;
+    yield return Open;
+    yield return Expr;
+    yield return Close;
   }
 }

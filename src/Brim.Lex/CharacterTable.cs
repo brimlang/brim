@@ -1,113 +1,112 @@
 using System.Runtime.CompilerServices;
-using Brim.Parse.Collections;
 
-namespace Brim.Parse;
+namespace Brim.Lex;
 
 /// <summary>
 /// A static table mapping ASCII characters to their corresponding single-character and multi-character raw kinds.
 /// </summary>
-public static class RawKindTable
+public static class CharacterTable
 {
   public const int MaxEntries = 128; // Basic ASCII range - No Unicode
 
   static readonly Entry[] _lookup = new Entry[MaxEntries];
 
-  static RawKindTable()
+  static CharacterTable()
   {
-    _lookup[':'] = new(RawKind.Colon,
+    _lookup[':'] = new(TokenKind.Colon,
       [
-        ("::=", RawKind.ColonColonEqual),
-        ("::", RawKind.ColonColon),
-        (":>", RawKind.ColonGreater),
-        (":=", RawKind.ColonEqual)
+        ("::=", TokenKind.ColonColonEqual),
+        ("::", TokenKind.ColonColon),
+        (":>", TokenKind.ColonGreater),
+        (":=", TokenKind.ColonEqual)
       ]);
-    _lookup['!'] = new(RawKind.Bang,
+    _lookup['!'] = new(TokenKind.Bang,
       [
-        ("!!{", RawKind.BangBangLBrace),
-        ("!{", RawKind.BangLBrace),
-        ("!=", RawKind.BangEqual)
+        ("!!{", TokenKind.BangBangLBrace),
+        ("!{", TokenKind.BangLBrace),
+        ("!=", TokenKind.BangEqual)
       ]);
-    _lookup['|'] = new(RawKind.Pipe,
+    _lookup['|'] = new(TokenKind.Pipe,
       [
-        ("||>", RawKind.PipePipeGreater),
-        ("|>", RawKind.PipeGreater),
-        ("||", RawKind.PipePipe),
-        ("|{", RawKind.PipeLBrace),
-        ("|(", RawKind.PipeLParen)
+        ("||>", TokenKind.PipePipeGreater),
+        ("|>", TokenKind.PipeGreater),
+        ("||", TokenKind.PipePipe),
+        ("|{", TokenKind.PipeLBrace),
+        ("|(", TokenKind.PipeLParen)
       ]);
-    _lookup['&'] = new(RawKind.Ampersand,
+    _lookup['&'] = new(TokenKind.Ampersand,
       [
-        ("&&", RawKind.AmpersandAmpersand),
-        ("&{", RawKind.AmpersandLBrace),
-        ("&(", RawKind.AmpersandLParen)
+        ("&&", TokenKind.AmpersandAmpersand),
+        ("&{", TokenKind.AmpersandLBrace),
+        ("&(", TokenKind.AmpersandLParen)
       ]);
-    _lookup['?'] = new(RawKind.Question,
+    _lookup['?'] = new(TokenKind.Question,
       [
-        ("??", RawKind.QuestionQuestion),
-        ("?{", RawKind.QuestionLBrace)
+        ("??", TokenKind.QuestionQuestion),
+        ("?{", TokenKind.QuestionLBrace)
       ]);
-    _lookup['#'] = new(RawKind.Hash,
+    _lookup['#'] = new(TokenKind.Hash,
       [
-        ("#{", RawKind.HashLBrace),
-        ("#(", RawKind.HashLParen)
+        ("#{", TokenKind.HashLBrace),
+        ("#(", TokenKind.HashLParen)
       ]);
-    _lookup['<'] = new(RawKind.Less,
+    _lookup['<'] = new(TokenKind.Less,
       [
-        ("<=", RawKind.LessEqual),
-        ("<<", RawKind.LessLess)
+        ("<=", TokenKind.LessEqual),
+        ("<<", TokenKind.LessLess)
       ]);
-    _lookup['.'] = new(RawKind.Stop,
+    _lookup['.'] = new(TokenKind.Stop,
       [
-        (".{", RawKind.StopLBrace),
-        ("..", RawKind.StopStop)
+        (".{", TokenKind.StopLBrace),
+        ("..", TokenKind.StopStop)
       ]);
-    _lookup['@'] = new(RawKind.Atmark,
+    _lookup['@'] = new(TokenKind.Atmark,
       [
-        ("@{", RawKind.AtmarkLBrace),
-        ("@(", RawKind.AtmarkLParen)
+        ("@{", TokenKind.AtmarkLBrace),
+        ("@(", TokenKind.AtmarkLParen)
       ]);
-    _lookup['='] = new(RawKind.Equal,
+    _lookup['='] = new(TokenKind.Equal,
       [
-        ("=[", RawKind.EqualLBracket),
-        ("==", RawKind.EqualEqual),
-        ("=>", RawKind.EqualGreater)
+        ("=[", TokenKind.EqualLBracket),
+        ("==", TokenKind.EqualEqual),
+        ("=>", TokenKind.EqualGreater)
       ]);
-    _lookup['%'] = new(RawKind.Percent,
+    _lookup['%'] = new(TokenKind.Percent,
       [
-        ("%{", RawKind.PercentLBrace),
-        ("%(", RawKind.PercentLParen)
+        ("%{", TokenKind.PercentLBrace),
+        ("%(", TokenKind.PercentLParen)
       ]);
-    _lookup['>'] = new(RawKind.Greater,
+    _lookup['>'] = new(TokenKind.Greater,
       [
-        (">>", RawKind.GreaterGreater),
-        (">=", RawKind.GreaterEqual)
+        (">>", TokenKind.GreaterGreater),
+        (">=", TokenKind.GreaterEqual)
       ]);
-    _lookup['*'] = new(RawKind.Star,
+    _lookup['*'] = new(TokenKind.Star,
       [
-        ("*{", RawKind.StarLBrace)
+        ("*{", TokenKind.StarLBrace)
       ]);
-    _lookup['~'] = new(RawKind.Tilde,
+    _lookup['~'] = new(TokenKind.Tilde,
       [
-        ("~=", RawKind.TildeEqual)
+        ("~=", TokenKind.TildeEqual)
       ]);
-    _lookup['['] = new(RawKind.LBracket, []);
-    _lookup[']'] = new(RawKind.RBracket,
+    _lookup['['] = new(TokenKind.LBracket, []);
+    _lookup[']'] = new(TokenKind.RBracket,
       [
-        ("]=", RawKind.RBracketEqual)
+        ("]=", TokenKind.RBracketEqual)
       ]);
-    _lookup['-'] = new(RawKind.Minus,
+    _lookup['-'] = new(TokenKind.Minus,
       [
-        ("->", RawKind.MinusGreater)
+        ("->", TokenKind.MinusGreater)
       ]);
-    _lookup['('] = new(RawKind.LParen, []);
-    _lookup[')'] = new(RawKind.RParen, []);
-    _lookup['{'] = new(RawKind.LBrace, []);
-    _lookup['}'] = new(RawKind.RBrace, []);
-    _lookup[','] = new(RawKind.Comma, []);
-    _lookup['^'] = new(RawKind.Hat, []);
-    _lookup['+'] = new(RawKind.Plus, []);
-    _lookup['/'] = new(RawKind.Slash, []);
-    _lookup['\\'] = new(RawKind.Backslash, []);
+    _lookup['('] = new(TokenKind.LParen, []);
+    _lookup[')'] = new(TokenKind.RParen, []);
+    _lookup['{'] = new(TokenKind.LBrace, []);
+    _lookup['}'] = new(TokenKind.RBrace, []);
+    _lookup[','] = new(TokenKind.Comma, []);
+    _lookup['^'] = new(TokenKind.Hat, []);
+    _lookup['+'] = new(TokenKind.Plus, []);
+    _lookup['/'] = new(TokenKind.Slash, []);
+    _lookup['\\'] = new(TokenKind.Backslash, []);
 
 #if DEBUG
     for (int i = 0; i < _lookup.Length; i++)
@@ -134,7 +133,7 @@ public static class RawKindTable
     if (c < MaxEntries)
     {
       entry = _lookup[c];
-      return entry.SingleKind != RawKind._SentinelDefault;
+      return entry.SingleKind != TokenKind.Unitialized;
     }
 
     entry = default;
@@ -142,14 +141,14 @@ public static class RawKindTable
   }
 
   /// <summary>
-  /// Gets the single-character raw kind for <paramref name="c"/> or <see cref="RawKind.Default"/> if none exists.
+  /// Gets the single-character raw kind for <paramref name="c"/> or <see cref="TokenKind.Default"/> if none exists.
   /// </summary>
   /// <param name="c">The character to look up.</param>
-  /// <returns>The associated single-character <see cref="RawKind"/> or <see cref="RawKind.Default"/>.</returns>
-  public static RawKind GetSingleKind(char c) =>
+  /// <returns>The associated single-character <see cref="TokenKind"/> or <see cref="TokenKind.Default"/>.</returns>
+  public static TokenKind GetSingleKind(char c) =>
     TryGetEntry(c, out Entry entry)
     ? entry.SingleKind
-    : RawKind._SentinelDefault;
+    : TokenKind.Unitialized;
 
   /// <summary>
   /// Determines whether <paramref name="c"/> corresponds to a single-character token with no multi-character continuations.
@@ -164,14 +163,14 @@ public static class RawKindTable
   /// Attempts to match the longest raw kind at the start of <paramref name="span"/>.
   /// </summary>
   /// <param name="span">The input character span.</param>
-  /// <param name="kind">On success, the matched <see cref="RawKind"/>.</param>
+  /// <param name="kind">On success, the matched <see cref="TokenKind"/>.</param>
   /// <param name="matchedLength">On success, the number of characters consumed.</param>
   /// <returns><c>true</c> if a kind was matched; otherwise <c>false</c>.</returns>
-  public static bool TryMatch(ReadOnlySpan<char> span, out RawKind kind, out int matchedLength)
+  public static bool TryMatch(ReadOnlySpan<char> span, out TokenKind kind, out int matchedLength)
   {
     if (span.Length == 0 || !TryGetEntry(span[0], out Entry entry))
     {
-      kind = RawKind._SentinelDefault;
+      kind = TokenKind.Unitialized;
       matchedLength = 0;
       return false;
     }
@@ -203,9 +202,9 @@ public static class RawKindTable
   /// <param name="Kind">The corresponding raw kind.</param>
   public readonly record struct Sequence(
     CharSequence Seq,
-    RawKind Kind)
+    TokenKind Kind)
   {
-    public static implicit operator Sequence((string seq, RawKind kind) tuple) =>
+    public static implicit operator Sequence((string seq, TokenKind kind) tuple) =>
       new(CharSequence.From(tuple.seq), tuple.kind);
   }
 
@@ -218,7 +217,7 @@ public static class RawKindTable
   /// <paramref name="Sequences"/> must be sorted in descending order of length.
   /// </remarks>
   public readonly record struct Entry(
-    RawKind SingleKind,
+    TokenKind SingleKind,
     ImmutableArray<Sequence> Sequences)
   {
     /// <summary>

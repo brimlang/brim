@@ -18,7 +18,7 @@ public sealed record ExportList(
     StringBuilder sb = new();
     foreach (CommaList<GreenToken>.Element element in List.Elements)
     {
-      if (element.Node is not GreenToken gt || gt.Kind != SyntaxKind.IdentifierToken)
+      if (element.Node is not GreenToken gt || gt.SyntaxKind != SyntaxKind.IdentifierToken)
         continue;
       if (sb.Length > 0) sb.Append(", ");
       sb.Append(gt.GetText(source));

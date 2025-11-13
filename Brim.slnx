@@ -6,7 +6,9 @@
   </Configurations>
   <Folder Name="/src/">
     <Project Path="src/Brim.C0/Brim.C0.csproj" />
+    <Project Path="src/Brim.Core/Brim.Core.csproj" />
     <Project Path="src/Brim.Emit.WitWasm/Brim.Emit.WitWasm.csproj" />
+    <Project Path="src/Brim.Lex/Brim.Lex.csproj" />
     <Project Path="src/Brim.Parse/Brim.Parse.csproj" />
     <Project Path="src/Brim.S0/Brim.S0.csproj" />
     <Project Path="src/Brim.Tool/Brim.Tool.csproj" />
@@ -16,6 +18,8 @@
     <Project Path="tests/Brim.Emit.WitWasm.Tests/Brim.Emit.WitWasm.Tests.csproj" />
     <Project Path="tests/Brim.Parse.Tests/Brim.Parse.Tests.csproj" />
     <Project Path="tests/Brim.S0.Tests/Brim.S0.Tests.csproj" />
+    <Project Path="tests/Brim.Core.Tests/Brim.Core.Tests.csproj" />
+    <Project Path="tests/Brim.Lex.Tests/Brim.Lex.Tests.csproj" />
   </Folder>
   <Folder Name="/benchmarks/">
     <Project Path="benchmarks/Brim.Parse.Benchmarks/Brim.Parse.Benchmarks.csproj" />

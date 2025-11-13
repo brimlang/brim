@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace Brim.Parse;
+namespace Brim.Core;
 
 /// <summary>
 /// Immutable backing store for source characters.

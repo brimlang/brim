@@ -13,7 +13,7 @@ public sealed record IntegerLiteral(
 
   public static IntegerLiteral Parse(Parser p)
   {
-    GreenToken token = p.ExpectSyntax(SyntaxKind.IntToken);
+    GreenToken token = p.Expect(SyntaxKind.IntToken);
     return new IntegerLiteral(token);
   }
 }

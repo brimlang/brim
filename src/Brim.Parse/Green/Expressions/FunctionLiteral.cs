@@ -17,3 +17,17 @@ public sealed record FunctionLiteral(
     yield return Body;
   }
 }
+
+public sealed record ZeroParameterFunctionLiteral(
+  GreenToken EmptyLambdaToken,
+  ExprNode Body)
+  : ExprNode(SyntaxKind.FunctionLiteral, EmptyLambdaToken.Offset)
+{
+  public override int FullWidth => Body.EndOffset - Offset;
+
+  public override IEnumerable<GreenNode> GetChildren()
+  {
+    yield return EmptyLambdaToken;
+    yield return Body;
+  }
+}

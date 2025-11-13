@@ -19,9 +19,9 @@ IParsable<ImportDeclaration>
 
   // EBNF: ImportDecl ::= Identifier '::=' ModulePath Terminator
   public static ImportDeclaration Parse(Parser p) => new(
-    p.ExpectSyntax(SyntaxKind.IdentifierToken),
-    p.ExpectSyntax(SyntaxKind.ModuleBindToken),
+    p.Expect(SyntaxKind.IdentifierToken),
+    p.Expect(SyntaxKind.ModuleBindToken),
     ModulePath.Parse(p),
-    p.ExpectSyntax(SyntaxKind.TerminatorToken)
+    p.Expect(SyntaxKind.TerminatorToken)
   );
 }

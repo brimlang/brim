@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "Parse-SampleBrim": {
+      "dotnetRunMessages": true,
+      "commandName": "Project",
+      "commandLineArgs": "parse ${workspaceFolder}/spec/sample.brim"
+    }
+  }
+}

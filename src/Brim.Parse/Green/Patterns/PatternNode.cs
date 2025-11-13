@@ -12,31 +12,31 @@ public abstract record PatternNode(SyntaxKind Kind, int Offset) : GreenNode(Kind
     // For now, both parse as identifiers and pattern matching determines usage
 
     // Handle ? and ! sequences that need lookahead
-    if (parser.Current.Kind == RawKind.Question && parser.MatchRaw(RawKind.LParen, 1))
+    if (parser.Current.TokenKind == TokenKind.Question && parser.Match(TokenKind.LParen, 1))
     {
       return OptionalPattern.Parse(parser);
     }
 
-    if (parser.Current.Kind == RawKind.Bang && parser.MatchRaw(RawKind.LParen, 1))
+    if (parser.Current.TokenKind == TokenKind.Bang && parser.Match(TokenKind.LParen, 1))
     {
       return FalliblePattern.Parse(parser);
     }
 
-    if (parser.Current.Kind == RawKind.Bang && parser.MatchRaw(RawKind.Bang, 1) && parser.MatchRaw(RawKind.LParen, 2))
+    if (parser.Current.TokenKind == TokenKind.Bang && parser.Match(TokenKind.Bang, 1) && parser.Match(TokenKind.LParen, 2))
     {
       return FalliblePattern.Parse(parser);
     }
 
-    return parser.Current.Kind switch
+    return parser.Current.TokenKind switch
     {
-      RawKind.Identifier => BindingPattern.Parse(parser),
-      RawKind.IntegerLiteral or RawKind.DecimalLiteral or RawKind.StringLiteral or RawKind.RuneLiteral => LiteralPattern.Parse(parser),
-      RawKind.HashLParen => TuplePattern.Parse(parser),
-      RawKind.PercentLParen => StructPattern.Parse(parser),
-      RawKind.PipeLParen => VariantPattern.Parse(parser),
-      RawKind.AmpersandLParen => FlagsPattern.Parse(parser),
-      RawKind.AtmarkLParen => ServicePattern.Parse(parser),
-      RawKind.LParen => ListPattern.Parse(parser),
+      TokenKind.Identifier => BindingPattern.Parse(parser),
+      TokenKind.IntegerLiteral or TokenKind.DecimalLiteral or TokenKind.StringLiteral or TokenKind.RuneLiteral => LiteralPattern.Parse(parser),
+      TokenKind.HashLParen => TuplePattern.Parse(parser),
+      TokenKind.PercentLParen => StructPattern.Parse(parser),
+      TokenKind.PipeLParen => VariantPattern.Parse(parser),
+      TokenKind.AmpersandLParen => FlagsPattern.Parse(parser),
+      TokenKind.AtmarkLParen => ServicePattern.Parse(parser),
+      TokenKind.LParen => ListPattern.Parse(parser),
       _ => BindingPattern.ParseError(parser)
     };
   }

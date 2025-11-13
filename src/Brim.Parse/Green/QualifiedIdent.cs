@@ -1,5 +1,3 @@
-using Brim.Parse.Collections;
-
 namespace Brim.Parse.Green;
 
 public sealed record QualifiedIdent(
@@ -17,15 +15,15 @@ GreenNode(SyntaxKind.QualifiedIdentifier, Qualifiers.Count > 0 ? Qualifiers[0].O
   public static QualifiedIdent Parse(Parser p)
   {
     ArrayBuilder<Qualifier> qualifiers = [];
-    while (p.MatchRaw(RawKind.Identifier) && p.MatchRaw(RawKind.Stop, 1))
+    while (p.Match(TokenKind.Identifier) && p.Match(TokenKind.Stop, 1))
     {
       qualifiers.Add(Qualifier.Parse(p));
     }
 
     // Special case: allows @ as an identifier
-    GreenToken name = p.MatchRaw(RawKind.Atmark)
-      ? new GreenToken(SyntaxKind.IdentifierToken, p.ExpectRaw(RawKind.Atmark))
-      : p.ExpectSyntax(SyntaxKind.IdentifierToken);
+    GreenToken name = p.Match(TokenKind.Atmark)
+      ? p.Expect(SyntaxKind.ServiceHandleToken)
+      : p.Expect(SyntaxKind.IdentifierToken);
 
     return new QualifiedIdent(qualifiers, name);
   }
@@ -44,8 +42,8 @@ GreenNode(SyntaxKind.QualifiedIdentifier, Qualifiers.Count > 0 ? Qualifiers[0].O
 
     public static Qualifier Parse(Parser p)
     {
-      GreenToken id = p.ExpectSyntax(SyntaxKind.IdentifierToken);
-      GreenToken dot = p.ExpectSyntax(SyntaxKind.StopToken);
+      GreenToken id = p.Expect(SyntaxKind.IdentifierToken);
+      GreenToken dot = p.Expect(SyntaxKind.StopToken);
       return new Qualifier(id, dot);
     }
   }

@@ -16,9 +16,9 @@ IParsable<UnionVariantDeclaration>
 
   public static UnionVariantDeclaration Parse(Parser p)
   {
-    GreenToken id = p.ExpectSyntax(SyntaxKind.IdentifierToken);
+    GreenToken id = p.Expect(SyntaxKind.IdentifierToken);
     VariantTypeExpr? vt = null;
-    if (p.MatchRaw(RawKind.Colon))
+    if (p.Match(TokenKind.Colon))
     {
       vt = VariantTypeExpr.Parse(p);
     }
@@ -40,7 +40,7 @@ IParsable<UnionVariantDeclaration>
 
     public static VariantTypeExpr Parse(Parser p) =>
       new(
-        Colon: p.ExpectSyntax(SyntaxKind.ColonToken),
+        Colon: p.Expect(SyntaxKind.ColonToken),
         TypeExpr: TypeExpr.Parse(p)
       );
   }

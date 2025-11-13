@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace Brim.Parse;
+namespace Brim.Core;
 
 /// <summary>
 /// Lightweight optional value.
@@ -19,7 +19,6 @@ internal readonly struct Opt<T> : IEquatable<Opt<T>>
   /// Creates an option in the Some state containing <paramref name="value"/>.
   /// </summary>
   /// <param name="value">The value to wrap.</param>
-  [SuppressMessage("Style", "IDE0290:Use primary constructor", Justification = "Default _hasValue must be false")]
   public Opt(in T value)
   {
     _value = value;
@@ -117,7 +116,7 @@ internal readonly struct Opt<T> : IEquatable<Opt<T>>
   public bool Equals(Opt<T> other)
   {
     return _hasValue == other._hasValue
-      && EqualityComparer<T>.Default.Equals(_value!, other._value!);
+      && EqualityComparer<T>.Default.Equals(_value, other._value);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]

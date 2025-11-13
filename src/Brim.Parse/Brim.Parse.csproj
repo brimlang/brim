@@ -2,4 +2,16 @@
 	<ItemGroup>
     <InternalsVisibleTo Include="Brim.Parse.Tests" />
 	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\Brim.Core\Brim.Core.csproj" />
+	  <ProjectReference Include="..\Brim.Lex\Brim.Lex.csproj" />
+	</ItemGroup>
+  <ItemGroup>
+    <Using Include="Brim.Core" />
+    <Using Include="Brim.Core.Collections" />
+    <Using Include="System.Collections" />
+    <Using Include="System.Collections.Immutable" />
+    <Using Include="System.Diagnostics" />
+    <Using Include="System.Diagnostics.CodeAnalysis" />
+  </ItemGroup>
 </Project>

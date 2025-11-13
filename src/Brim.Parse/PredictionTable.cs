@@ -32,7 +32,7 @@ internal readonly struct PredictionTable
 
   public ReadOnlySpan<Prediction> Entries => _entries;
 
-  public bool TryGetGroup(RawKind kind, out ReadOnlySpan<Prediction> group)
+  public bool TryGetGroup(TokenKind kind, out ReadOnlySpan<Prediction> group)
   {
     int idx = (int)kind;
     if (idx >= _groupStart.Length || _groupStart[idx] < 0)

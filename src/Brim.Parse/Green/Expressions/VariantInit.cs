@@ -19,10 +19,10 @@ public sealed record VariantInit(
 
   public static VariantInit Parse(Parser p)
   {
-    GreenToken name = p.ExpectSyntax(SyntaxKind.IdentifierToken);
-    if (p.MatchRaw(RawKind.Equal))
+    GreenToken name = p.Expect(SyntaxKind.IdentifierToken);
+    if (p.Match(TokenKind.Equal))
     {
-      GreenToken equals = p.ExpectSyntax(SyntaxKind.EqualToken);
+      GreenToken equals = p.Expect(SyntaxKind.EqualToken);
       ExprNode value = p.ParseExpression();
       return new VariantInit(name, equals, value);
     }

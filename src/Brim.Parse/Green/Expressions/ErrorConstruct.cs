@@ -1,18 +1,17 @@
 namespace Brim.Parse.Green;
 
 public sealed record ErrorConstruct(
-  GreenToken BangBangOpen,
-  ExprNode Value,
+  GreenToken Open,
+  ExprNode Expr,
   GreenToken CloseBrace)
-  : ExprNode(SyntaxKind.ErrorConstruct, BangBangOpen.Offset)
+  : ExprNode(SyntaxKind.ErrorConstruct, Open.Offset)
 {
-  public override int FullWidth =>
-    BangBangOpen.FullWidth + Value.FullWidth + CloseBrace.FullWidth;
+  public override int FullWidth => CloseBrace.EndOffset - Offset;
 
   public override IEnumerable<GreenNode> GetChildren()
   {
-    yield return BangBangOpen;
-    yield return Value;
+    yield return Open;
+    yield return Expr;
     yield return CloseBrace;
   }
 }

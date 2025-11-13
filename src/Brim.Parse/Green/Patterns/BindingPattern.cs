@@ -15,13 +15,13 @@ public sealed record BindingPattern(GreenToken Identifier)
 
   internal static new BindingPattern Parse(Parser parser)
   {
-    GreenToken identifier = parser.Expect(RawKind.Identifier, SyntaxKind.IdentifierToken);
+    GreenToken identifier = parser.Expect(SyntaxKind.IdentifierToken);
     return new BindingPattern(identifier);
   }
 
   internal static PatternNode ParseError(Parser parser)
   {
-    GreenToken error = parser.Expect(RawKind.Error, SyntaxKind.ErrorToken);
+    GreenToken error = parser.Expect(SyntaxKind.ErrorToken);
     return new BindingPattern(error);
   }
 }

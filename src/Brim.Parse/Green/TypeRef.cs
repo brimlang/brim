@@ -1,5 +1,3 @@
-using Brim.Parse.Collections;
-
 namespace Brim.Parse.Green;
 
 public sealed record TypeRef(
@@ -22,7 +20,7 @@ GreenNode(SyntaxKind.TypeRef, QualifiedIdent.Offset)
     QualifiedIdent qualifiedIdent = QualifiedIdent.Parse(p);
 
     GenericArgumentList? args = null;
-    if (p.MatchRaw(RawKind.LBracket))
+    if (p.Match(TokenKind.LBracket))
       args = GenericArgumentList.Parse(p);
 
     return new TypeRef(qualifiedIdent, args);

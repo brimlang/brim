@@ -4,10 +4,12 @@
 
 **CRITICAL:** Use the repo-local `tmp/` directory for all temporary files. NEVER use global `/tmp/` or other system temp directories.
 
-1. Setup: `mise trust && mise install` (installs dotnet 9 + tasks).
+1. Setup: `mise trust && mise install` (installs dotnet 10 preview + tasks).
 2. Build: `mise run build` (or `dotnet build`); AOT: `mise run aot:linux-x64:publish`.
 3. Lint (verify): `mise run lint`; Auto-format: `mise run format` (CI fails on unformatted code).
-4. Test all: `mise run test`; Single test project: `dotnet test tests/Brim.Parse.Tests -c Release -f net9.0 --filter FullyQualifiedName~ParserPredictionTests`.
+4. Test all: `mise run test`; Single test projects:
+    - Parser predictions: `dotnet test tests/Brim.Parse.Tests -c Release -f net10.0 --filter FullyQualifiedName~ParserPredictionTests`.
+    - Core primitives: `dotnet test tests/Brim.Core.Tests -c Release -f net10.0`.
 5. Fast inner-loop examples: lex `mise rx lex ./demo.brim`; parse `mise rx parse ./demo.brim`; diagnostics `mise rx parse --diagnostics ./demo.brim`.
 6. Language/Compiler rules: grammar must remain LL(k≤4); no lookahead >4; prefer table-driven predictions over nested switches. Keep `spec/sample.brim`, `spec/grammar.md`, `spec/fundamentals.md`, `spec/unicode.md`, and `spec/functions.md` in agreement; review the entire set whenever one changes, and if you find a mismatch or unclear direction, stop and ask the requester which version to follow before continuing.
 6.1 **Brim function syntax is unique and has three distinct forms** (see spec/functions.md):
@@ -19,7 +21,9 @@
     - Greedy matching of compound glyphs using an ASCII table; longest-match wins. Sequences up to 3 characters (e.g., `::=`, `<<`, `|{`, `*{`, `!!{`, `[[`, `]]`, `.{`, `??`) are single tokens. A 4th char may be added in future; never regress to shorter fragments. Example: `[[` is a single token, never two `[` tokens.
     - Runs collapse to one token: non-terminator whitespace → one `WhitespaceTrivia`; newline runs → one `Terminator`.
     - Identifiers lex as single tokens (Unicode-aware start/part rules). Comments (`-- …\n`) lex as single `CommentTrivia`.
-    - SignificantProducer attaches all trivia as leading only; there is no trailing trivia; `Eob` is synthesized exactly once.
+    - `src/Brim.Lex/CharacterTable.cs` owns the operator trie/longest-match table; keep glyph definitions there in sync with the spec before touching parser tables.
+    - `LexTokenSource` is the single producer of lexed tokens (including `Eob`); `CoreTokenSource` adapts them into `CoreToken`s by attaching accumulated leading trivia only (no trailing trivia) and replays the cached `Eob` exactly once. Do not resurrect `SignificantProducer`-style flows.
+    - Shared primitives (diagnostics, tokens, SourceText, structural collections) now live in `Brim.Core`; add new building blocks there instead of under `Brim.Parse`/`Brim.Lex`.
     - Design predictions against these stable first tokens (e.g., `<<`, `::=`, `:=`, `.[{]`, `^{`, `[[`, etc.) and ignore trivia — this keeps LL(k) small and tables robust.
 7. Tree model: single immutable layer (names with Green* are historical—do NOT add a red layer).
 8. Diagnostics: allocate-light value types, capped at 512; last slot becomes TooManyErrors sentinel.

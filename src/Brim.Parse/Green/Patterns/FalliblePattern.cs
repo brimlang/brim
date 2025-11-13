@@ -17,34 +17,32 @@ public sealed record FalliblePattern(
   public override IEnumerable<GreenNode> GetChildren()
   {
     yield return BangToken;
-    if (SecondBangToken is not null)
-      yield return SecondBangToken;
+    if (SecondBangToken is not null) yield return SecondBangToken;
     yield return OpenToken;
-    if (Pattern is not null)
-      yield return Pattern;
+    if (Pattern is not null) yield return Pattern;
     yield return CloseToken;
   }
 
   internal static new FalliblePattern Parse(Parser parser)
   {
-    GreenToken firstBang = parser.Expect(RawKind.Bang, SyntaxKind.BangToken);
+    GreenToken firstBang = parser.Expect(SyntaxKind.BangToken);
 
     GreenToken? secondBang = null;
-    if (parser.Match(RawKind.Bang))
+    if (parser.Match(TokenKind.Bang))
     {
-      secondBang = parser.Expect(RawKind.Bang, SyntaxKind.BangToken);
+      secondBang = parser.Expect(SyntaxKind.BangToken);
     }
 
-    GreenToken open = parser.Expect(RawKind.LParen, SyntaxKind.OpenParenToken);
+    GreenToken open = parser.Expect(SyntaxKind.OpenParenToken);
 
     PatternNode? pattern = null;
     // !(p) requires pattern, !!(p) allows optional pattern
-    if (!parser.Match(RawKind.RParen))
+    if (!parser.Match(TokenKind.RParen))
     {
       pattern = PatternNode.Parse(parser);
     }
 
-    GreenToken close = parser.Expect(RawKind.RParen, SyntaxKind.CloseParenToken);
+    GreenToken close = parser.Expect(SyntaxKind.CloseParenToken);
 
     return new FalliblePattern(firstBang, secondBang, open, pattern, close);
   }

@@ -15,6 +15,6 @@ IParsable<ModuleDirective>
 
   public static ModuleDirective Parse(Parser p) => new(
     ModuleHeader.Parse(p),
-    p.ExpectSyntax(SyntaxKind.TerminatorToken)
+    p.Expect(SyntaxKind.TerminatorToken)
   );
 }

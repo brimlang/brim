@@ -17,7 +17,7 @@ public sealed record FlagsPatternEntry(GreenNode Entry)
   {
     GreenNode entry;
 
-    if (parser.Match(RawKind.Plus) || parser.Match(RawKind.Minus))
+    if (parser.Match(TokenKind.Plus) || parser.Match(TokenKind.Minus))
     {
       // Signed flag: +flag or -flag
       entry = SignedFlag.Parse(parser);
@@ -25,7 +25,7 @@ public sealed record FlagsPatternEntry(GreenNode Entry)
     else
     {
       // Bare identifier
-      entry = parser.Expect(RawKind.Identifier, SyntaxKind.IdentifierToken);
+      entry = parser.Expect(SyntaxKind.IdentifierToken);
     }
 
     return new FlagsPatternEntry(entry);

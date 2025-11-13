@@ -1,6 +1,8 @@
 using System.Text;
+using Brim.Core;
 using Brim.Parse;
 using Brim.Parse.Green;
+
 using Spectre.Console;
 
 namespace Brim.Tool;
@@ -22,8 +24,8 @@ public static class GreenNodeFormatter
       _ = sb.Append(isLast ? "└── " : "├── ");
 
     // Node name with color
-    string color = GetColor(node.Kind);
-    _ = sb.Append($"[{color}]").Append(node.Kind).Append("[/]");
+    string color = GetColor(node.SyntaxKind);
+    _ = sb.Append($"[{color}]").Append(node.SyntaxKind).Append("[/]");
 
     // Location metadata
     (int line, int col) = GetLocation(node);
@@ -48,15 +50,15 @@ public static class GreenNodeFormatter
     int triviaCount = 0;
     if (node is GreenToken tok && tok.HasLeading)
     {
-      SourceText sourceText = SourceText.From(source);
-      foreach (RawToken trivia in tok.LeadingTrivia)
+      foreach (TriviaToken trivia in tok.LeadingTrivia)
       {
-        if (trivia.Kind == RawKind.CommentTrivia)
+        if (trivia.TokenKind == TokenKind.CommentTrivia)
+        {
           triviaCount++;
+        }
       }
     }
 
-    int totalChildren = children.Count + triviaCount;
     string childIndent = indent.Length == 0
       ? " "
       : indent + (isLast ? "    " : "│   ");
@@ -66,15 +68,15 @@ public static class GreenNodeFormatter
     {
       SourceText sourceText = SourceText.From(source);
       int triviaIndex = 0;
-      foreach (RawToken trivia in tkn.LeadingTrivia)
+      foreach (TriviaToken trivia in tkn.LeadingTrivia)
       {
-        if (trivia.Kind == RawKind.CommentTrivia)
+        if (trivia.TokenKind == TokenKind.CommentTrivia)
         {
           _ = sb.Append(childIndent);
           bool isLastTrivia = (triviaIndex == triviaCount - 1) && children.Count == 0;
           _ = sb.Append(isLastTrivia ? "└── " : "├── ");
 
-          string comment = trivia.Value(sourceText.Span).Trim().ToString();
+          string comment = trivia.Chars(sourceText.Span).Trim().ToString();
           _ = sb.Append("[green3]# ").Append(Escape(comment)).Append("[/]")
             .Append($" [grey46]@{trivia.Line}:{trivia.Column}[[{trivia.Length}]][/]\n");
           triviaIndex++;
@@ -90,7 +92,7 @@ public static class GreenNodeFormatter
   static (int line, int col) GetLocation(GreenNode node)
   {
     if (node is GreenToken token)
-      return (token.Token.Line, token.Token.Column);
+      return (token.CoreToken.Line, token.CoreToken.Column);
 
     foreach (GreenNode child in node.GetChildren())
     {
@@ -162,8 +164,9 @@ public static class GreenNodeFormatter
 
     // Tokens - color by category
     SyntaxKind.IdentifierToken => "cornflowerblue",
-    SyntaxKind.IntToken => "lightcoral",
+    SyntaxKind.IntToken => "lightgreen",
     SyntaxKind.StrToken => "lightgreen",
+    SyntaxKind.DecimalToken => "lightgreen",
     SyntaxKind.TerminatorToken => "grey50",
 
     // Keywords and operators - various

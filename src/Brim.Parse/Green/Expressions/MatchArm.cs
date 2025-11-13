@@ -19,11 +19,9 @@ public sealed record MatchArm(
   public override IEnumerable<GreenNode> GetChildren()
   {
     yield return Pattern;
-    if (Guard is not null)
-      yield return Guard;
+    if (Guard is not null) yield return Guard;
     yield return Arrow;
     yield return Target;
-    if (Terminator is not null)
-      yield return Terminator;
+    if (Terminator is not null) yield return Terminator;
   }
 }

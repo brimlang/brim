@@ -18,9 +18,7 @@ public sealed record FlagsPattern(CommaList<FlagsPatternEntry> Entries)
   {
     CommaList<FlagsPatternEntry> entries = CommaList<FlagsPatternEntry>.Parse(
         parser,
-        RawKind.AmpersandLParen,
-        SyntaxKind.FlagsToken,
-        RawKind.RParen,
+        SyntaxKind.FlagsPatternToken,
         SyntaxKind.CloseParenToken,
         FlagsPatternEntry.Parse);
 

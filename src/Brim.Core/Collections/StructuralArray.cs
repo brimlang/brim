@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace Brim.Parse.Collections;
+namespace Brim.Core.Collections;
 
 /// <summary>
 /// An immutable array that compares its contents for equality and hashing.

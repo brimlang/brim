@@ -16,8 +16,8 @@ public sealed record AssignmentTarget(
   public static AssignmentTarget Parse(Parser p)
   {
     GreenToken? mutator = null;
-    if (p.MatchRaw(RawKind.Hat))
-      mutator = new GreenToken(SyntaxKind.HatToken, p.ExpectRaw(RawKind.Hat));
+    if (p.Match(TokenKind.Hat))
+      mutator = p.Expect(SyntaxKind.MutableToken);
 
     QualifiedIdent ident = QualifiedIdent.Parse(p);
     return new AssignmentTarget(mutator, ident);

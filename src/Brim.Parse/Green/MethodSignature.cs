@@ -20,7 +20,7 @@ public sealed record MethodSignature(
   public static MethodSignature Parse(Parser p)
   {
     DeclarationName name = DeclarationName.Parse(p);
-    GreenToken colon = p.ExpectSyntax(SyntaxKind.ColonToken);
+    GreenToken colon = p.Expect(SyntaxKind.ColonToken);
     CommaList<FunctionParam> parameters = CommaList<FunctionParam>.Parse(
       p,
       SyntaxKind.OpenParenToken,
