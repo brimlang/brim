@@ -22,7 +22,7 @@ public static class TokenKindExtensions
     public bool IsTrivia => kind is > TokenKind._SentinelTrivia and < TokenKind._SentinelCore;
     public bool IsGlyph => kind is > TokenKind._SentinelGlyphs and < TokenKind._SentinelLiteral;
     public bool IsLiteral => kind is > TokenKind._SentinelLiteral and < TokenKind._SentinelSynthetic;
-    public bool IsUnused => Enum.IsDefined(kind) is false && !kind.IsSentinel;
+    public bool IsUnused => Enum.IsDefined(kind) is false || kind.IsSentinel;
 
     public bool IsSentinel => kind
       is TokenKind._SentinelSpecial

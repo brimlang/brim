@@ -1,6 +1,5 @@
-using Brim.Parse.Collections;
 using Brim.Parse.Green;
-using Brim.Parse.Producers;
+using Xunit;
 
 namespace Brim.Parse.Tests;
 
@@ -8,24 +7,14 @@ public class NumericLiteralParseTests
 {
   static IntegerLiteral ParseInt(string text)
   {
-    SourceText st = SourceText.From(text);
-    DiagnosticList diags = DiagnosticList.Create();
-    RawProducer raw = new(st, diags);
-    SignificantProducer<RawProducer> sig = new(raw);
-    RingBuffer<SignificantToken, SignificantProducer<RawProducer>> la = new(sig, 4);
-    Parser p = new(la, diags);
-    return IntegerLiteral.Parse(p);
+    Parser parser = ParserTestHelpers.CreateParser(text, out _);
+    return IntegerLiteral.Parse(parser);
   }
 
   static DecimalLiteral ParseDecimal(string text)
   {
-    SourceText st = SourceText.From(text);
-    DiagnosticList diags = DiagnosticList.Create();
-    RawProducer raw = new(st, diags);
-    SignificantProducer<RawProducer> sig = new(raw);
-    RingBuffer<SignificantToken, SignificantProducer<RawProducer>> la = new(sig, 4);
-    Parser p = new(la, diags);
-    return DecimalLiteral.Parse(p);
+    Parser parser = ParserTestHelpers.CreateParser(text, out _);
+    return DecimalLiteral.Parse(parser);
   }
 
   [Fact]
@@ -42,4 +31,3 @@ public class NumericLiteralParseTests
     Assert.Equal(SyntaxKind.DecimalToken, lit.Token.SyntaxKind);
   }
 }
-

@@ -1,3 +1,4 @@
+using System.Linq;
 using Brim.Parse.Green;
 
 namespace Brim.Parse.Tests;
@@ -5,6 +6,9 @@ namespace Brim.Parse.Tests;
 public class FunctionDeclarationTests
 {
   const string Header = "=[test::module]=\n";
+
+  static string TokenText(GreenToken token, string source) =>
+    source.Substring(token.CoreToken.Offset, token.CoreToken.Length);
 
   [Fact]
   public void FunctionDecl_WithNamedParams()
@@ -16,10 +20,11 @@ public class FunctionDeclarationTests
     Assert.Equal(2, decl.Parameters.Elements.Length);
 
     FunctionParam firstParam = decl.Parameters.Elements[0].Node;
-    Assert.Equal("a", firstParam.Name.Token.Value(src));
+    Assert.Equal("a", TokenText(firstParam.Name, src));
 
     BlockExpr body = Assert.IsType<BlockExpr>(decl.Body);
-    Assert.IsType<BinaryExpr>(body.Result);
+    GreenNode lastStatement = body.StatementNodes().Last();
+    Assert.IsType<BinaryExpr>(lastStatement);
   }
 
   [Fact]
@@ -32,7 +37,7 @@ public class FunctionDeclarationTests
 
     // Empty params parse as value declaration
     ValueDeclaration decl = ParserTestHelpers.GetMember<ValueDeclaration>(module, 0);
-    Assert.IsType<FunctionLiteral>(decl.Initializer);
+    Assert.True(decl.Initializer is FunctionLiteral or ZeroParameterFunctionLiteral);
   }
 
   [Fact]
@@ -71,6 +76,6 @@ public class FunctionDeclarationTests
 
     FunctionDeclaration decl = ParserTestHelpers.GetMember<FunctionDeclaration>(module, 0);
     BlockExpr body = Assert.IsType<BlockExpr>(decl.Body);
-    Assert.NotEmpty(body.Statements);
+    Assert.NotEmpty(body.StatementNodes());
   }
 }

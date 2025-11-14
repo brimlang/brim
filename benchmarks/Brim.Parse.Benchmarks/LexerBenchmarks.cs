@@ -1,7 +1,7 @@
 using BenchmarkDotNet.Attributes;
 using Brim.Core;
 using Brim.Core.Collections;
-using Brim.Parse.Collections;
+using Brim.Lex;
 using Brim.Parse.Producers;
 
 namespace Brim.Parse.Benchmarks;
@@ -22,12 +22,12 @@ public class LexerBenchmarks
   {
     SourceText src = SourceText.From(_text);
     DiagnosticList diags = DiagnosticList.Create();
-    LexSource raw = new(src, diags);
+    LexTokenSource raw = new(src, diags);
     int count = 0;
     while (raw.TryRead(out LexToken tok))
     {
       count++;
-      if (tok.Kind == TokenKind.Eob) break;
+      if (tok.TokenKind == TokenKind.Eob) break;
     }
     return count + diags.Count;
   }
@@ -37,12 +37,12 @@ public class LexerBenchmarks
   {
     SourceText src = SourceText.From(_text);
     DiagnosticList diags = DiagnosticList.Create();
-    SignificantProducer<LexSource> sig = new(new RawProducer(src, diags));
+    CoreTokenSource sig = new(new LexTokenSource(src, diags));
     int count = 0;
-    while (sig.TryRead(out SignificantToken tok))
+    while (sig.TryRead(out CoreToken tok))
     {
       count++;
-      if (tok.Kind == TokenKind.Eob) break;
+      if (tok.TokenKind == TokenKind.Eob) break;
     }
     return count + diags.Count;
   }

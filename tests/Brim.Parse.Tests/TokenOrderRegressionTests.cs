@@ -1,5 +1,10 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using Brim.Core;
+using Brim.Core.Collections;
+using Brim.Lex;
 using Brim.Parse;
-using Brim.Parse.Collections;
 using Brim.Parse.Green;
 using Brim.Parse.Producers;
 
@@ -38,57 +43,61 @@ public class TokenOrderRegressionTests
       + "Tup := #{ A, B, };\n"
       + "Fn := (A,B,) C;\n";
 
-    // Build significant token stream directly
-    DiagnosticList diags = DiagnosticList.Create();
+    // Build core token stream directly
     SourceText st = SourceText.From(src);
-    var raw = new RawProducer(st, diags);
-    var sig = new SignificantProducer<RawProducer>(raw);
-    List<RawToken> sigTokens = new();
-    while (sig.TryRead(out SignificantToken tok))
-      sigTokens.Add(tok.CoreToken);
+    DiagnosticList diags = DiagnosticList.Create();
+    LexTokenSource lex = new(st, diags);
+    CoreTokenSource coreSource = new(lex);
+    List<CoreToken> coreTokens = new();
+    while (coreSource.TryRead(out CoreToken tok))
+    {
+      coreTokens.Add(tok);
+      if (tok.TokenKind == TokenKind.Eob)
+        break;
+    }
 
     // Parse to green tree and extract tokens in traversal order
     BrimModule module = Parser.ModuleFrom(st);
-    List<RawToken> greenTokens = EnumerateGreenTokens(module).Select(gt => gt.Token).ToList();
+    List<CoreToken> greenTokens = EnumerateGreenTokens(module).Select(gt => gt.CoreToken).ToList();
 
     // Sanity: offsets must be non-decreasing in green tree
     for (int i = 1; i < greenTokens.Count; i++)
       Assert.True(greenTokens[i - 1].Offset <= greenTokens[i].Offset, $"Out of order at index {i}");
 
     // Compare streams
-    if (sigTokens.Count != greenTokens.Count)
+    if (coreTokens.Count != greenTokens.Count)
     {
       // Show a quick diff window for debugging
-      int min = Math.Min(sigTokens.Count, greenTokens.Count);
+      int min = Math.Min(coreTokens.Count, greenTokens.Count);
       int diffAt = -1;
       for (int i = 0; i < min; i++)
       {
-        if (sigTokens[i].Kind != greenTokens[i].Kind || sigTokens[i].Offset != greenTokens[i].Offset || sigTokens[i].Length != greenTokens[i].Length)
+        if (coreTokens[i].TokenKind != greenTokens[i].TokenKind || coreTokens[i].Offset != greenTokens[i].Offset || coreTokens[i].Length != greenTokens[i].Length)
         { diffAt = i; break; }
       }
-      static string Dump(List<RawToken> list, int start, int count, string src)
+      static string Dump(List<CoreToken> list, int start, int count, string src)
       {
         var sb = new System.Text.StringBuilder();
         for (int i = start; i < Math.Min(list.Count, start + count); i++)
         {
           var t = list[i];
           sb.Append('[').Append(i).Append("] ")
-            .Append((int)t.Kind).Append('@').Append(t.Offset).Append(':').Append(t.Length)
+            .Append((int)t.TokenKind).Append('@').Append(t.Offset).Append(':').Append(t.Length)
             .Append(' ').Append(src.Substring(t.Offset, Math.Min(t.Length, Math.Max(0, src.Length - t.Offset))))
             .Append('\n');
         }
         return sb.ToString();
       }
-      string diag = $"sig={sigTokens.Count} green={greenTokens.Count} firstDiff={diffAt}\n" +
-        "sig:\n" + Dump(sigTokens, Math.Max(0, diffAt - 3), 8, src) +
+      string diag = $"core={coreTokens.Count} green={greenTokens.Count} firstDiff={diffAt}\n" +
+        "core:\n" + Dump(coreTokens, Math.Max(0, diffAt - 3), 8, src) +
         "green:\n" + Dump(greenTokens, Math.Max(0, diffAt - 3), 8, src);
       Assert.Fail(diag);
     }
-    for (int i = 0; i < sigTokens.Count; i++)
+    for (int i = 0; i < coreTokens.Count; i++)
     {
-      var a = sigTokens[i];
+      var a = coreTokens[i];
       var b = greenTokens[i];
-      Assert.Equal(a.Kind, b.Kind);
+      Assert.Equal(a.TokenKind, b.TokenKind);
       Assert.Equal(a.Offset, b.Offset);
       Assert.Equal(a.Length, b.Length);
     }

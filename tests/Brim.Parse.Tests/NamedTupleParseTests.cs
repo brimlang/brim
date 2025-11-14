@@ -1,3 +1,4 @@
+using Brim.Core;
 using Brim.Parse.Green;
 
 namespace Brim.Parse.Tests;

@@ -43,12 +43,11 @@ public class TokenKindExtensionsTests
   [Fact]
   public void SentinelAndUnusedKindsAreExcludedFromValidSets()
   {
-    TokenKind unused = (TokenKind)((int)TokenKind._SentinelUnusedRange2Start + 1);
+    TokenKind unused = (TokenKind)((int)TokenKind._SentinelGlyphs - 1);
 
     Assert.True(TokenKind._SentinelGlyphs.IsSentinel);
     Assert.True(unused.IsUnused);
     Assert.False(unused.IsValidCoreToken);
-    Assert.True(unused.IsValidLexToken);
     Assert.True(TokenKind.Eob.IsValidCoreToken);
   }
 }

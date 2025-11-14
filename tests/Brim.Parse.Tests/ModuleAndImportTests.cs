@@ -1,3 +1,4 @@
+using Brim.Core;
 using Brim.Parse.Green;
 
 namespace Brim.Parse.Tests;
@@ -53,4 +54,3 @@ public class ModuleAndImportTests
     Assert.Contains(m.Diagnostics, d => d.Code == DiagCode.UnexpectedToken);
   }
 }
-

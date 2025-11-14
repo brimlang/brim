@@ -1,3 +1,4 @@
+using System.Linq;
 using Brim.Parse.Green;
 
 namespace Brim.Parse.Tests;
@@ -171,7 +172,7 @@ public class ExpressionParsingTests
     BlockExpr block = Assert.IsType<BlockExpr>(func.Body);
 
     // Should have result expression
-    Assert.IsType<BinaryExpr>(block.Result);
+    Assert.IsType<BinaryExpr>(block.LastStatement());
     // No error should be raised
   }
 
@@ -186,7 +187,7 @@ public class ExpressionParsingTests
     BlockExpr block = Assert.IsType<BlockExpr>(func.Body);
 
     // Should have result expression
-    Assert.IsType<BinaryExpr>(block.Result);
+    Assert.IsType<BinaryExpr>(block.LastStatement());
   }
 
   [Fact]
@@ -200,7 +201,8 @@ public class ExpressionParsingTests
     BlockExpr block = Assert.IsType<BlockExpr>(func.Body);
 
     // Should have 1 statement (x with terminator) and a result (x + 1)
-    Assert.Equal(1, block.Statements.Length);
-    Assert.IsType<BinaryExpr>(block.Result);
+    var nodes = block.StatementNodes().ToArray();
+    Assert.Equal(2, nodes.Length);
+    Assert.IsType<BinaryExpr>(nodes[^1]);
   }
 }
