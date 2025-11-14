@@ -1,8 +1,11 @@
+using Brim.Core;
+using Brim.Parse.Green;
+
 namespace Brim.Parse.Tests;
 
 public class UnsupportedModuleMemberTests
 {
-  static Green.BrimModule Parse(string src) => Parser.ParseModule(src);
+  static BrimModule Parse(string src) => Parser.ParseModule(src);
 
   [Fact]
   public void FunctionHeaderAtModule_EmitsUnsupported()
@@ -12,4 +15,3 @@ public class UnsupportedModuleMemberTests
     Assert.Contains(m.Diagnostics, d => d.Code == DiagCode.UnsupportedModuleMember);
   }
 }
-

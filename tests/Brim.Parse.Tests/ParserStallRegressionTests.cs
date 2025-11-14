@@ -1,3 +1,5 @@
+using Brim.Core;
+
 namespace Brim.Parse.Tests;
 
 public class ParserStallRegressionTests

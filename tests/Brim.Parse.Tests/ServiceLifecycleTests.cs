@@ -1,3 +1,4 @@
+using System.Linq;
 using Brim.Parse.Green;
 
 namespace Brim.Parse.Tests;
@@ -21,7 +22,7 @@ public class ServiceLifecycleTests
     Assert.Single(ctor.ParamList.Elements);
 
     BlockExpr body = Assert.IsType<BlockExpr>(ctor.Block);
-    Assert.IsType<ServiceConstruct>(body.Result);
+    Assert.IsType<ServiceConstruct>(body.LastStatement());
   }
 
   [Fact]
@@ -36,8 +37,8 @@ public class ServiceLifecycleTests
     ServiceCtorDecl ctor = Assert.IsType<ServiceCtorDecl>(lifecycle.Members[0]);
 
     BlockExpr body = Assert.IsType<BlockExpr>(ctor.Block);
-    Assert.NotEmpty(body.Statements);
-    Assert.IsType<ServiceConstruct>(body.Result);
+    Assert.True(body.StatementNodes().Count() >= 2);
+    Assert.IsType<ServiceConstruct>(body.LastStatement());
   }
 
   [Fact]
@@ -55,7 +56,7 @@ public class ServiceLifecycleTests
     Assert.Single(dtor.Params.Elements);
 
     BlockExpr body = Assert.IsType<BlockExpr>(dtor.Block);
-    Assert.IsType<MemberAccessExpr>(body.Result);
+    Assert.IsType<MemberAccessExpr>(body.LastStatement());
   }
 
   [Fact]
@@ -92,7 +93,7 @@ public class ServiceLifecycleTests
 
     ServiceMethodDecl method = Assert.IsType<ServiceMethodDecl>(protocol.Methods[0]);
     BlockExpr body = Assert.IsType<BlockExpr>(method.Block);
-    Assert.IsType<ServiceConstruct>(body.Result);
+    Assert.IsType<ServiceConstruct>(body.LastStatement());
   }
 
   [Fact]
@@ -110,7 +111,7 @@ public class ServiceLifecycleTests
     ServiceMethodDecl method = Assert.IsType<ServiceMethodDecl>(protocol.Methods[0]);
 
     BlockExpr body = Assert.IsType<BlockExpr>(method.Block);
-    Assert.NotEmpty(body.Statements);
+    Assert.True(body.StatementNodes().Any());
   }
 
   [Fact]

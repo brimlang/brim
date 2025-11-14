@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using Brim.Parse.Green;
 
 namespace Brim.Parse.Tests;
@@ -13,7 +15,7 @@ public class TreeShapeRegressionTests
 
     var module = Parse(src);
 
-    var legacy = module.Enumerate().Where(n => n is not GreenToken && n.Kind == SyntaxKind.IdentifierToken).ToList();
+    var legacy = module.Enumerate().Where(n => n is not GreenToken && n.SyntaxKind == SyntaxKind.IdentifierToken).ToList();
     Assert.Empty(legacy);
   }
 }

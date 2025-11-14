@@ -1,8 +1,11 @@
+using Brim.Core;
+using Brim.Parse.Green;
+
 namespace Brim.Parse.Tests;
 
 public class GenericUseSiteDiagnosticsTests
 {
-  static Green.BrimModule Parse(string src) => Parser.ParseModule(src);
+  static BrimModule Parse(string src) => Parser.ParseModule(src);
 
   [Fact]
   public void EmptyGenericArgumentListDiagnostic()

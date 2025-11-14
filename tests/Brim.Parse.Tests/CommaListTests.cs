@@ -1,24 +1,30 @@
 using Brim.Core;
-using Brim.Parse.Collections;
+using Brim.Core.Collections;
+using Brim.Lex;
+using Brim.Parse;
 using Brim.Parse.Green;
 
 namespace Brim.Parse.Tests;
 
 public class CommaListTests
 {
+  static GreenToken MakeToken(SyntaxKind kind, TokenKind tokenKind, int offset, int length, int line, int column)
+  {
+    LexToken lex = new(tokenKind, offset, length, line, column);
+    CoreToken core = CoreToken.FromLexToken(StructuralArray<TriviaToken>.Empty, lex);
+    return new GreenToken(kind, core);
+  }
+
   [Fact]
   public void Element_GetChildren_Order_WithBothLeading()
   {
     // Node token at offset 10
-    LexToken rawNode = new(TokenKind.Identifier, 10, 3, 1, 1);
-    GreenToken node = new(SyntaxKind.IdentifierToken, rawNode);
+    GreenToken node = MakeToken(SyntaxKind.IdentifierToken, TokenKind.Identifier, 10, 3, 1, 1);
 
     // Leading comma and terminator (positions arbitrary for test)
-    LexToken rawComma = new(TokenKind.Comma, 8, 1, 1, 1);
-    GreenToken comma = new(SyntaxKind.CommaToken, rawComma);
+    GreenToken comma = MakeToken(SyntaxKind.CommaToken, TokenKind.Comma, 8, 1, 1, 1);
 
-    LexToken rawTerm = new(TokenKind.Terminator, 9, 1, 1, 2);
-    GreenToken term = new(SyntaxKind.TerminatorToken, rawTerm);
+    GreenToken term = MakeToken(SyntaxKind.TerminatorToken, TokenKind.Terminator, 9, 1, 1, 2);
 
     var element = new CommaList<GreenToken>.Element(comma, term, node);
 
@@ -33,12 +39,10 @@ public class CommaListTests
   public void Element_FullWidth_UsesLeadingTerminator_WhenCommaNull()
   {
     // Node token at offset 10
-    LexToken rawNode = new(TokenKind.Identifier, 10, 4, 1, 1);
-    GreenToken node = new(SyntaxKind.IdentifierToken, rawNode);
+    GreenToken node = MakeToken(SyntaxKind.IdentifierToken, TokenKind.Identifier, 10, 4, 1, 1);
 
     // Leading terminator at end offset 14
-    LexToken rawTerm = new(TokenKind.Terminator, 14, 1, 1, 5);
-    GreenToken term = new(SyntaxKind.TerminatorToken, rawTerm);
+    GreenToken term = MakeToken(SyntaxKind.TerminatorToken, TokenKind.Terminator, 14, 1, 1, 5);
 
     var element = new CommaList<GreenToken>.Element(null, term, node);
 
@@ -52,11 +56,8 @@ public class CommaListTests
     // Source text with two identifiers "one,two"
     string src = "one,two";
 
-    LexToken rawId1 = new(TokenKind.Identifier, 0, 3, 1, 1); // "one"
-    GreenToken id1 = new(SyntaxKind.IdentifierToken, rawId1);
-
-    LexToken rawId2 = new(TokenKind.Identifier, 4, 3, 1, 5); // "two"
-    GreenToken id2 = new(SyntaxKind.IdentifierToken, rawId2);
+    GreenToken id1 = MakeToken(SyntaxKind.IdentifierToken, TokenKind.Identifier, 0, 3, 1, 1);
+    GreenToken id2 = MakeToken(SyntaxKind.IdentifierToken, TokenKind.Identifier, 4, 3, 1, 5);
 
     var e1 = new CommaList<GreenToken>.Element(null, null, id1);
     var e2 = new CommaList<GreenToken>.Element(null, null, id2);
@@ -64,10 +65,8 @@ public class CommaListTests
     var elements = StructuralArray.Create(e1, e2);
 
     // Open/close tokens (positions not important for this test)
-    LexToken rawOpen = new(TokenKind.LessLess, 0, 2, 1, 1);
-    GreenToken open = new(SyntaxKind.ExportOpenToken, rawOpen);
-    LexToken rawClose = new(TokenKind.GreaterGreater, 6, 2, 1, 7);
-    GreenToken close = new(SyntaxKind.ExportEndToken, rawClose);
+    GreenToken open = MakeToken(SyntaxKind.ExportOpenToken, TokenKind.LessLess, 0, 2, 1, 1);
+    GreenToken close = MakeToken(SyntaxKind.ExportEndToken, TokenKind.GreaterGreater, 6, 2, 1, 7);
 
     var cl = new CommaList<GreenToken>(open, null, elements, null, null, close);
     var exportList = new ExportList(cl);

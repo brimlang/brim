@@ -1,7 +1,7 @@
 using BenchmarkDotNet.Attributes;
 using Brim.Core;
 using Brim.Core.Collections;
-using Brim.Parse.Collections;
+using Brim.Lex;
 using Brim.Parse.Producers;
 
 namespace Brim.Parse.Benchmarks;
@@ -58,8 +58,8 @@ public class CorpusBenchmarks
     foreach (string t in _texts)
     {
       DiagnosticList diags = DiagnosticList.Create();
-      LexSource raw = new(SourceText.From(t), diags);
-      while (raw.TryRead(out LexToken tok)) { if (tok.Kind == TokenKind.Eob) break; }
+      LexTokenSource raw = new(SourceText.From(t), diags);
+      while (raw.TryRead(out LexToken tok)) { if (tok.TokenKind == TokenKind.Eob) break; }
       sum += diags.Count;
     }
     return sum;
@@ -72,8 +72,8 @@ public class CorpusBenchmarks
     foreach (string t in _texts)
     {
       DiagnosticList diags = DiagnosticList.Create();
-      SignificantProducer<LexSource> sig = new(new RawProducer(SourceText.From(t), diags));
-      while (sig.TryRead(out SignificantToken tok)) { if (tok.Kind == TokenKind.Eob) break; }
+      CoreTokenSource sig = new(new LexTokenSource(SourceText.From(t), diags));
+      while (sig.TryRead(out CoreToken tok)) { if (tok.TokenKind == TokenKind.Eob) break; }
       sum += diags.Count;
     }
     return sum;

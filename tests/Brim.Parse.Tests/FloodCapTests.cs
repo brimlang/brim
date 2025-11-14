@@ -1,5 +1,7 @@
 using System.Text;
-using Brim.Parse.Collections;
+using Brim.Core;
+using Brim.Core.Collections;
+
 namespace Brim.Parse.Tests;
 
 public class FloodCapTests

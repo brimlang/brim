@@ -1,3 +1,4 @@
+using System.Linq;
 using Brim.Parse.Green;
 
 namespace Brim.Parse.Tests;
@@ -5,6 +6,9 @@ namespace Brim.Parse.Tests;
 public class ConstructExpressionTests
 {
   const string Header = "=[test::module]=\n";
+
+  static string TokenText(GreenToken token, string source) =>
+    source.Substring(token.CoreToken.Offset, token.CoreToken.Length);
 
   [Fact]
   public void SeqConstruct_WithGenericArgs()
@@ -43,7 +47,7 @@ public class ConstructExpressionTests
     Assert.Equal(2, construct.Fields.Elements.Length);
 
     FieldInit nameField = construct.Fields.Elements[0].Node;
-    Assert.Equal("name", nameField.Name.Token.Value(src));
+    Assert.Equal("name", TokenText(nameField.Name, src));
     Assert.IsType<LiteralExpr>(nameField.Value);
   }
 
@@ -56,7 +60,7 @@ public class ConstructExpressionTests
     ValueDeclaration decl = ParserTestHelpers.GetMember<ValueDeclaration>(module, 0);
     UnionConstruct construct = Assert.IsType<UnionConstruct>(decl.Initializer);
 
-    Assert.Equal("Admin", construct.Variant.Name.Token.Value(src));
+    Assert.Equal("Admin", TokenText(construct.Variant.Name, src));
     Assert.NotNull(construct.Variant.EqualsToken);
     Assert.NotNull(construct.Variant.Value);
   }
@@ -70,7 +74,7 @@ public class ConstructExpressionTests
     ValueDeclaration decl = ParserTestHelpers.GetMember<ValueDeclaration>(module, 0);
     UnionConstruct construct = Assert.IsType<UnionConstruct>(decl.Initializer);
 
-    Assert.Equal("Banned", construct.Variant.Name.Token.Value(src));
+    Assert.Equal("Banned", TokenText(construct.Variant.Name, src));
     Assert.Null(construct.Variant.EqualsToken);
     Assert.Null(construct.Variant.Value);
   }
@@ -103,8 +107,8 @@ public class ConstructExpressionTests
     ValueDeclaration decl = ParserTestHelpers.GetMember<ValueDeclaration>(module, 0);
     OptionConstruct opt = Assert.IsType<OptionConstruct>(decl.Initializer);
 
-    Assert.NotNull(opt.Value);
-    Assert.IsType<LiteralExpr>(opt.Value);
+    Assert.NotNull(opt.Expr);
+    Assert.IsType<LiteralExpr>(opt.Expr);
   }
 
   [Fact]
@@ -116,7 +120,7 @@ public class ConstructExpressionTests
     ValueDeclaration decl = ParserTestHelpers.GetMember<ValueDeclaration>(module, 0);
     OptionConstruct opt = Assert.IsType<OptionConstruct>(decl.Initializer);
 
-    Assert.Null(opt.Value);
+    Assert.Null(opt.Expr);
   }
 
   [Fact]
@@ -128,7 +132,7 @@ public class ConstructExpressionTests
     ValueDeclaration decl = ParserTestHelpers.GetMember<ValueDeclaration>(module, 0);
     ResultConstruct result = Assert.IsType<ResultConstruct>(decl.Initializer);
 
-    Assert.IsType<LiteralExpr>(result.Value);
+    Assert.IsType<LiteralExpr>(result.Expr);
   }
 
   [Fact]
@@ -140,7 +144,7 @@ public class ConstructExpressionTests
     ValueDeclaration decl = ParserTestHelpers.GetMember<ValueDeclaration>(module, 0);
     ErrorConstruct error = Assert.IsType<ErrorConstruct>(decl.Initializer);
 
-    Assert.IsType<LiteralExpr>(error.Value);
+    Assert.IsType<LiteralExpr>(error.Expr);
   }
 
   [Fact]
@@ -150,10 +154,17 @@ public class ConstructExpressionTests
     BrimModule module = ParserTestHelpers.ParseModule(src);
 
     ValueDeclaration decl = ParserTestHelpers.GetMember<ValueDeclaration>(module, 0);
-    FunctionLiteral lambda = Assert.IsType<FunctionLiteral>(decl.Initializer);
-    BlockExpr block = Assert.IsType<BlockExpr>(lambda.Body);
+    BlockExpr block = decl.Initializer switch
+    {
+      FunctionLiteral lambda => Assert.IsType<BlockExpr>(lambda.Body),
+      ZeroParameterFunctionLiteral zero => Assert.IsType<BlockExpr>(zero.Body),
+      _ => throw new Xunit.Sdk.XunitException("Expected lambda literal")
+    };
 
-    StructConstruct construct = Assert.IsType<StructConstruct>(block.Result);
+    StructConstruct construct = block.StatementList.Elements
+      .Select(e => e.Node)
+      .OfType<StructConstruct>()
+      .First();
     Assert.Equal(2, construct.Fields.Elements.Length);
   }
 
@@ -193,7 +204,7 @@ public class ConstructExpressionTests
     Assert.Equal(2, service.Fields.Elements.Length);
 
     FieldInit countField = service.Fields.Elements[0].Node;
-    Assert.Equal("count", countField.Name.Token.Value(src));
+    Assert.Equal("count", TokenText(countField.Name, src));
   }
 
   [Fact]
@@ -204,7 +215,10 @@ public class ConstructExpressionTests
 
     FunctionDeclaration func = ParserTestHelpers.GetMember<FunctionDeclaration>(module, 0);
     BlockExpr block = Assert.IsType<BlockExpr>(func.Body);
-    ServiceConstruct service = Assert.IsType<ServiceConstruct>(block.Result);
+    ServiceConstruct service = block.StatementList.Elements
+      .Select(e => e.Node)
+      .OfType<ServiceConstruct>()
+      .First();
 
     Assert.Single(service.Fields.Elements);
   }
@@ -221,7 +235,10 @@ public class ConstructExpressionTests
     ServiceCtorDecl ctor = Assert.IsType<ServiceCtorDecl>(lifecycle.Members[0]);
 
     BlockExpr block = Assert.IsType<BlockExpr>(ctor.Block);
-    ServiceConstruct service = Assert.IsType<ServiceConstruct>(block.Result);
+    ServiceConstruct service = block.StatementList.Elements
+      .Select(e => e.Node)
+      .OfType<ServiceConstruct>()
+      .First();
 
     Assert.Single(service.Fields.Elements);
   }

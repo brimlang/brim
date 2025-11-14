@@ -2,7 +2,8 @@ using System.Text;
 using BenchmarkDotNet.Attributes;
 using Brim.Core;
 using Brim.Core.Collections;
-using Brim.Parse.Collections;
+using Brim.Lex;
+using Brim.Parse.Producers;
 
 namespace Brim.Parse.Benchmarks;
 
@@ -69,9 +70,9 @@ public class ParserBenchmarks
     // Simulate a pipeline that lexes significant tokens (discarded), then parses fresh.
     DiagnosticList diags = DiagnosticList.Create();
     SourceText src = SourceText.From(_medium);
-    Producers.SignificantProducer<Producers.LexSource> sig = new(new Producers.RawProducer(src, diags));
+    CoreTokenSource sig = new(new LexTokenSource(src, diags));
     int count = 0;
-    while (sig.TryRead(out SignificantToken tok)) { count++; if (tok.Kind == TokenKind.Eob) break; }
+    while (sig.TryRead(out CoreToken tok)) { count++; if (tok.TokenKind == TokenKind.Eob) break; }
     Green.BrimModule mod = Parser.ModuleFrom(src);
     return count + mod.Diagnostics.Count;
   }
