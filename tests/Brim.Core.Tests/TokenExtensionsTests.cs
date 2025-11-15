@@ -17,9 +17,9 @@ public class TokenExtensionsTests
   public void ToString_ShowsKindLocationAndSpan()
   {
     FakeToken token = new(TokenKind.IntegerLiteral, 10, 2, 4, 3);
-    string formatted = ITokenExtensions.ToString(token);
+    string formatted = ITokenExtensions.ToPositionString(token);
 
-    Assert.Equal("IntegerLiteral@4:3 [10..12]", formatted);
+    Assert.Equal("IntegerLiteral@4:3 [10(2)]", formatted);
   }
 }
 
