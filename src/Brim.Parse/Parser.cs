@@ -21,11 +21,10 @@ public sealed partial class Parser(
   public static BrimModule ModuleFrom(SourceText source)
   {
     DiagnosticList diags = DiagnosticList.Create();
-    LexTokenSource lexSource = new(source, diags);
     return new Parser(
       new RingBuffer<CoreToken>(
         new CoreTokenSource(
-          lexSource),
+          new LexTokenSource(source, diags)),
         capacity: 4),
       diags)
     .ParseModule();
@@ -44,7 +43,7 @@ public sealed partial class Parser(
 
     while (!Tokens.IsEob(Current))
     {
-      Trace.WriteLine($"[Parser] {Current}");
+      Trace.WriteLine($"[Parser] {Current.ToPositionString()}");
       StallGuard stallGuard = GetStallGuard();
       // terminators handled directly.
       if (Match(TokenKind.Terminator))
@@ -84,7 +83,8 @@ public sealed partial class Parser(
       {
         Trace.WriteLine("[Parser] Stalled detected, skipping unexpected token.");
         _diags.Add(Diagnostic.Parse.Unexpected(Current, []));
-        break;
+        Advance();
+        continue;
       }
     }
 
@@ -96,8 +96,12 @@ public sealed partial class Parser(
     };
   }
 
-  internal bool Match(TokenKind kind, int offset = 0) =>
-    PeekTokenKind(offset) != TokenKind.Eob && (kind == TokenKind.Any || PeekTokenKind(offset) == kind);
+  internal bool Match(TokenKind kind, int offset = 0)
+  {
+    return kind is TokenKind.Eob
+      ? kind == TokenKind.Any || PeekTokenKind(offset) == kind
+      : PeekTokenKind(offset) != TokenKind.Eob && (kind == TokenKind.Any || PeekTokenKind(offset) == kind);
+  }
 
   internal GreenToken Expect(SyntaxKind kind)
   {
@@ -211,7 +215,7 @@ public sealed partial class Parser(
   LexToken GetErrorToken() => new(
     TokenKind.Error,
     Current.Offset,
-    length: 0,
+    Current.Length,
     Current.Line,
     Current.Column);
 
@@ -238,5 +242,4 @@ public sealed partial class Parser(
     /// </summary>
     public bool Stalled => _before == p.Current.Offset;
   }
-
 }
