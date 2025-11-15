@@ -11,7 +11,7 @@ public static class ITokenExtensions
   public static ReadOnlySpan<char> Chars<T>(this T token, ReadOnlySpan<char> sourceSpan) where T : IToken => sourceSpan.Slice(token.Offset, token.Length);
 
   /// <summary>
-  /// Returns a string representation of the token.
+  /// Returns a string representation of the token's position.
   /// </summary>
-  public static string ToString<T>(this T token) where T : IToken => $"{token.TokenKind}@{token.Line}:{token.Column} [{token.Offset}..{token.Offset + token.Length}]";
+  public static string ToPositionString<T>(this T token) where T : IToken => $"{token.TokenKind}@{token.Line}:{token.Column} [{token.Offset}({token.Length})]";
 }
