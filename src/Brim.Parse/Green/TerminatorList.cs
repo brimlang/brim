@@ -75,7 +75,7 @@ GreenNode(SyntaxKind.TerminatorList, OpenToken.Offset) where T : GreenNode
     ArrayBuilder<Element> elements = [];
 
     // Parse first element if not immediately at close
-    while (!p.Match(Parser.MapTokenKind(closeSyntax)) && !p.Match(TokenKind.Eob))
+    while (!p.Match(Parser.MapTokenKind(closeSyntax)))
     {
       Parser.StallGuard sg = p.GetStallGuard();
       elements.Add(Element.Parse(p, parseElement));
